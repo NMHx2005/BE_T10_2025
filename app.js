@@ -1,16 +1,16 @@
-import express from 'express'; // ES6 import
-const app = express()
-const port = 3000
+import dotenv from 'dotenv';
+import app from './src/app.js';
 
-app.get('/', (req, res) => {
-    res.send('Nguyễn Văn A - 20120001')
-})
+dotenv.config();
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+const PORT = process.env.PORT || 3000;
 
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📱 Environment: ${process.env.NODE_ENV}`);
+});
 
-app.get('/nguyen-van-thinh', (req, res) => {
-    res.send('Tôi là Thịnh')
-})
+process.on('SIGINT', () => {
+    console.log("Shutting down server...");
+    process.exit();
+});
