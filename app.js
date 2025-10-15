@@ -1,9 +1,9 @@
-const express = require('express')
+import express from 'express'; // ES6 import
 const app = express()
 const port = 3000
 
 app.get('/', (req, res) => {
-    res.send('Đây là trang web của tôi')
+    res.send('Nguyễn Văn A - 20120001')
 })
 
 app.listen(port, () => {
