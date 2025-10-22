@@ -1,0 +1,1 @@
+// Hàm xử lý lỗi chung
