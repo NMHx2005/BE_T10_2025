@@ -6,7 +6,7 @@ module.exports = {
                 targets: {
                     node: 'current' // Target Node.js version hiện tại
                 },
-                modules: 'false' // Giữ CommonJS modules
+                modules: 'false' // Giữ ES modules (không convert sang CommonJS)
             }
         ]
     ]
