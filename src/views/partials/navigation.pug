@@ -1,1 +1,24 @@
-nav test
+//- Navigation partial
+nav.bg-white.shadow-sm.border-b.border-gray-200
+  .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
+    .flex.justify-between.items-center.h-16
+      // Logo
+      .flex.items-center
+        a.flex.items-center(href="/")
+          i.fas.fa-box.text-blue-600.text-2xl.mr-2
+          span.text-xl.font-bold.text-gray-900 Product Management
+      
+      // Desktop Navigation
+      .hidden(class="md:flex md:items-center md:space-x-8")
+        a.text-gray-700(class="hover:text-blue-600 transition-colors", href="/") Home
+        a.text-gray-700(class="hover:text-blue-600 transition-colors", href="/products") Products
+        a.text-gray-700(class="hover:text-blue-600 transition-colors", href="/categories") Categories
+        
+        .flex.space-x-4
+          a.text-gray-700(class="hover:text-blue-600 transition-colors px-4 py-2 hover:bg-blue-700 rounded-md hover:text-white", href="/auth/login") Login
+          a.bg-blue-600(class="hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors", href="/auth/register") Sign Up
+      
+      // Mobile menu button
+      .md.hidden
+        button.inline-flex.items-center.justify-center.p-2.rounded-md.text-gray-700(class="hover:text-blue-600 hover:bg-gray-100", type="button")
+          i.fas.fa-bars

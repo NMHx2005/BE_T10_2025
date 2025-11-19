@@ -1,8 +1,110 @@
 extends ../../../layouts/main
-
+include ../../../mixins/cards
+include ../../../mixins/buttons
 
 block content
-  h2 Nguyễn Văn A
-
-
-
+  // Hero Section
+  section.bg-gradient-to-r.from-blue-600.to-blue-800.text-white.py-20
+    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
+      .text-center
+        h1.text-5xl.font-bold.mb-6 Welcome to Product Management System
+        p.text-xl.mb-8.max-w-3xl.mx-auto Streamline your product management with our comprehensive solution. Track inventory, manage categories, and boost your business efficiency.
+        .flex.flex-col(class="sm:flex-row gap-4 justify-center")
+          +button-primary('Get Started', '/auth/register', 'fas fa-rocket')
+          +button-secondary('View Products', '/products', 'fas fa-eye')
+  
+  // Features Section
+  section.py-20.bg-white
+    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
+      .text-center.mb-16
+        h2.text-4xl.font-bold.text-gray-900.mb-4 Our Features
+        p.text-xl.text-gray-600.max-w-2xl.mx-auto Everything you need to manage your products efficiently
+      
+      .grid.grid-cols-1(class="md:grid-cols-3 gap-8")
+        .text-center.p-8.rounded-lg.bg-blue-50
+          i.fas.fa-box.text-6xl.text-blue-600.mb-6
+          h3.text-2xl.font-bold.text-gray-900.mb-4 Product Management
+          p.text-gray-600 Efficiently manage your product inventory with our intuitive interface and powerful tools.
+        
+        .text-center.p-8.rounded-lg.bg-green-50
+          i.fas.fa-tags.text-6xl.text-green-600.mb-6
+          h3.text-2xl.font-bold.text-gray-900.mb-4 Category Organization
+          p.text-gray-600 Organize your products with custom categories and tags for better organization.
+        
+        .text-center.p-8.rounded-lg.bg-purple-50
+          i.fas.fa-chart-line.text-6xl.text-purple-600.mb-6
+          h3.text-2xl.font-bold.text-gray-900.mb-4 Analytics & Reports
+          p.text-gray-600 Get insights into your business with detailed analytics and comprehensive reports.
+  
+  // Stats Section
+  section.py-20.bg-gray-50
+    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
+      .grid.grid-cols-2(class="md:grid-cols-4 gap-8 text-center")
+        .stat-item
+          h3.text-4xl.font-bold.text-blue-600.mb-2 1000+
+          p.text-gray-600 Products Managed
+        .stat-item
+          h3.text-4xl.font-bold.text-green-600.mb-2 500+
+          p.text-gray-600 Happy Customers
+        .stat-item
+          h3.text-4xl.font-bold.text-purple-600.mb-2 99.9%
+          p.text-gray-600 Uptime
+        .stat-item
+          h3.text-4xl.font-bold.text-orange-600.mb-2 24/7
+          p.text-gray-600 Support
+  
+  // Sample Products Section
+  section.py-20.bg-white
+    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
+      .text-center.mb-16
+        h2.text-4xl.font-bold.text-gray-900.mb-4 Featured Products
+        p.text-xl.text-gray-600.max-w-2xl.mx-auto Discover our most popular products
+      
+      .grid.grid-cols-1(class="md:grid-cols-2 lg:grid-cols-3 gap-8")
+        .bg-white.rounded-lg.shadow-md.border.border-gray-200.overflow-hidden(class="hover:shadow-lg transition-shadow duration-300")
+          img.w-full.h-48.object-cover(src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400", alt="Wireless Headphones")
+          .p-6
+            h3.text-xl.font-semibold.mb-2 Wireless Headphones
+            p.text-gray-600.mb-4 High-quality wireless headphones with noise cancellation and premium sound quality.
+            .flex.justify-between.items-center.mb-4
+              span.text-2xl.font-bold.text-blue-600 $199.99
+              span.bg-green-100.text-green-800.px-2.py-1.rounded-full.text-sm 25 in stock
+            .flex.gap-2
+              a.bg-blue-600(class="hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center gap-2", href="/products/1")
+                i.fas.fa-eye
+                | View Details
+        
+        .bg-white.rounded-lg.shadow-md.border.border-gray-200.overflow-hidden(class="hover:shadow-lg transition-shadow duration-300")
+          img.w-full.h-48.object-cover(src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400", alt="Smart Watch")
+          .p-6
+            h3.text-xl.font-semibold.mb-2 Smart Watch
+            p.text-gray-600.mb-4 Advanced smartwatch with health monitoring, GPS, and water resistance.
+            .flex.justify-between.items-center.mb-4
+              span.text-2xl.font-bold.text-blue-600 $299.99
+              span.bg-green-100.text-green-800.px-2.py-1.rounded-full.text-sm 15 in stock
+            .flex.gap-2
+              a.bg-blue-600(class="hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center gap-2", href="/products/2")
+                i.fas.fa-eye
+                | View Details
+        
+        .bg-white.rounded-lg.shadow-md.border.border-gray-200.overflow-hidden(class="hover:shadow-lg transition-shadow duration-300")
+          img.w-full.h-48.object-cover(src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400", alt="Running Shoes")
+          .p-6
+            h3.text-xl.font-semibold.mb-2 Running Shoes
+            p.text-gray-600.mb-4 Comfortable running shoes with advanced cushioning and breathable material.
+            .flex.justify-between.items-center.mb-4
+              span.text-2xl.font-bold.text-blue-600 $129.99
+              span.bg-green-100.text-green-800.px-2.py-1.rounded-full.text-sm 40 in stock
+            .flex.gap-2
+              a.bg-blue-600(class="hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center gap-2", href="/products/3")
+                i.fas.fa-eye
+                | View Details
+  
+  // CTA Section
+  section.bg-gradient-to-r.from-gray-900.to-gray-800.text-white.py-20
+    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 text-center")
+      h2.text-4xl.font-bold.mb-6 Ready to Get Started?
+      p.text-xl.mb-8.max-w-2xl.mx-auto Join thousands of businesses already using our product management system.
+      .flex.flex-col(class="sm:flex-row gap-4 justify-center")
+        +button-primary('Start Free Trial', '/auth/register', 'fas fa-play')
+        +button-secondary('Contact Sales', '/contact', 'fas fa-phone')

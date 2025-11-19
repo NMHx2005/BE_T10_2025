@@ -1,0 +1,141 @@
+extends ../../layouts/admin
+include ../../mixins/cards
+include ../../mixins/buttons
+
+block content
+  // Page Header
+  .mb-8
+    h1.text-3xl.font-bold.text-gray-900 Dashboard
+    p.text-gray-600 Welcome back! Here's what's happening with your business today.
+  
+  // Stats Cards
+  .grid.grid-cols-1.md.grid-cols-2.lg.grid-cols-4.gap-6.mb-8
+    .card.p-6
+      .flex.items-center
+        .flex-shrink-0
+          .w-12.h-12.bg-blue-100.rounded-lg.flex.items-center.justify-center
+            i.fas.fa-box.text-blue-600.text-xl
+        .ml-4
+          p.text-sm.font-medium.text-gray-600 Total Products
+          p.text-2xl.font-bold.text-gray-900 1,247
+          p.text-sm.text-green-600 +12% from last month
+    
+    .card.p-6
+      .flex.items-center
+        .flex-shrink-0
+          .w-12.h-12.bg-green-100.rounded-lg.flex.items-center.justify-center
+            i.fas.fa-users.text-green-600.text-xl
+        .ml-4
+          p.text-sm.font-medium.text-gray-600 Total Users
+          p.text-2xl.font-bold.text-gray-900 3,456
+          p.text-sm.text-green-600 +8% from last month
+    
+    .card.p-6
+      .flex.items-center
+        .flex-shrink-0
+          .w-12.h-12.bg-yellow-100.rounded-lg.flex.items-center.justify-center
+            i.fas.fa-shopping-cart.text-yellow-600.text-xl
+        .ml-4
+          p.text-sm.font-medium.text-gray-600 Total Orders
+          p.text-2xl.font-bold.text-gray-900 892
+          p.text-sm.text-red-600 -3% from last month
+    
+    .card.p-6
+      .flex.items-center
+        .flex-shrink-0
+          .w-12.h-12.bg-purple-100.rounded-lg.flex.items-center.justify-center
+            i.fas.fa-dollar-sign.text-purple-600.text-xl
+        .ml-4
+          p.text-sm.font-medium.text-gray-600 Revenue
+          p.text-2xl.font-bold.text-gray-900 $45,678
+          p.text-sm.text-green-600 +15% from last month
+  
+  // Charts and Tables Section
+  .grid.grid-cols-1.lg.grid-cols-2.gap-8.mb-8
+    // Sales Chart
+    .card.p-6
+      h3.text-lg.font-semibold.text-gray-900.mb-4 Sales Overview
+      .h-64.bg-gray-50.rounded-lg.flex.items-center.justify-center
+        .text-center
+          i.fas.fa-chart-line.text-4xl.text-gray-400.mb-2
+          p.text-gray-500 Chart will be implemented here
+          p.text-sm.text-gray-400 Last 30 days sales data
+    
+    // Recent Orders
+    .card.p-6
+      h3.text-lg.font-semibold.text-gray-900.mb-4 Recent Orders
+      .space-y-4
+        .flex.items-center.justify-between.p-3.bg-gray-50.rounded-lg
+          .flex.items-center
+            .w-10.h-10.bg-blue-100.rounded-full.flex.items-center.justify-center.mr-3
+              i.fas.fa-user.text-blue-600
+            div
+              p.font-medium.text-gray-900 John Doe
+              p.text-sm.text-gray-500 Order #12345
+          .text-right
+            p.font-semibold.text-gray-900 $299.99
+            p.text-sm.text-green-600 Completed
+        
+        .flex.items-center.justify-between.p-3.bg-gray-50.rounded-lg
+          .flex.items-center
+            .w-10.h-10.bg-green-100.rounded-full.flex.items-center.justify-center.mr-3
+              i.fas.fa-user.text-green-600
+            div
+              p.font-medium.text-gray-900 Jane Smith
+              p.text-sm.text-gray-500 Order #12346
+          .text-right
+            p.font-semibold.text-gray-900 $199.99
+            p.text-sm.text-yellow-600 Pending
+        
+        .flex.items-center.justify-between.p-3.bg-gray-50.rounded-lg
+          .flex.items-center
+            .w-10.h-10.bg-purple-100.rounded-full.flex.items-center.justify-center.mr-3
+              i.fas.fa-user.text-purple-600
+            div
+              p.font-medium.text-gray-900 Mike Johnson
+              p.text-sm.text-gray-500 Order #12347
+          .text-right
+            p.font-semibold.text-gray-900 $149.99
+            p.text-sm.text-green-600 Completed
+  
+  // Quick Actions
+  .card.p-6
+    h3.text-lg.font-semibold.text-gray-900.mb-4 Quick Actions
+    .grid.grid-cols-1.md.grid-cols-3.gap-4
+      +button-primary('Add New Product', '/admin/products/create', 'fas fa-plus')
+      +button-secondary('Manage Users', '/admin/users', 'fas fa-users')
+      +button-secondary('View Reports', '/admin/reports', 'fas fa-chart-bar')
+  
+  // Recent Activity
+  .card.p-6.mt-8
+    h3.text-lg.font-semibold.text-gray-900.mb-4 Recent Activity
+    .space-y-4
+      .flex.items-start.space-x-3
+        .flex-shrink-0
+          .w-8.h-8.bg-blue-100.rounded-full.flex.items-center.justify-center
+            i.fas.fa-plus.text-blue-600.text-sm
+        .flex-1
+          p.text-sm.text-gray-900
+            span.font-medium New product added.
+            |  Wireless Headphones
+          p.text-xs.text-gray-500 2 hours ago
+      
+      .flex.items-start.space-x-3
+        .flex-shrink-0
+          .w-8.h-8.bg-green-100.rounded-full.flex.items-center.justify-center
+            i.fas.fa-user.text-green-600.text-sm
+        .flex-1
+          p.text-sm.text-gray-900
+            span.font-medium New user registered.
+            |  john.doe@example.com
+          p.text-xs.text-gray-500 4 hours ago
+      
+      .flex.items-start.space-x-3
+        .flex-shrink-0
+          .w-8.h-8.bg-yellow-100.rounded-full.flex.items-center.justify-center
+            i.fas.fa-edit.text-yellow-600.text-sm
+        .flex-1
+          p.text-sm.text-gray-900
+            span.font-medium Product updated.
+            |  Smart Watch
+          p.text-xs.text-gray-500 6 hours ago

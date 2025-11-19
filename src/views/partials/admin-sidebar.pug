@@ -1,1 +1,54 @@
-div test
+//- Admin Sidebar
+aside.w-64.bg-gray-800.text-white.flex.flex-col.h-full
+  // Logo
+  .p-6.border-b.border-gray-700
+    .flex.items-center
+      i.fas.fa-cog.text-2xl.text-blue-400.mr-3
+      span.text-xl.font-bold Admin Panel
+  
+  // User Info
+  .p-6.border-b.border-gray-700
+    .flex.items-center
+      img.w-10.h-10.rounded-full(src="/images/admin-avatar.png", alt="Admin")
+      .ml-3
+        p.font-medium= user ? user.name : 'Admin User'
+        p.text-sm.text-gray-400 Administrator
+  
+  // Navigation
+  nav.flex-1.p-4
+    ul.space-y-2
+      li
+        a.flex.items-center.px-4.py-2.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.transition-colors(href="/admin")
+          i.fas.fa-tachometer-alt.mr-3
+          | Dashboard
+      
+      li
+        a.flex.items-center.px-4.py-2.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.transition-colors(href="/admin/products")
+          i.fas.fa-box.mr-3
+          | Products
+      
+      li
+        a.flex.items-center.px-4.py-2.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.transition-colors(href="/admin/categories")
+          i.fas.fa-tags.mr-3
+          | Categories
+      
+      li
+        a.flex.items-center.px-4.py-2.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.transition-colors(href="/admin/users")
+          i.fas.fa-users.mr-3
+          | Users
+      
+      li
+        a.flex.items-center.px-4.py-2.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.transition-colors(href="/admin/orders")
+          i.fas.fa-shopping-cart.mr-3
+          | Orders
+      
+      li
+        a.flex.items-center.px-4.py-2.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.transition-colors(href="/admin/reports")
+          i.fas.fa-chart-bar.mr-3
+          | Reports
+  
+  // Logout
+  .p-4.border-t.border-gray-700
+    a.flex.items-center.px-4.py-2.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.transition-colors(href="/logout")
+      i.fas.fa-sign-out-alt.mr-3
+      | Logout

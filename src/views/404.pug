@@ -1,9 +1,13 @@
 extends layouts/main
 
-
 block content
-  h2 404 - Page Not Found
-  p The page you are looking for does not exist.
-
-
-
+  .container.text-center.py-5
+    .row.justify-content-center
+      .col-md-6
+        i.fas.fa-exclamation-triangle.fa-5x.text-warning.mb-4
+        h1.display-1.fw-bold.text-muted 404
+        h2.mb-4= message || 'Page Not Found'
+        p.lead.mb-4 The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+        .d-flex.gap-3.justify-content-center
+          a.btn.btn-primary(href="/") Go Home
+          a.btn.btn-outline-secondary(href="javascript:history.back()") Go Back

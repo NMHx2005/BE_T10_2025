@@ -1,1 +1,53 @@
-footer test
+//- Footer partial
+footer.bg-gray-900.text-white
+  .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 py-12")
+    .grid.grid-cols-1(class="md:grid-cols-4 gap-8")
+      // Company Info
+      .col-span-1(class="md:col-span-2")
+        .flex.items-center.mb-4
+          i.fas.fa-box.text-blue-400.text-2xl.mr-2
+          span.text-xl.font-bold Product Management
+        p.text-gray-400.mb-4 A comprehensive product management solution for businesses of all sizes.
+        .flex.space-x-4
+          a.text-gray-400(class="hover:text-white transition-colors", href="#")
+            i.fab.fa-facebook.text-xl
+          a.text-gray-400(class="hover:text-white transition-colors", href="#")
+            i.fab.fa-twitter.text-xl
+          a.text-gray-400(class="hover:text-white transition-colors", href="#")
+            i.fab.fa-linkedin.text-xl
+      
+      // Quick Links
+      .col-span-1
+        h3.text-lg.font-semibold.mb-4 Quick Links
+        ul.space-y-2
+          li
+            a.text-gray-400(class="hover:text-white transition-colors", href="/") Home
+          li
+            a.text-gray-400(class="hover:text-white transition-colors", href="/products") Products
+          li
+            a.text-gray-400(class="hover:text-white transition-colors", href="/about") About
+          li
+            a.text-gray-400(class="hover:text-white transition-colors", href="/contact") Contact
+      
+      // Contact Info
+      .col-span-1
+        h3.text-lg.font-semibold.mb-4 Contact
+        .space-y-2
+          p.text-gray-400
+            i.fas.fa-envelope.mr-2
+            | info@productmanagement.com
+          p.text-gray-400
+            i.fas.fa-phone.mr-2
+            | +1 (555) 123-4567
+          p.text-gray-400
+            i.fas.fa-map-marker-alt.mr-2
+            | 123 Business St, City, State 12345
+  
+  // Bottom bar
+  .border-t.border-gray-800
+    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 py-4")
+      .flex.flex-col(class="md:flex-row justify-between items-center")
+        p.text-gray-400.text-sm &copy; 2024 Product Management System. All rights reserved.
+        p.text-gray-400.text-sm Made with 
+          i.fas.fa-heart.text-red-500.mx-1
+          |  by Development Team

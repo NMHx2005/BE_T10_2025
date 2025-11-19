@@ -1,0 +1,12 @@
+//- Button mixins
+mixin button-primary(text, href, icon)
+  a.bg-blue-600(class="hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center gap-2", href=href)
+    if icon
+      i(class=icon)
+    = text
+
+mixin button-secondary(text, href, icon)
+  a.bg-gray-600(class="hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center gap-2", href=href)
+    if icon
+      i(class=icon)
+    = text

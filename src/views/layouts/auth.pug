@@ -3,9 +3,7 @@ html(lang="en")
   head
     meta(charset="UTF-8")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    meta(http-equiv="X-UA-Compatible", content="ie=edge")
-    
-    title= title || 'Product Management System'
+    title= title || 'Authentication'
     
     // Font Awesome CDN
     link(href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css", rel="stylesheet")
@@ -27,18 +25,15 @@ html(lang="en")
     
     block head
 
-  body.min-h-screen.flex.flex-col.bg-gray-50
-    // Header
-    include ../partials/navigation
+  body.min-h-screen.bg-gradient-to-br.from-blue-50.to-indigo-100.flex.items-center.justify-center.p-4
+    // Background decoration
+    .absolute.inset-0.bg-gradient-to-br.from-blue-400.to-purple-600.opacity-10
     
-    // Main Content
-    main.flex-1
+    // Main content
+    .relative.z-10.w-full.max-w-md
       block content
     
-    // Footer
-    include ../partials/footer
-    
     // JavaScript
-    script(src="/js/main.js")
+    script(src="/js/auth.js")
     
     block scripts
