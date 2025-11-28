@@ -46,5 +46,15 @@ const logout = (req, res) => {
     res.send('Register endpoint');
 }
 
+const getLoginPage = (req, res) => {
+    res.send('Trang đăng nhập người dùng');
+}
+const getRegisterPage = (req, res) => {
+    res.send('Trang đăng kí người dùng');
+}
+const getLogoutPage = (req, res) => {
+    res.send('Trang đăng xuất người dùng');
+}
 
-export { register, login, logout };
+
+export { register, login, logout, getLoginPage, getRegisterPage, getLogoutPage };
