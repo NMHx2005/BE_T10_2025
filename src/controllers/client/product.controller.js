@@ -1,4 +1,10 @@
-const createProductController = (req, res) => {
+import { NotFoundError } from "../../utils/errors.js";
+
+const createProductController = (req, res, next) => {
+    // const product = req.body;
+    // if (!product) {
+    //     return next(new NotFoundError("Không tìm thấy sản phẩm"));
+    // }
     console.log("Đã thêm mới sản phẩm");
     res.send('Create Product endpoint');
 }
