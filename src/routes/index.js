@@ -32,7 +32,6 @@ router.use('/', webRoutes);
 
 // 404 Handler - Phải để cuối cùng
 router.use(/(.*)/, (req, res, next) => {
-    console.log("Sai rồi!!!!!!!!!!!!!!!"); // req.params will be { '0': '/the/path' }
     next();
 });
 
