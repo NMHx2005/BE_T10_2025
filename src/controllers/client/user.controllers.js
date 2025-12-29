@@ -4,4 +4,9 @@ const getProfile = (req, res) => {
 }
 
 
-export { getProfile };
+const updateProfile = (req, res) => {
+    console.log("Đã thêm mới sản phẩm");
+    res.send('Create Product endpoint');
+}
+
+export { getProfile, updateProfile };

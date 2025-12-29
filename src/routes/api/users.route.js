@@ -1,6 +1,7 @@
 import express from 'express';
-import { getProfile } from '../../controllers/client/user.controllers.js';
+import { getProfile, updateProfile } from '../../controllers/client/user.controllers.js';
 import { adminOnly, protect } from '../../middleware/auth.js';
+import { deleteUser, getAllUsers, updateUser } from '../../controllers/admin/user.controllers.js';
 
 
 const router = express.Router();
@@ -9,7 +10,7 @@ const router = express.Router();
 router.get('/profile', protect, getProfile);
 
 // Cập nhật profile
-
+router.put('/profile', protect, updateProfile);
 
 // middleware protect sẽ kiểm tra auth trước khi vào controller
 
@@ -18,11 +19,12 @@ router.get('/profile', protect, getProfile);
 // Lấy ra tất cả người dùng
 router.get('/', protect, adminOnly, getAllUsers);
 
-// Lấy thông tin theo id
-
 // Cập nhật user
+router.put('/:id', protect, adminOnly, updateUser);
+
 
 // Xóa user
+router.delete('/:id', protect, adminOnly, deleteUser);
 
 
 
