@@ -144,10 +144,15 @@ userSchema.pre("save", async function (next) {
  */
 
 
-userSchema.method.comparePassword = async function (candidatatePassword, userPassword) {
-    return await bcrypt.compare(candidatatePassword, userPassword);
-}
-
+userSchema.methods.comparePassword = async function (candidatePassword) {
+    // Kiểm tra user có password không
+    if (!this.password) {
+        return false;
+    }
+    
+    // So sánh password với hash trong database
+    return await bcrypt.compare(candidatePassword, this.password);
+};
 
 // tạo token khi rết mật khẩu
 
