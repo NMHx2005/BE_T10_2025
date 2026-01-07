@@ -2,22 +2,16 @@ import express from 'express';
 import { register, login, logout } from '../../controllers/client/auth.controllers.js';
 import { changePassword, resetPassword } from '../../controllers/auth/password.controllers.js';
 import { protect } from '../../middleware/auth.js';
-
-const { body, validationResult } = await import('express-validator');
+import { loginValidation, registerValidation } from '../../middleware/validators/auth.validator.js';
 
 const router = express.Router();
 
 
 // POST /api/v1/auth/register - Đăng kí người dùng mới
-router.post('/register',
-    body('email').isEmail(),
-    body('password').isLength({ min: 6 }),
-    register
-);
-
+router.post('/register', registerValidation, register);
 
 // POST /api/v1/auth/login - Đăng nhập
-router.post('/login', login);
+router.post('/login', loginValidation, login);
 
 // POST /api/v1/auth/reset-password/:token - Đặt lại mật khẩu
 router.post('/reset-password/:token', resetPassword);

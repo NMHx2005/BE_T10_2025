@@ -40,6 +40,7 @@ const userSchema = new mongoose.Schema(
         // password hashing trước khi lưu vào database
         passwordComfirm: {
             type: String,
+            select: false,
             // Validate chỉ chạy khi tạo mới hoặc cập nhật
             validate: {
                 validator: function (value) {
@@ -110,27 +111,6 @@ userSchema.index({
 
 
 
-// Pre-save middleware: chạy trước khi lưu document, dùng để hash password
-userSchema.pre("save", async function (next) {
-    if (this.isModified("password")) {
-        return next();
-    }
-
-    try {
-        const hashedPassword = await bcrypt.hash(this.password, 12);
-        this.password = hashedPassword;
-
-
-        this.passwordComfirm = undefined; // Xoá trường passwordComfirm trước khi lưu
-
-        next();
-    } catch (error) {
-        next(error);
-    }
-})
-
-
-
 /** 
  * Middleware để hash password trước khi lưu vào database
  * 
@@ -149,7 +129,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
     if (!this.password) {
         return false;
     }
-    
+
     // So sánh password với hash trong database
     return await bcrypt.compare(candidatePassword, this.password);
 };
