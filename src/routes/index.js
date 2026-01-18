@@ -35,6 +35,7 @@ router.use('/', webRoutes);
 router.get('/verify-email', async (req, res, next) => {
     const { token } = req.query;
     const infoUser = await decodeToken(token);
+    console.log('Decoded token info:', infoUser);
 
     const user = await User.findById(infoUser.userId);
     if (!user) {

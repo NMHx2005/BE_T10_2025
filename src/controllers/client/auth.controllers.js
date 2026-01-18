@@ -2,7 +2,9 @@
 
 // Cấu trúc của 1 controller chuẩn
 
-import { generateTokens } from "../../config/jwt.js";
+import { decodeToken, generateTokens, getTokenFromRequest, verifyAccessToken, verifyRefreshToken } from "../../config/jwt.js";
+import RefreshToken from "../../models/RefreshToken.js";
+import TokenBlacklist from "../../models/TokenBlacklist.js";
 import User from "../../models/User.js";
 import { sendVerificationEmail } from "../../services/email/email.service.js";
 import { comparePassword, hashPassword } from "../../utils/password.js";
@@ -107,10 +109,18 @@ const login = async (req, res) => {
     // B6: Tạo JWT tokens
     const { accessToken, refreshToken } = generateTokens(user);
 
+
+    // Dùng cho khi phát triển sockeio realtime
     // B7: Cập nhật thông tin đăng nhập
+    // user.lastLogin = new Date();
+
 
     // B8: reset login attempts
     // Cơ chế đếm số lần đăng nhập sai
+    // Reset về 0 nếu đăng nhập thành công
+    // if (user.loginAttempts > 0) {
+    //     await user.resetLoginAttempts();
+    // }
 
 
     // B9: response
@@ -132,8 +142,105 @@ const login = async (req, res) => {
     });
 }
 
-const logout = (req, res) => {
-    res.send('Register endpoint');
+
+// 4: logout controller
+
+// c1: Client-side logout: Đơn giản, ít an toàn
+
+// c2: token blacklist: phổ biến, cân bằng
+// server lưu danh sách token đã logout
+// mỗi request gửi đến, đều phải kiểm tra tokent có trong blacklist không
+// nếu có => reject request
+// token vẫn hiệu lực => nhưng bị chặn
+
+// c3: refresh token rotation: an toàn nhất, phức tạp
+// logout => revoke refresh token
+// access token vẫn còn hiệu lực nhưng không thể refresh được nữa
+// Sau khi access token hết hạn => Không dùng được nữa
+
+// c4: short-lived tokens: đơn giản, ít an toàn
+const logout = async (req, res, next) => {
+    try {
+        const accessToken = getTokenFromRequest(req);
+
+        if (!accessToken) {
+            return res.status(200).json({
+                success: true,
+                message: 'Đăng xuất thành công'
+            })
+        }
+
+        let decoded;
+        let tokenExpiresAt;
+
+        try {
+            decoded = verifyAccessToken(accessToken);
+            if (decoded.exp) {
+                tokenExpiresAt = new Date(decoded.exp * 1000);
+            }
+        } catch (error) {
+            const decodeExpired = decodeToken(accessToken);
+            if (decodeExpired && decodeToken.exp) {
+                decoded = decodedExpired;
+                tokenExpiresAt = new Date(decodedExpired.exp * 1000);
+            } else {
+                return res.status(200).json({
+                    success: true,
+                    message: 'Đăng xuất thành công'
+                })
+            }
+        }
+
+        if (decoded && decoded.userId && tokenExpiresAt) {
+            try {
+                console.log("Đã lưu vào blacklist")
+                await TokenBlacklist.addToBlackList(
+                    accessToken,
+                    'access',
+                    decoded.userId,
+                    tokenExpiresAt,
+                    'logout'
+                )
+            } catch (error) {
+
+            }
+        }
+        // const { refreshToken = "" } = req.body;
+        // if (refreshToken !== "" && decoded && decoded.userId) {
+        //     try {
+        //         const isValidRefreshToken = await RefreshToken.isValidToken(refreshToken);
+        //         if (isValidRefreshToken) {
+        //             await RefreshToken.revokeToken(refreshToken, 'logout');
+
+        //             try {
+        //                 const refreshDecoded = verifyRefreshToken(refreshToken);
+        //                 if (refreshDecoded.exp) {
+        //                     await TokenBlacklist.addToBlackList(
+        //                         refreshToken,
+        //                         'refresh',
+        //                         decoded.userId,
+        //                         new Date(refreshDecoded.exp * 1000),
+        //                         'logout'
+        //                     )
+        //                 }
+        //             } catch (error) {
+
+        //             }
+        //         }
+        //     } catch (error) {
+        //         console.error('Lỗi khi revore refresh token + không ảnh hưởng logout');
+        //     }
+        // }
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Đăng xuất thành công"
+        })
+    } catch (error) {
+        next(error);
+    }
+
 }
 
 const getLoginPage = (req, res) => {

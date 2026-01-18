@@ -16,6 +16,11 @@ export const protect = async (req, res, next) => {
             throw new UnauthorizedError('Bạn cần đăng nhập để truy cập tài nguyên này');
         }
 
+        const isBlacklisted = await TokenBlacklist.isBlacklisted(token);
+        if (isBlacklisted) {
+            throw new UnauthorizedError('Token đã bị thu hồi. Vui lòng đăng nhập lại.');
+        }
+
         // Verify token
         let decoded;
         try {

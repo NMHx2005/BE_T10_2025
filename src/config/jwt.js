@@ -149,6 +149,7 @@ export const decodeToken = (token) => {
 export const getTokenFromRequest = (req) => {
     // Bearer jbsebswjebrowe
     const authHeader = req.headers.authorization;
+
     if (!authHeader) {
         return null;
     }
@@ -166,6 +167,19 @@ export const getTokenFromRequest = (req) => {
 
 }
 
+
+export const getTokenExpiration = (token) => {
+    try {
+        const decoded = jwt.decode(token);
+        if (decoded && decoded.exp) {
+            return new Date(decoded.exp * 1000); // Chuyển đổi từ giây sang milliseconds
+        }
+        return null;
+    } catch (error) {
+        return null;
+    }
+}
+
 export default {
     JWT_SECRET,
     JWT_EXPIRE,
@@ -178,5 +192,6 @@ export default {
     verifyAccessToken,
     verifyRefreshToken,
     decodeToken,
-    getTokenFromRequest
+    getTokenFromRequest,
+    getTokenExpiration
 }
