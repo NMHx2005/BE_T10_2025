@@ -9,6 +9,7 @@ import connectDB from './config/database.js';
 import helmetConfig from './config/security.js';
 import corsConfig from './config/cors.js';
 import { apiLimiter, authLimiter, generalLimiter, uploadLimiter } from './config/rateLimit.js';
+import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
 
@@ -61,5 +62,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 // });
 
 app.use('/', routes);
+
+// Error handler middleware - Phải đặt sau tất cả routes
+app.use(errorHandler);
 
 export default app;

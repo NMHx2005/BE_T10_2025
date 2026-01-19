@@ -1,4 +1,7 @@
 import { getTokenFromRequest, verifyAccessToken } from "../config/jwt.js";
+import TokenBlacklist from "../models/TokenBlacklist.js";
+import User from "../models/User.js";
+import { UnauthorizedError, ForbiddenError } from "../utils/errors.js";
 // flow: request => middleware -> controller => response
 // Phải kiểm tra auth trong mỗi controller
 // Authentication middleware

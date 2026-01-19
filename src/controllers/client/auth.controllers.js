@@ -2,12 +2,16 @@
 
 // Cấu trúc của 1 controller chuẩn
 
-import { decodeToken, generateTokens, getTokenFromRequest, verifyAccessToken, verifyRefreshToken } from "../../config/jwt.js";
+import { decodeToken, generateAccessToken, generateRefreshToken, generateTokens, getTokenExpiration, getTokenFromRequest, verifyAccessToken, verifyRefreshToken } from "../../config/jwt.js";
 import RefreshToken from "../../models/RefreshToken.js";
 import TokenBlacklist from "../../models/TokenBlacklist.js";
 import User from "../../models/User.js";
 import { sendVerificationEmail } from "../../services/email/email.service.js";
 import { comparePassword, hashPassword } from "../../utils/password.js";
+import { UnauthorizedError } from "../../utils/errors.js";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const register = async (req, res) => {
     try {
@@ -121,6 +125,8 @@ const login = async (req, res) => {
     // if (user.loginAttempts > 0) {
     //     await user.resetLoginAttempts();
     // }
+    let decoded = verifyRefreshToken(refreshToken);
+    await RefreshToken.createToken(refreshToken, user.id, decoded.exp);
 
 
     // B9: response
@@ -254,4 +260,87 @@ const getLogoutPage = (req, res) => {
 }
 
 
-export { register, login, logout, getLoginPage, getRegisterPage, getLogoutPage };
+const refreshToken = async (req, res, next) => {
+    try {
+        // B1: Lấy refresh token từ request body
+        const { refreshToken: refreshTokenString } = req.body;
+
+        if (!refreshTokenString) {
+            throw new UnauthorizedError('Refresh Token là bắt buộc')
+        }
+
+        // B2: Verify refresh token
+        let decoded;
+        try {
+            decoded = verifyRefreshToken(refreshTokenString);
+            // console.log(decoded);
+            // decoded sẽ có dạng
+            // {
+            //     userId: '695f565f01fec25545353898',
+            //         iat: 1768827434,
+            //             exp: 1771419434
+            // }
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                throw new UnauthorizedError('Refresh token đã hết hạn. Vui lòng đăng nhập lại.');
+            } else if (error.name === 'JsonWebTokenError') {
+                throw new UnauthorizedError('Refresh token không hợp lệ');
+            } else {
+                throw error;
+            }
+        }
+
+        // B3: Kiểm tra refresh token trong database
+        // const tokenDoc = await RefreshToken.findByToken(refreshTokenString);
+
+        // if (!tokenDoc) {
+        //     throw new UnauthorizedError('Refresh token không tồn tại. Vui lòng đăng nhập lại');
+        // }
+
+        // B4: Tìm user
+        const user = await User.findById(decoded.userId);
+
+        if (!user) {
+            throw new UnauthorizedError('User không tồn tại');
+        }
+
+        // Kiểm tra use còn active hay không
+        if (user.status !== 'active') {
+            throw new UnauthorizedError('Tài khoản của bạn đã bị vô hiệu hóa');
+        }
+
+        // B5: Tạo access token mới
+        const newAccessToken = generateAccessToken(user);
+        const newRefresherToken = generateRefreshToken(user);
+
+        const newRefresherTokenExpiresAt = getTokenExpiration(newRefresherToken);
+
+        await RefreshToken.createToken(
+            newRefresherToken,
+            user.id,
+            newRefresherTokenExpiresAt,
+        );
+
+        await RefreshToken.revokeToken(refreshTokenString, 'token_totation');
+
+
+        res.status(200).json({
+            success: true,
+            message: "Làm mới token thành công",
+            data: {
+                user: user,
+                tokens: {
+                    accessToken: newAccessToken,
+                    refreshToken: newRefresherToken
+                }
+            }
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+// B1: lấy refresh
+// B2: decoded
+// B3: Tìm user. Tạo refresh token mới
+// Trả về
+export { register, login, logout, getLoginPage, getRegisterPage, getLogoutPage, refreshToken };

@@ -68,9 +68,10 @@ const sendErrorProd = (err, req, res) => {
 const handleValidationError = (err) => {
     // kiểm tra nếu có errors array từ express-validator
     if (err.errors && Array.isArray(err.errors)) {
-        const message = err.error.map(e => e.msg || e.message).join(', ');
-        return next(new ValidationError(`Validation failed: ${message}`, err.errors));
+        const message = err.errors.map(e => e.msg || e.message).join(', ');
+        return new ValidationError(`Validation failed: ${message}`, err.errors);
     }
+    return null;
 }
 
 /**

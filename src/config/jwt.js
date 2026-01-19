@@ -167,10 +167,11 @@ export const getTokenFromRequest = (req) => {
 
 }
 
-
+// Lấy thời gian hết hạn từ token
 export const getTokenExpiration = (token) => {
     try {
-        const decoded = jwt.decode(token);
+        // const decoded = jwt.decode(token);
+        const decoded = decodeToken(token);
         if (decoded && decoded.exp) {
             return new Date(decoded.exp * 1000); // Chuyển đổi từ giây sang milliseconds
         }

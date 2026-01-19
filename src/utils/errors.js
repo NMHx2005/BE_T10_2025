@@ -25,13 +25,19 @@ export class NotFoundError extends AppError {
 
 // Unauthorized error - Lỗi chưa xác thực
 // Sử dụng khi user chưa đăng nhập (401)
-
-
-
-
+export class UnauthorizedError extends AppError {
+    constructor(message = "Bạn cần đăng nhập để truy cập tài nguyên này") {
+        super(message, 401, 'fail');
+    }
+}
 
 // Forbidden error - Lỗi không có quyền truy cập
 // Sử dụng khi user không có quyền truy cập resource - ví dụ: user thường truy cập trang admin (403)
+export class ForbiddenError extends AppError {
+    constructor(message = "Bạn không có quyền truy cập tài nguyên này") {
+        super(message, 403, 'fail');
+    }
+}
 
 
 

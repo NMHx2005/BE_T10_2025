@@ -73,3 +73,15 @@ export const loginValidation = [
 
     validate
 ];
+
+
+export const updateProfileValidation = [
+    body('username')
+        .optional()
+        .trim()
+        .isLength({ min: 3, max: 30 })
+        .withMessage("Username phải có từ 3 - 30 kí tự")
+
+
+    // phone và avatar
+];

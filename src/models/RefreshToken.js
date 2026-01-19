@@ -38,6 +38,10 @@ const refreshTokenSchema = new mongoose.Schema({
 })
 
 refreshTokenSchema.index({ userId: 1, isRevoked: 1 });
+// Tim refresh token theo token string
+refreshTokenSchema.statics.findByToken = function (token) {
+    return this.findOne({ token });
+}
 
 refreshTokenSchema.statics.revokeToken = async function (token, reason = 'logout') {
     return this.findOneAndUpdate({ token: token }, {
@@ -68,7 +72,7 @@ refreshTokenSchema.statics.isTokenRevoked = async function (token) {
         return true; // Token đã hết hạn
     }
 
-    return true;
+    return false; // Token hợp lệ và chưa bị thu hồi
 }
 
 

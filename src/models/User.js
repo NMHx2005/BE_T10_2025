@@ -163,7 +163,7 @@ userSchema.statics.findByEmail = function (email) {
 
 
 // TÌm kiếm theo user active
-userSchema.static.findActiveUsers = function () {
+userSchema.statics.findActiveUsers = function () {
     return this.find({ status: "active" });
 }
 

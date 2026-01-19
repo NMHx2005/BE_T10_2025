@@ -2,6 +2,7 @@ import express from 'express';
 import { getProfile, updateProfile } from '../../controllers/client/user.controllers.js';
 import { adminOnly, protect } from '../../middleware/auth.js';
 import { deleteUser, getAllUsers, updateUser } from '../../controllers/admin/user.controllers.js';
+import { updateProfileValidation } from '../../middleware/validators/auth.validator.js';
 
 
 const router = express.Router();
@@ -9,8 +10,16 @@ const router = express.Router();
 // GET /api/v1/users/profile - Lấy thông tin người dùng
 router.get('/profile', protect, getProfile);
 
-// Cập nhật profile
-router.put('/profile', protect, updateProfile);
+// Cập nhật profile  /api/v1/users/profile
+router.put('/profile', protect, updateProfileValidation, updateProfile);
+
+// /upload-avatar
+// change-password
+// address
+// post address
+// put address/:id
+// delete address/:id
+
 
 // middleware protect sẽ kiểm tra auth trước khi vào controller
 
