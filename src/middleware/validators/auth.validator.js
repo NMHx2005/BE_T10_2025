@@ -85,3 +85,12 @@ export const updateProfileValidation = [
 
     // phone và avatar
 ];
+
+
+export const addressValidation = [
+    // fullname
+    // phone
+    // address
+    // ward
+
+]

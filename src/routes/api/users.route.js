@@ -2,8 +2,9 @@ import express from 'express';
 import { getProfile, updateProfile, uploadAvatar as uploadAvatarController } from '../../controllers/client/user.controllers.js';
 import { adminOnly, protect } from '../../middleware/auth.js';
 import { deleteUser, getAllUsers, updateUser } from '../../controllers/admin/user.controllers.js';
-import { updateProfileValidation } from '../../middleware/validators/auth.validator.js';
+import { addressValidation, updateProfileValidation } from '../../middleware/validators/auth.validator.js';
 import { uploadAvatar } from '../../middleware/upload.js';
+import { createAddress, deleteAddresses, getAddresses } from '../../controllers/client/address.controllers.js';
 
 
 const router = express.Router();
@@ -18,9 +19,15 @@ router.put('/profile', protect, updateProfileValidation);
 router.post('/upload-avatar', protect, uploadAvatar, uploadAvatarController);
 // change-password
 // address
+router.get('/addresses', protect, getAddresses);
 // post address
+router.post('/addresses', protect, addressValidation, createAddress);
 // put address/:id
+// router.put('/addresses/:id', protect, addressValidation, updateAddresses);
 // delete address/:id
+router.delete('/addresses/:id', protect, deleteAddresses);
+// update default address
+// router.put('addresses/:id/set-default', protect, setDefaultAddress);
 
 
 // middleware protect sẽ kiểm tra auth trước khi vào controller
