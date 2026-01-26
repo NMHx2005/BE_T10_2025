@@ -27,7 +27,8 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.9",
     "path": "^0.12.7",
-    "pug": "^3.0.3"
+    "pug": "^3.0.3",
+    "url": "^0.11.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",

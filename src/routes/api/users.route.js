@@ -1,8 +1,9 @@
 import express from 'express';
-import { getProfile, updateProfile } from '../../controllers/client/user.controllers.js';
+import { getProfile, updateProfile, uploadAvatar as uploadAvatarController } from '../../controllers/client/user.controllers.js';
 import { adminOnly, protect } from '../../middleware/auth.js';
 import { deleteUser, getAllUsers, updateUser } from '../../controllers/admin/user.controllers.js';
 import { updateProfileValidation } from '../../middleware/validators/auth.validator.js';
+import { uploadAvatar } from '../../middleware/upload.js';
 
 
 const router = express.Router();
@@ -11,9 +12,10 @@ const router = express.Router();
 router.get('/profile', protect, getProfile);
 
 // Cập nhật profile  /api/v1/users/profile
-router.put('/profile', protect, updateProfileValidation, updateProfile);
+router.put('/profile', protect, updateProfileValidation);
 
 // /upload-avatar
+router.post('/upload-avatar', protect, uploadAvatar, uploadAvatarController);
 // change-password
 // address
 // post address
