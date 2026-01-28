@@ -62,6 +62,57 @@ export const createAddress = async (req, res, next) => {
 }
 
 
+/**
+ * UPDATE ADDRESS - Cập nhật địa chỉ
+ * 
+ * ENDPOINT: PUT /api/v1/users/addresses/:id
+ */
+export const updateAddress = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const { id } = req.params;
+        const { fullName, phone, address, ward, district, city, isDefault, note } = req.body;
+
+        // Tìm địa chỉ
+        const addressDoc = await Address.findOne({ _id: id, userId });
+
+        if (!addressDoc) {
+            throw new NotFoundError('Địa chỉ không tồn tại');
+        }
+
+        // Nếu đặt làm mặc định, bỏ mặc định các địa chỉ khác
+        if (isDefault && !addressDoc.isDefault) {
+            await Address.updateMany(
+                { userId, isDefault: true },
+                { isDefault: false }
+            );
+        }
+
+        // Cập nhật
+        Object.assign(addressDoc, {
+            fullName,
+            phone,
+            address,
+            ward,
+            district,
+            city,
+            isDefault: isDefault !== undefined ? isDefault : addressDoc.isDefault,
+            note
+        });
+
+        await addressDoc.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Cập nhật địa chỉ thành công',
+            data: {
+                address: addressDoc
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 export const deleteAddresses = async (req, res, next) => {
     try {
@@ -88,3 +139,29 @@ export const deleteAddresses = async (req, res, next) => {
 
 
 
+/**
+ * SET DEFAULT ADDRESS - Đặt địa chỉ làm mặc định
+ * 
+ * ENDPOINT: PUT /api/v1/users/addresses/:id/set-default
+ */
+export const setDefaultAddress = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const { id } = req.params;
+
+        const address = await Address.findOne({ _id: id, userId });
+
+        if (!address) {
+            throw new NotFoundError('Địa chỉ không tồn tại');
+        }
+
+        await Address.setDefaultAddress(id, userId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Đặt địa chỉ mặc định thành công'
+        });
+    } catch (error) {
+        next(error);
+    }
+};

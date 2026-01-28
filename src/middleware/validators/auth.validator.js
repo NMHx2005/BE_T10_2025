@@ -87,10 +87,55 @@ export const updateProfileValidation = [
 ];
 
 
+/**
+ * ADDRESS VALIDATION
+ * Validation rules cho địa chỉ
+ */
 export const addressValidation = [
-    // fullname
-    // phone
-    // address
-    // ward
+    body('fullName')
+        .notEmpty()
+        .withMessage('Tên người nhận là bắt buộc')
+        .trim()
+        .isLength({ min: 2, max: 50 })
+        .withMessage('Tên người nhận phải có từ 2 đến 50 ký tự'),
 
-]
+    body('phone')
+        .notEmpty()
+        .withMessage('Số điện thoại là bắt buộc')
+        .trim()
+        .matches(/^(0|\+84)[0-9]{9,10}$/)
+        .withMessage('Số điện thoại không hợp lệ'),
+
+    body('address')
+        .notEmpty()
+        .withMessage('Địa chỉ là bắt buộc')
+        .trim(),
+
+    body('ward')
+        .notEmpty()
+        .withMessage('Phường/Xã là bắt buộc')
+        .trim(),
+
+    body('district')
+        .notEmpty()
+        .withMessage('Quận/Huyện là bắt buộc')
+        .trim(),
+
+    body('city')
+        .notEmpty()
+        .withMessage('Tỉnh/Thành phố là bắt buộc')
+        .trim(),
+
+    body('isDefault')
+        .optional()
+        .isBoolean()
+        .withMessage('isDefault phải là boolean'),
+
+    body('note')
+        .optional()
+        .trim()
+        .isLength({ max: 200 })
+        .withMessage('Ghi chú không được quá 200 ký tự'),
+
+    validate
+];
