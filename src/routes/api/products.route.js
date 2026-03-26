@@ -11,7 +11,7 @@ router.get('/', optionalAuth, getProducts);
 
 
 // Lấy ra chi tiết sản phẩm
-router.get('/', optionalAuth, getProductsDetail);
+router.get('/:id', optionalAuth, getProductsDetail);
 
 
 

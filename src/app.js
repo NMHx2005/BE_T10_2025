@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import routes from './routes/index.js';
 dotenv.config();
 
+import './models/index.js';
 import connectDB from './config/database.js';
 import helmetConfig from './config/security.js';
 import corsConfig from './config/cors.js';
