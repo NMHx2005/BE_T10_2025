@@ -1,6 +1,7 @@
 import express from 'express';
 import { createProductController, deleteProductController, getProducts, getProductsDetail, updateFullProductController, updateProductController } from '../../controllers/client/product.controller.js';
 import { adminOnly, optionalAuth, protect } from '../../middleware/auth.js';
+import { createProductValidation } from '../../middleware/validators/product.validator.js';
 
 
 const router = express.Router();
@@ -17,7 +18,8 @@ router.get('/:id', optionalAuth, getProductsDetail);
 
 // Cần đăng nhập
 // POST /api/v1/products - Tạo sản phẩm mới
-router.post('/', protect, adminOnly, createProductController);
+// router.post('/', protect, adminOnly, createProductValidation, createProductController);
+router.post('/', protect, adminOnly, createProductValidation, createProductController);
 
 
 // PUT /products/:id - Cập nhật toàn bộ thông tin sản phẩm

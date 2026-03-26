@@ -1,13 +1,100 @@
 import { NotFoundError } from "../../utils/errors.js";
 import Product from "../../models/Product.js"
+import mongoose from "mongoose";
+import slugify from "slugify";
 
-const createProductController = (req, res, next) => {
-    // const product = req.body;
-    // if (!product) {
-    //     return next(new NotFoundError("Không tìm thấy sản phẩm"));
-    // }
-    console.log("Đã thêm mới sản phẩm");
-    res.send('Create Product endpoint');
+
+const addRandomSuffix = (sku, length = 4) => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let suffix = '';
+    for (let i = 0; i < length; i++) {
+        suffix += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return suffix;
+};
+
+const generateProductSKU = () => {
+    return `PRD-${Date.now()}-${addRandomSuffix(4)}`;
+}
+const generateVariantSKU = (productName, index) => {
+    const short = slugify(productName, {
+        lower: true,
+        strict: true,
+        trim: true
+    });
+
+    return `VR-${short}-${index + 1}-∂${addRandomSuffix(4)}`;
+}
+
+
+const createProductController = async (req, res, next) => {
+    try {
+        const {
+            name,
+            description = "",
+            price,
+            category,
+            brand,
+            stock = 0,
+            thumbnail = "",
+            variants = [],
+        } = req.body;
+
+        // 1) Tạo slug từ tên sản phẩm
+        const baseSlug = slugify(name, {
+            lower: true,
+            strict: true,
+            trim: true
+        })
+
+
+        let slug = baseSlug;
+        let counter = 1;
+        while (await Product.exists({ slug })) {
+            slug = `${baseSlug}-${counter}`;
+            counter++;
+        }
+
+        // 2) SKU tự động
+        const sku = generateProductSKU();
+
+
+        // 3) Chuẩn hóa variants data
+        const normalizedVariants = variants.map((v, idx) => ({
+            name: v.name?.trim() || `Variant ${idx + 1}`,
+            sku: v.sku?.trim() || generateVariantSKU(name, idx),
+            price: Number.isFinite(Number(v.price)) ? Number(v.price) : Number(price),
+            stock: Number.isInteger(Number(v.stock)) ? Number(v.stock) : Number(stock),
+            attributes: v.attributes || {},
+        }));
+
+        const payload = {
+            name: name.trim(),
+            description,
+            slug,
+            sku,
+            price: Number(price),
+            category,
+            brand: brand || undefined,
+            stock: Number(stock),
+            thumbnail,
+            variants: normalizedVariants,
+            viewCount: 0,
+            deleted: false,
+            createdBy: req.user._id
+        };
+
+        const created = await Product.create(payload);
+
+        res.status(201).json({
+            success: true,
+            message: 'Tạo sản phẩm thành công',
+            data: created,
+        })
+
+    } catch (error) {
+        next(error);
+    }
 }
 
 const updateFullProductController = (req, res) => {
@@ -119,8 +206,65 @@ const getProducts = async (req, res, next) => {
 }
 
 
-const getProductsDetail = (req, res) => {
-    res.send('Chi tiết sản phẩm');
+const getProductsDetail = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        // validate id
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            res.return.status(400).json({
+                success: false,
+                message: "Product ID không hợp lệ"
+            })
+        }
+
+        // find product + populate category, brand
+        const product = await Product.findOne({
+            _id: id,
+            deleted: { $ne: true }, // Nếu model soft delete
+        })
+            .populate("category", "name slug")
+            .populate("brand", "name slug")
+            .lean();
+
+        if (!product) {
+            res.return.status(404).json({
+                success: false,
+                message: "Không tìm thấy sản phẩm"
+            })
+        }
+
+
+        // Update viewcount
+
+        // Find related products
+        const relatedFilter = {
+            _id: { $ne: id },
+            deleted: { $ne: true },
+            category: product.category._id,
+        }
+
+        if (product.brand._id) {
+            relatedFilter.brand = product.brand._id;
+        }
+
+        const relatedProducts = await Product.find(relatedFilter)
+            .populate("category", "name slug")
+            .populate("brand", "name slug")
+            .sort({ createAt: -1 })
+            .limit(8)
+            .lean();
+
+        res.status(200).json({
+            success: true,
+            méssage: 'Lấy chi tiết sản phẩm thành công',
+            data: product,
+            relatedProducts
+        });
+
+    } catch (error) {
+        next(error);
+    }
 }
 
 export { createProductController, updateFullProductController, updateProductController, deleteProductController, getProducts, getProductsDetail };

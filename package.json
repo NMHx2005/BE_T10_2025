@@ -29,6 +29,7 @@
     "nodemailer": "^7.0.9",
     "path": "^0.12.7",
     "pug": "^3.0.3",
+    "slugify": "^1.6.8",
     "url": "^0.11.4"
   },
   "devDependencies": {
