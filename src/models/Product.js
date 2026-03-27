@@ -26,7 +26,7 @@ const productVariantSchema = new mongoose.Schema({
         unique: true,
         index: true
     },
-    
+
     /**
      * ATTRIBUTES
      * Các thuộc tính phân biệt variant
@@ -37,7 +37,7 @@ const productVariantSchema = new mongoose.Schema({
         of: String,
         required: [true, 'Attributes là bắt buộc']
     },
-    
+
     /**
      * PRICE
      * Giá của variant này
@@ -48,7 +48,7 @@ const productVariantSchema = new mongoose.Schema({
         required: [true, 'Giá là bắt buộc'],
         min: [0, 'Giá phải lớn hơn hoặc bằng 0']
     },
-    
+
     /**
      * COMPARE AT PRICE
      * Giá so sánh (giá gốc trước khi giảm)
@@ -58,14 +58,14 @@ const productVariantSchema = new mongoose.Schema({
         type: Number,
         min: [0, 'Compare at price phải lớn hơn hoặc bằng 0'],
         validate: {
-            validator: function(value) {
+            validator: function (value) {
                 // Compare at price phải lớn hơn price
                 return !value || value > this.price;
             },
             message: 'Compare at price phải lớn hơn price'
         }
     },
-    
+
     /**
      * STOCK
      * Số lượng tồn kho của variant này
@@ -76,7 +76,7 @@ const productVariantSchema = new mongoose.Schema({
         default: 0,
         min: [0, 'Stock phải lớn hơn hoặc bằng 0']
     },
-    
+
     /**
      * IMAGES
      * Ảnh riêng cho variant này
@@ -86,7 +86,7 @@ const productVariantSchema = new mongoose.Schema({
         type: String,
         trim: true
     }],
-    
+
     /**
      * WEIGHT
      * Trọng lượng của variant (gram)
@@ -96,7 +96,7 @@ const productVariantSchema = new mongoose.Schema({
         type: Number,
         min: [0, 'Weight phải lớn hơn hoặc bằng 0']
     },
-    
+
     /**
      * BARCODE
      * Mã vạch của variant
@@ -105,7 +105,7 @@ const productVariantSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    
+
     /**
      * IS ACTIVE
      * Variant có đang được bán không
@@ -123,7 +123,7 @@ const productVariantSchema = new mongoose.Schema({
  * VIRTUAL: DISCOUNT PERCENTAGE
  * Tính phần trăm giảm giá
  */
-productVariantSchema.virtual('discountPercentage').get(function() {
+productVariantSchema.virtual('discountPercentage').get(function () {
     if (this.compareAtPrice && this.compareAtPrice > this.price) {
         return Math.round(((this.compareAtPrice - this.price) / this.compareAtPrice) * 100);
     }
@@ -134,7 +134,7 @@ productVariantSchema.virtual('discountPercentage').get(function() {
  * VIRTUAL: IS IN STOCK
  * Kiểm tra variant còn hàng không
  */
-productVariantSchema.virtual('isInStock').get(function() {
+productVariantSchema.virtual('isInStock').get(function () {
     return this.stock > 0 && this.isActive;
 });
 
@@ -142,7 +142,7 @@ productVariantSchema.virtual('isInStock').get(function() {
  * METHOD: DECREASE STOCK
  * Giảm số lượng tồn kho
  */
-productVariantSchema.methods.decreaseStock = function(quantity) {
+productVariantSchema.methods.decreaseStock = function (quantity) {
     if (this.stock < quantity) {
         throw new Error('Không đủ hàng trong kho');
     }
@@ -154,7 +154,7 @@ productVariantSchema.methods.decreaseStock = function(quantity) {
  * METHOD: INCREASE STOCK
  * Tăng số lượng tồn kho
  */
-productVariantSchema.methods.increaseStock = function(quantity) {
+productVariantSchema.methods.increaseStock = function (quantity) {
     this.stock += quantity;
     return this.save();
 };
@@ -176,7 +176,7 @@ const productSchema = new mongoose.Schema({
         trim: true,
         index: true
     },
-    
+
     /**
      * SLUG
      * URL-friendly name
@@ -189,7 +189,7 @@ const productSchema = new mongoose.Schema({
         lowercase: true,
         index: true
     },
-    
+
     /**
      * DESCRIPTION
      * Mô tả sản phẩm
@@ -199,7 +199,7 @@ const productSchema = new mongoose.Schema({
         required: [true, 'Mô tả là bắt buộc'],
         trim: true
     },
-    
+
     /**
      * SHORT DESCRIPTION
      * Mô tả ngắn (cho preview)
@@ -209,7 +209,7 @@ const productSchema = new mongoose.Schema({
         trim: true,
         maxLength: [200, 'Short description không được quá 200 ký tự']
     },
-    
+
     /**
      * BRAND
      * Thương hiệu
@@ -219,7 +219,7 @@ const productSchema = new mongoose.Schema({
         trim: true,
         index: true
     },
-    
+
     /**
      * CATEGORY
      * Danh mục sản phẩm
@@ -231,13 +231,13 @@ const productSchema = new mongoose.Schema({
         required: [true, 'Category là bắt buộc'],
         index: true
     },
-    
+
     /**
      * VARIANTS
      * Mảng các biến thể của sản phẩm
      */
     variants: [productVariantSchema],
-    
+
     /**
      * IMAGES
      * Ảnh chung của sản phẩm
@@ -247,7 +247,7 @@ const productSchema = new mongoose.Schema({
         type: String,
         trim: true
     }],
-    
+
     /**
      * TAGS
      * Tags để search và filter
@@ -257,7 +257,7 @@ const productSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     }],
-    
+
     /**
      * STATUS
      * Trạng thái sản phẩm
@@ -268,7 +268,7 @@ const productSchema = new mongoose.Schema({
         default: 'draft',
         index: true
     },
-    
+
     /**
      * FEATURED
      * Sản phẩm nổi bật
@@ -278,7 +278,7 @@ const productSchema = new mongoose.Schema({
         default: false,
         index: true
     },
-    
+
     /**
      * RATING
      * Điểm đánh giá trung bình
@@ -296,7 +296,7 @@ const productSchema = new mongoose.Schema({
             min: 0
         }
     },
-    
+
     /**
      * SEO
      * Thông tin SEO
@@ -315,7 +315,7 @@ const productSchema = new mongoose.Schema({
             trim: true
         }]
     },
-    
+
     /**
      * CREATED BY
      * User tạo sản phẩm
@@ -325,7 +325,7 @@ const productSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    
+
     /**
      * UPDATED BY
      * User cập nhật sản phẩm lần cuối
@@ -333,7 +333,14 @@ const productSchema = new mongoose.Schema({
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    }
+    },
+
+    // Optional: lưu ai xóa để audit nhanh
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+    },
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -378,7 +385,7 @@ productSchema.index({ 'variants.isActive': 1 });
  * VIRTUAL: MIN PRICE
  * Giá thấp nhất trong tất cả variants
  */
-productSchema.virtual('minPrice').get(function() {
+productSchema.virtual('minPrice').get(function () {
     if (!this.variants || this.variants.length === 0) {
         return 0;
     }
@@ -392,7 +399,7 @@ productSchema.virtual('minPrice').get(function() {
  * VIRTUAL: MAX PRICE
  * Giá cao nhất trong tất cả variants
  */
-productSchema.virtual('maxPrice').get(function() {
+productSchema.virtual('maxPrice').get(function () {
     if (!this.variants || this.variants.length === 0) {
         return 0;
     }
@@ -406,7 +413,7 @@ productSchema.virtual('maxPrice').get(function() {
  * VIRTUAL: TOTAL STOCK
  * Tổng số lượng tồn kho của tất cả variants
  */
-productSchema.virtual('totalStock').get(function() {
+productSchema.virtual('totalStock').get(function () {
     if (!this.variants || this.variants.length === 0) {
         return 0;
     }
@@ -419,7 +426,7 @@ productSchema.virtual('totalStock').get(function() {
  * VIRTUAL: IS IN STOCK
  * Sản phẩm còn hàng không (ít nhất 1 variant còn hàng)
  */
-productSchema.virtual('isInStock').get(function() {
+productSchema.virtual('isInStock').get(function () {
     if (!this.variants || this.variants.length === 0) {
         return false;
     }
@@ -430,7 +437,7 @@ productSchema.virtual('isInStock').get(function() {
  * VIRTUAL: ACTIVE VARIANTS COUNT
  * Số lượng variants đang active
  */
-productSchema.virtual('activeVariantsCount').get(function() {
+productSchema.virtual('activeVariantsCount').get(function () {
     if (!this.variants) {
         return 0;
     }
@@ -441,13 +448,13 @@ productSchema.virtual('activeVariantsCount').get(function() {
  * VIRTUAL: AVAILABLE ATTRIBUTES
  * Tất cả các attributes có sẵn (size, color...)
  */
-productSchema.virtual('availableAttributes').get(function() {
+productSchema.virtual('availableAttributes').get(function () {
     if (!this.variants || this.variants.length === 0) {
         return {};
     }
-    
+
     const attributes = {};
-    
+
     this.variants
         .filter(v => v.isActive)
         .forEach(variant => {
@@ -460,13 +467,13 @@ productSchema.virtual('availableAttributes').get(function() {
                 });
             }
         });
-    
+
     // Convert Set to Array
     const result = {};
     Object.keys(attributes).forEach(key => {
         result[key] = Array.from(attributes[key]);
     });
-    
+
     return result;
 });
 
@@ -480,7 +487,7 @@ productSchema.virtual('availableAttributes').get(function() {
  * PRE-SAVE: GENERATE SLUG
  * Tự động tạo slug từ name nếu chưa có
  */
-productSchema.pre('save', function(next) {
+productSchema.pre('save', function (next) {
     if (!this.slug && this.name) {
         // Convert name to slug
         this.slug = this.name
@@ -499,19 +506,19 @@ productSchema.pre('save', function(next) {
  * PRE-SAVE: VALIDATE VARIANTS
  * Kiểm tra variants trước khi lưu
  */
-productSchema.pre('save', function(next) {
+productSchema.pre('save', function (next) {
     // Phải có ít nhất 1 variant
     if (!this.variants || this.variants.length === 0) {
         return next(new Error('Sản phẩm phải có ít nhất 1 variant'));
     }
-    
+
     // Kiểm tra SKU không trùng
     const skus = this.variants.map(v => v.sku);
     const uniqueSkus = new Set(skus);
     if (skus.length !== uniqueSkus.size) {
         return next(new Error('SKU không được trùng lặp'));
     }
-    
+
     // Kiểm tra attributes không trùng
     const attributeCombinations = this.variants.map(v => {
         if (!v.attributes) return null;
@@ -521,7 +528,7 @@ productSchema.pre('save', function(next) {
     if (attributeCombinations.length !== uniqueCombinations.size) {
         return next(new Error('Attributes không được trùng lặp'));
     }
-    
+
     next();
 });
 
@@ -529,7 +536,7 @@ productSchema.pre('save', function(next) {
  * PRE-SAVE: UPDATE RATING
  * Cập nhật rating trung bình (nếu có reviews)
  */
-productSchema.pre('save', async function(next) {
+productSchema.pre('save', async function (next) {
     // Nếu có reviews, tính lại rating
     // (Giả sử có Review model)
     // const Review = mongoose.model('Review');
@@ -551,7 +558,7 @@ productSchema.pre('save', async function(next) {
  * STATIC: FIND BY SLUG
  * Tìm sản phẩm theo slug
  */
-productSchema.statics.findBySlug = function(slug) {
+productSchema.statics.findBySlug = function (slug) {
     return this.findOne({ slug, status: 'active' })
         .populate('category', 'name slug')
         .populate('createdBy', 'username email');
@@ -561,16 +568,16 @@ productSchema.statics.findBySlug = function(slug) {
  * STATIC: FIND BY CATEGORY
  * Tìm sản phẩm theo category
  */
-productSchema.statics.findByCategory = function(categoryId, options = {}) {
+productSchema.statics.findByCategory = function (categoryId, options = {}) {
     const query = {
         category: categoryId,
         status: 'active'
     };
-    
+
     if (options.featured !== undefined) {
         query.featured = options.featured;
     }
-    
+
     return this.find(query)
         .sort(options.sort || { createdAt: -1 })
         .limit(options.limit || 20)
@@ -582,20 +589,20 @@ productSchema.statics.findByCategory = function(categoryId, options = {}) {
  * STATIC: SEARCH PRODUCTS
  * Tìm kiếm sản phẩm bằng text search
  */
-productSchema.statics.search = function(keyword, options = {}) {
+productSchema.statics.search = function (keyword, options = {}) {
     const query = {
         $text: { $search: keyword },
         status: 'active'
     };
-    
+
     if (options.category) {
         query.category = options.category;
     }
-    
+
     if (options.brand) {
         query.brand = options.brand;
     }
-    
+
     return this.find(query, { score: { $meta: 'textScore' } })
         .sort({ score: { $meta: 'textScore' } })
         .limit(options.limit || 20)
@@ -607,12 +614,12 @@ productSchema.statics.search = function(keyword, options = {}) {
  * STATIC: FIND VARIANT BY SKU
  * Tìm variant theo SKU
  */
-productSchema.statics.findVariantBySku = async function(sku) {
+productSchema.statics.findVariantBySku = async function (sku) {
     const product = await this.findOne({ 'variants.sku': sku });
     if (!product) {
         return null;
     }
-    
+
     const variant = product.variants.find(v => v.sku === sku);
     return {
         product,
@@ -630,18 +637,18 @@ productSchema.statics.findVariantBySku = async function(sku) {
  * METHOD: ADD VARIANT
  * Thêm variant mới vào sản phẩm
  */
-productSchema.methods.addVariant = function(variantData) {
+productSchema.methods.addVariant = function (variantData) {
     // Validate variant data
     if (!variantData.sku) {
         throw new Error('SKU là bắt buộc');
     }
-    
+
     // Kiểm tra SKU đã tồn tại chưa
     const existingVariant = this.variants.find(v => v.sku === variantData.sku);
     if (existingVariant) {
         throw new Error('SKU đã tồn tại');
     }
-    
+
     // Thêm variant
     this.variants.push(variantData);
     return this.save();
@@ -651,12 +658,12 @@ productSchema.methods.addVariant = function(variantData) {
  * METHOD: UPDATE VARIANT
  * Cập nhật variant
  */
-productSchema.methods.updateVariant = function(variantId, updateData) {
+productSchema.methods.updateVariant = function (variantId, updateData) {
     const variant = this.variants.id(variantId);
     if (!variant) {
         throw new Error('Variant không tồn tại');
     }
-    
+
     Object.assign(variant, updateData);
     return this.save();
 };
@@ -665,12 +672,12 @@ productSchema.methods.updateVariant = function(variantId, updateData) {
  * METHOD: DELETE VARIANT
  * Xóa variant
  */
-productSchema.methods.deleteVariant = function(variantId) {
+productSchema.methods.deleteVariant = function (variantId) {
     // Phải có ít nhất 1 variant
     if (this.variants.length <= 1) {
         throw new Error('Sản phẩm phải có ít nhất 1 variant');
     }
-    
+
     this.variants.id(variantId).remove();
     return this.save();
 };
@@ -679,21 +686,27 @@ productSchema.methods.deleteVariant = function(variantId) {
  * METHOD: GET VARIANT BY ATTRIBUTES
  * Tìm variant theo attributes
  */
-productSchema.methods.getVariantByAttributes = function(attributes) {
+productSchema.methods.getVariantByAttributes = function (attributes) {
     return this.variants.find(variant => {
         if (!variant.attributes) return false;
-        
+
         // Kiểm tra tất cả attributes khớp
         for (const [key, value] of Object.entries(attributes)) {
             if (variant.attributes.get(key) !== value) {
                 return false;
             }
         }
-        
+
         return true;
     });
 };
-
+productSchema.index(
+    { name: "text", description: "text", tags: "text" },
+    {
+        weights: { name: 10, tags: 6, description: 3 },
+        name: "ProductTextIndex",
+    }
+);
 /**
  * CREATE MODEL
  * Tạo Product model từ schema

@@ -25,8 +25,35 @@ const generateVariantSKU = (productName, index) => {
 
     return `VR-${short}-${index + 1}-∂${addRandomSuffix(4)}`;
 }
+const normalizeVariant = (variant, index, fallbackName, fallbackPrice, fallbackStock) => {
+    return {
+        name: variant?.name?.trim() || `Variant ${index + 1}`,
+        sku: variant?.sku?.trim() || generateVariantSKU(fallbackName, index),
+        price:
+            Number.isFinite(Number(variant?.price))
+                ? Number(variant.price)
+                : Number(fallbackPrice),
+        stock:
+            Number.isInteger(Number(variant?.stock))
+                ? Number(variant.stock)
+                : Number(fallbackStock),
+        attributes: variant?.attributes || {},
+    };
+};
 
-
+/**
+ * So sánh shallow để lấy danh sách field thay đổi phục vụ audit.
+ * Với object nested sâu, bạn có thể thay bằng deep-diff library.
+ */
+const getChangedFields = (before, after, fields) => {
+    const changed = [];
+    for (const key of fields) {
+        const b = JSON.stringify(before?.[key]);
+        const a = JSON.stringify(after?.[key]);
+        if (b !== a) changed.push(key);
+    }
+    return changed;
+};
 const createProductController = async (req, res, next) => {
     try {
         const {
@@ -97,9 +124,141 @@ const createProductController = async (req, res, next) => {
     }
 }
 
-const updateFullProductController = (req, res) => {
-    console.log("Đã thêm mới sản phẩm");
-    res.send('Create Product endpoint');
+const updateFullProductController = async (req, res) => {
+    try {
+        const { id } = req.params;
+        // 1) Lấy product hiện tại
+        const existing = await Product.findOne({ _id: id, deleted: { $ne: true } });
+        if (!existing) {
+            return res.status(404).json({
+                success: false,
+                message: "Không tìm thấy sản phẩm",
+            });
+        }
+        // 2) Chuẩn bị payload partial update
+        // Chỉ set field nào có trong req.body để tránh ghi đè không mong muốn.
+        const updatePayload = {};
+        if (typeof req.body.name === "string") {
+            const nextName = req.body.name.trim();
+            // Nếu name đổi => regenerate slug
+            if (nextName !== existing.name) {
+                const baseSlug = slugify(nextName, { lower: true, strict: true, trim: true });
+                let nextSlug = baseSlug;
+                let counter = 1;
+                // Đảm bảo slug unique, loại trừ chính product hiện tại
+                while (
+                    await Product.exists({
+                        _id: { $ne: existing._id },
+                        slug: nextSlug,
+                    })
+                ) {
+                    nextSlug = `${baseSlug}-${counter}`;
+                    counter += 1;
+                }
+                updatePayload.slug = nextSlug;
+            }
+            updatePayload.name = nextName;
+        }
+        if (typeof req.body.description === "string") {
+            updatePayload.description = req.body.description;
+        }
+        if (req.body.price !== undefined) {
+            updatePayload.price = Number(req.body.price);
+        }
+        if (req.body.stock !== undefined) {
+            updatePayload.stock = Number(req.body.stock);
+        }
+        if (req.body.category !== undefined) {
+            updatePayload.category = req.body.category;
+        }
+        if (req.body.brand !== undefined) {
+            // Cho phép set null để remove brand nếu muốn
+            updatePayload.brand = req.body.brand || null;
+        }
+        if (req.body.thumbnail !== undefined) {
+            updatePayload.thumbnail = req.body.thumbnail;
+        }
+        // 3) Cập nhật variants nếu có
+        // Strategy đơn giản: nếu client gửi variants thì replace toàn bộ mảng.
+        // Ưu điểm: dễ kiểm soát tính nhất quán dữ liệu.
+        if (Array.isArray(req.body.variants)) {
+            const baseName = updatePayload.name || existing.name;
+            const basePrice = updatePayload.price ?? existing.price;
+            const baseStock = updatePayload.stock ?? existing.stock;
+            updatePayload.variants = req.body.variants.map((v, idx) =>
+                normalizeVariant(v, idx, baseName, basePrice, baseStock)
+            );
+        }
+        // Nếu không có field nào để update thì trả luôn
+        if (Object.keys(updatePayload).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Không có dữ liệu cập nhật",
+            });
+        }
+        // 4) Cập nhật DB
+        const updated = await Product.findByIdAndUpdate(existing._id, updatePayload, {
+            new: true,
+            runValidators: true,
+        })
+            .populate("category", "name slug")
+            .populate("brand", "name slug");
+        // 5) Audit log: ghi lại các field thay đổi
+        const changedFields = getChangedFields(
+            existing.toObject(),
+            updated.toObject(),
+            [
+                "name",
+                "slug",
+                "description",
+                "price",
+                "stock",
+                "category",
+                "brand",
+                "thumbnail",
+                "variants",
+            ]
+        );
+        // userId lấy từ middleware auth (nếu có)
+        const actorId = req.user?._id || null;
+        await AuditLog.create({
+            action: "PRODUCT_UPDATE",
+            entity: "Product",
+            entityId: String(updated._id),
+            actorId,
+            changedFields,
+            before: {
+                name: existing.name,
+                slug: existing.slug,
+                price: existing.price,
+                stock: existing.stock,
+                category: existing.category,
+                brand: existing.brand,
+                variants: existing.variants,
+            },
+            after: {
+                name: updated.name,
+                slug: updated.slug,
+                price: updated.price,
+                stock: updated.stock,
+                category: updated.category,
+                brand: updated.brand,
+                variants: updated.variants,
+            },
+            ip: req.ip,
+            userAgent: req.headers["user-agent"] || "",
+        });
+        return res.status(200).json({
+            success: true,
+            message: "Cập nhật sản phẩm thành công",
+            data: updated,
+            meta: {
+                changedFields,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 const updateProductController = (req, res) => {
@@ -107,9 +266,120 @@ const updateProductController = (req, res) => {
     res.send('Create Product endpoint');
 }
 
-const deleteProductController = (req, res) => {
-    console.log("Đã thêm mới sản phẩm");
-    res.send('Create Product endpoint');
+/**
+ * Soft delete product:
+ * - set deleted=true
+ * - set status='deleted'
+ * - set deletedAt
+ * - lưu deletedBy nếu có user đăng nhập
+ */
+export const restoreProductController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const actorId = req.user?._id || null;
+        // Chỉ soft-delete item chưa bị xóa
+        const product = await Product.findOne({
+            _id: id,
+            deleted: { $ne: true },
+            status: { $ne: "deleted" },
+        });
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Không tìm thấy sản phẩm hoặc đã bị xóa",
+            });
+        }
+        product.deleted = true;
+        product.status = "deleted";
+        product.deletedAt = new Date();
+        product.deletedBy = actorId;
+        await product.save();
+        // Audit log để truy vết
+        await AuditLog.create({
+            action: "PRODUCT_SOFT_DELETE",
+            entity: "Product",
+            entityId: String(product._id),
+            actorId,
+            changedFields: ["deleted", "status", "deletedAt", "deletedBy"],
+            before: { deleted: false, status: "active", deletedAt: null },
+            after: {
+                deleted: product.deleted,
+                status: product.status,
+                deletedAt: product.deletedAt,
+                deletedBy: product.deletedBy,
+            },
+            ip: req.ip,
+            userAgent: req.headers["user-agent"] || "",
+        });
+        return res.status(200).json({
+            success: true,
+            message: "Đã xóa mềm sản phẩm",
+            data: {
+                _id: product._id,
+                status: product.status,
+                deleted: product.deleted,
+                deletedAt: product.deletedAt,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+const deleteProductController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const actorId = req.user?._id || null;
+        const product = await Product.findOne({
+            _id: id,
+            deleted: true,
+            status: "deleted",
+        });
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Không tìm thấy sản phẩm đã xóa để khôi phục",
+            });
+        }
+        const before = {
+            deleted: product.deleted,
+            status: product.status,
+            deletedAt: product.deletedAt,
+            deletedBy: product.deletedBy,
+        };
+        product.deleted = false;
+        product.status = "active";
+        product.deletedAt = null;
+        product.deletedBy = null;
+        await product.save();
+        await AuditLog.create({
+            action: "PRODUCT_RESTORE",
+            entity: "Product",
+            entityId: String(product._id),
+            actorId,
+            changedFields: ["deleted", "status", "deletedAt", "deletedBy"],
+            before,
+            after: {
+                deleted: product.deleted,
+                status: product.status,
+                deletedAt: product.deletedAt,
+                deletedBy: product.deletedBy,
+            },
+            ip: req.ip,
+            userAgent: req.headers["user-agent"] || "",
+        });
+        return res.status(200).json({
+            success: true,
+            message: "Khôi phục sản phẩm thành công",
+            data: {
+                _id: product._id,
+                status: product.status,
+                deleted: product.deleted,
+                deletedAt: product.deletedAt,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 const toNumber = (value, fallback) => {

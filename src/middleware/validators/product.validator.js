@@ -55,3 +55,50 @@ export const createProductValidation = [
         .withMessage('Variants phải là một mảng.'),
     validate
 ];
+
+export const updateProductValidation = [
+    // Validate data (optional vì partial update)
+    body("name")
+        .optional()
+        .trim()
+        .isLength({ min: 3, max: 200 })
+        .withMessage("Tên sản phẩm từ 3 đến 200 ký tự"),
+    body("description")
+        .optional()
+        .isLength({ max: 2000 })
+        .withMessage("Mô tả không quá 2000 ký tự"),
+    body("price")
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage("Giá phải >= 0"),
+    body("stock")
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage("Stock phải là số nguyên >= 0"),
+    body("category")
+        .optional()
+        .isMongoId()
+        .withMessage("Category ID không hợp lệ"),
+    body("brand")
+        .optional()
+        .isMongoId()
+        .withMessage("Brand ID không hợp lệ"),
+    body("variants")
+        .optional()
+        .isArray()
+        .withMessage("Variants phải là mảng"),
+    body("variants.*.name")
+        .optional()
+        .trim()
+        .notEmpty()
+        .withMessage("Tên variant không được rỗng"),
+    body("variants.*.price")
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage("Giá variant phải >= 0"),
+    body("variants.*.stock")
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage("Stock variant phải là số nguyên >= 0"),
+    validate
+]
