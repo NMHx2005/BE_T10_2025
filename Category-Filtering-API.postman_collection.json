@@ -1,0 +1,377 @@
+{
+    "info": {
+        "name": "Category Product Filtering API",
+        "description": "API collection để test category filtering, breadcrumb navigation, và stats",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Category Filtering",
+            "item": [
+                {
+                    "name": "1. Get Products by Category (with Breadcrumb)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products/category/{{category_id}}?page=1&limit=10&sort=newest",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "category",
+                                "{{category_id}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "newest",
+                                    "disabled": false
+                                }
+                            ]
+                        },
+                        "description": "Lấy danh sách sản phẩm theo category + breadcrumb navigation + subcategories list"
+                    }
+                },
+                {
+                    "name": "2. Get Category with Price Filter",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products/category/{{category_id}}?minPrice=10000000&maxPrice=50000000&sort=price_asc&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "category",
+                                "{{category_id}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "minPrice",
+                                    "value": "10000000"
+                                },
+                                {
+                                    "key": "maxPrice",
+                                    "value": "50000000"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "price_asc"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Lọc sản phẩm theo giá + sắp xếp theo giá tăng"
+                    }
+                },
+                {
+                    "name": "3. Get Category Filters",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products/category/{{category_id}}/filters",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "category",
+                                "{{category_id}}",
+                                "filters"
+                            ]
+                        },
+                        "description": "Lấy danh sách filter options: brands, price range, subcategories"
+                    }
+                },
+                {
+                    "name": "4. Get Category Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products/category-stats/{{category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "category-stats",
+                                "{{category_id}}"
+                            ]
+                        },
+                        "description": "Lấy thống kê chi tiết: breadcrumb, product count, subcategories with count"
+                    }
+                },
+                {
+                    "name": "5. Search Products (Fixed - Not Blocked)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products/search?q=laptop&page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "laptop",
+                                    "description": "Search keyword (required)"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Full-text search - Route ordering fixed (search/:id conflict resolved)"
+                    }
+                },
+                {
+                    "name": "6. Get Products with Category Tree Filter",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products?category={{category_id}}&page=1&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products"
+                            ],
+                            "query": [
+                                {
+                                    "key": "category",
+                                    "value": "{{category_id}}",
+                                    "description": "Filter by category (now supports tree descendants)"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "General product list with category tree filtering"
+                    }
+                },
+                {
+                    "name": "7. Complex Filter Query",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products/category/{{category_id}}?minPrice=20000000&maxPrice=40000000&brand=Apple&search=gaming&sort=price_desc&page=1&limit=15",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "category",
+                                "{{category_id}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "minPrice",
+                                    "value": "20000000"
+                                },
+                                {
+                                    "key": "maxPrice",
+                                    "value": "40000000"
+                                },
+                                {
+                                    "key": "brand",
+                                    "value": "Apple"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "gaming"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "price_desc"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "15"
+                                }
+                            ]
+                        },
+                        "description": "Multiple filters combined: price range, brand, search, sorting"
+                    }
+                },
+                {
+                    "name": "8. Test Pagination",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products/category/{{category_id}}?page=2&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "category",
+                                "{{category_id}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "2"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Test pagination - Request page 2"
+                    }
+                },
+                {
+                    "name": "9. Search within Category",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products/category/{{category_id}}?search=gaming&limit=25",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "category",
+                                "{{category_id}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "gaming"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "25"
+                                }
+                            ]
+                        },
+                        "description": "Search products within specific category"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Setup - Environment",
+            "item": [
+                {
+                    "name": "Set Base URL",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:3000/api",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "3000",
+                            "path": [
+                                "api"
+                            ]
+                        },
+                        "description": "Base URL: http://localhost:3000/api\n\nSave this to postman environment variable {{base_url}}"
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000/api",
+            "type": "string"
+        },
+        {
+            "key": "category_id",
+            "value": "507f1f77bcf86cd799439011",
+            "type": "string",
+            "description": "Replace with actual category ID from your database"
+        }
+    ]
+}

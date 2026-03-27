@@ -1,7 +1,16 @@
 import { NotFoundError } from "../../utils/errors.js";
 import Product from "../../models/Product.js"
+import Category from "../../models/Category.js"
 import mongoose from "mongoose";
 import slugify from "slugify";
+import AuditLog from "../../models/AuditLog.js";
+import {
+    getCategoryDescendants,
+    getCategoryBreadcrumb,
+    getCategoryProductCount,
+    getCategoryStats,
+    getCategory
+} from "../../services/category.service.js";
 
 
 const addRandomSuffix = (sku, length = 4) => {
@@ -411,12 +420,22 @@ const getProducts = async (req, res, next) => {
             deleted: { $ne: true }, // Nếu model soft delete
         }
 
-        // Filter category/brand
-        if (req.query.category) filter.category = req.query.category;
+        // Filter category/brand with hierarchy support
+        let categoryFilter = null;
+        if (req.query.category) {
+            // Lấy category và tất cả category con
+            const categoryIds = await getCategoryDescendants(req.query.category, true);
+            if (categoryIds.length > 0) {
+                categoryFilter = { $in: categoryIds };
+            }
+        }
+        if (categoryFilter) {
+            filter.category = categoryFilter;
+        }
         if (req.query.brand) filter.brand = req.query.brand;
 
         // Filter price range
-        const minPrice = toNumber(req.query.mỉnPrice, null);
+        const minPrice = toNumber(req.query.minPrice, null);
         const maxPrice = toNumber(req.query.maxPrice, null);
 
         // Search theo name/description (case - insensitive)
@@ -633,4 +652,263 @@ const searchProduct = async (req, res, next) => {
     }
 }
 
-export { createProductController, updateFullProductController, updateProductController, deleteProductController, getProducts, getProductsDetail, searchProduct };
+/**
+ * LAY PRODUCTS BY CATEGORY (HỖ TRỢ TREE FILTERING)
+ * GET /api/products/category/:categoryId?page=1&limit=10&sort=newest
+ * 
+ * Chức năng:
+ * - Lọc sản phẩm theo category (bao gồm tất cả category con)
+ * - Phân trang, sắp xếp
+ * - Trả về breadcrumb navigation
+ * - Trả về danh sách category con với product count
+ */
+const getProductsByCategory = async (req, res, next) => {
+    try {
+        const { categoryId } = req.params;
+
+        // 1. Validate category ID
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Category ID không hợp lệ"
+            });
+        }
+
+        // 2. Lấy thông tin category + breadcrumb
+        const category = await getCategory(categoryId);
+        if (!category) {
+            return res.status(404).json({
+                success: false,
+                message: "Danh mục không tồn tại"
+            });
+        }
+
+        const breadcrumb = await getCategoryBreadcrumb(categoryId);
+
+        // 3. Parse pagination
+        const page = Math.max(toNumber(req.query.page, 1), 1);
+        const limit = Math.min(Math.max(toNumber(req.query.limit, 10), 1), 100);
+        const skip = (page - 1) * limit;
+
+        // 4. Lấy tất cả category con (descendants)
+        const categoryIds = await getCategoryDescendants(categoryId, true);
+
+        // 5. Build filter
+        const filter = {
+            deleted: { $ne: true },
+            category: { $in: categoryIds }
+        };
+
+        // Optional filters
+        if (req.query.brand) filter.brand = req.query.brand;
+
+        const minPrice = toNumber(req.query.minPrice, null);
+        const maxPrice = toNumber(req.query.maxPrice, null);
+        if (Number.isFinite(minPrice) || Number.isFinite(maxPrice)) {
+            filter.price = {};
+            if (Number.isFinite(minPrice)) filter.price.$gte = minPrice;
+            if (Number.isFinite(maxPrice)) filter.price.$lte = maxPrice;
+        }
+
+        // Search
+        if (req.query.search) {
+            const keyword = req.query.search.trim();
+            filter.$or = [
+                { name: { $regex: keyword, $options: "i" } },
+                { description: { $regex: keyword, $options: "i" } },
+            ];
+        }
+
+        // 6. Build sort
+        const sort = buildSort(req.query.sort);
+
+        // 7. Query products
+        const products = await Product.find(filter)
+            .populate("category", "name slug")
+            .populate("brand", "name slug")
+            .sort(sort)
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const totalItems = await Product.countDocuments(filter);
+        const totalPages = Math.ceil(totalItems / limit);
+
+        // 8. Lấy danh sách category con với product count
+        const children = await Category.find(
+            { parent: categoryId, status: 'active' },
+            '_id name slug featured'
+        ).sort({ order: 1 });
+
+        const childrenWithCount = await Promise.all(
+            children.map(async (child) => ({
+                id: child._id,
+                name: child.name,
+                slug: child.slug,
+                featured: child.featured,
+                productCount: await getCategoryProductCount(child._id)
+            }))
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'Lấy sản phẩm theo danh mục thành công',
+            data: {
+                category: {
+                    id: category._id,
+                    name: category.name,
+                    slug: category.slug,
+                    description: category.description,
+                    image: category.image
+                },
+                breadcrumb,
+                products,
+                pagination: {
+                    page,
+                    limit,
+                    totalItems,
+                    totalPages,
+                    hasNextPage: page < totalPages,
+                    hasPrevPage: page > 1,
+                },
+                filters: {
+                    brand: req.query.brand || null,
+                    minPrice,
+                    maxPrice,
+                    search: req.query.search || null,
+                    sort: req.query.sort || "newest",
+                },
+                subcategories: childrenWithCount
+            }
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * LAY CATEGORY STATS
+ * GET /api/products/category-stats/:categoryId
+ * 
+ * Trả về:
+ * - Breadcrumb navigation
+ * - Product count của category và mỗi subcategory
+ * - Thông tin chi tiết category
+ */
+const getCategoryStatsController = async (req, res, next) => {
+    try {
+        const { categoryId } = req.params;
+
+        // Validate
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Category ID không hợp lệ"
+            });
+        }
+
+        // Lấy category stats
+        const stats = await getCategoryStats(categoryId);
+
+        if (!stats) {
+            return res.status(404).json({
+                success: false,
+                message: "Danh mục không tồn tại"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Lấy thống kê danh mục thành công',
+            data: stats
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * LAY CATEGORY FILTERS
+ * GET /api/products/category/:categoryId/filters
+ * 
+ * Trả về các tùy chọn lọc có sẵn cho category:
+ * - Danh sách brands
+ * - Price range (min, max)
+ * - Subcategories
+ */
+const getCategoryFiltersController = async (req, res, next) => {
+    try {
+        const { categoryId } = req.params;
+
+        // Validate
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Category ID không hợp lệ"
+            });
+        }
+
+        // Lấy tất cả category con
+        const categoryIds = await getCategoryDescendants(categoryId, true);
+
+        // Lấy danh sách brands
+        const brands = await Product.distinct('brand', {
+            category: { $in: categoryIds },
+            deleted: { $ne: true }
+        });
+
+        // Lấy price range
+        const priceStats = await Product.aggregate([
+            {
+                $match: {
+                    category: { $in: categoryIds },
+                    deleted: { $ne: true }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    minPrice: { $min: '$price' },
+                    maxPrice: { $max: '$price' }
+                }
+            }
+        ]);
+
+        const { minPrice = 0, maxPrice = 0 } = priceStats[0] || {};
+
+        // Lấy subcategories
+        const subcategories = await Category.find(
+            { parent: categoryId, status: 'active' },
+            '_id name slug'
+        ).sort({ order: 1 });
+
+        const subcategoriesWithCount = await Promise.all(
+            subcategories.map(async (cat) => ({
+                id: cat._id,
+                name: cat.name,
+                slug: cat.slug,
+                productCount: await getCategoryProductCount(cat._id)
+            }))
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'Lấy các tùy chọn lọc thành công',
+            data: {
+                brands: brands.filter(b => b),
+                priceRange: {
+                    min: minPrice,
+                    max: maxPrice
+                },
+                subcategories: subcategoriesWithCount
+            }
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+export { createProductController, updateFullProductController, updateProductController, deleteProductController, getProducts, getProductsDetail, searchProduct, getProductsByCategory, getCategoryStatsController, getCategoryFiltersController };
