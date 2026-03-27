@@ -482,7 +482,7 @@ const getProductsDetail = async (req, res, next) => {
 
         // validate id
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            res.return.status(400).json({
+            res.status(400).json({
                 success: false,
                 message: "Product ID không hợp lệ"
             })
@@ -537,4 +537,100 @@ const getProductsDetail = async (req, res, next) => {
     }
 }
 
-export { createProductController, updateFullProductController, updateProductController, deleteProductController, getProducts, getProductsDetail };
+const buildSortSearch = (sort) => {
+    switch (sort) {
+        case "newest":
+            return { createdAt: -1 };
+        case "price_asc":
+            return { price: 1 };
+        case "price_desc":
+            return { price: -1 };
+        default:
+            return { score: { $meta: "textScore" } };
+    }
+}
+
+const searchProduct = async (req, res, next) => {
+    try {
+        const q = req.query.q || "";
+
+        const keyword = q.trim();
+
+        if (!keyword) {
+            return res.status(400).json({
+                success: false,
+                message: "Vui lòng nhập từ khóa tìm kiếm"
+            });
+        }
+
+        const filter = {
+            deleted: { $ne: true },
+            status: { $ne: "deleted" },
+            $text: { $search: keyword }
+        };
+        // parse page, đảm bảo page >= 1
+        const page = Math.max(Number(req.query.page) || 1, 1);
+
+
+        // Parse limit, giới hạn 1...199
+        const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+
+
+        const skip = (page - 1) * limit;
+
+        if (req.query.category) filter.category = req.query.category;
+        if (req.query.brand) filter.brand = req.query.brand;
+        const minPrice = Number(req.query.minPrice);
+        const maxPrice = Number(req.query.maxPrice);
+
+        if (Number.isFinite(minPrice) || Number.isFinite(maxPrice)) {
+            filter.price = {};
+            if (Number.isFinite(minPrice)) filter.price.$gte = minPrice;
+            if (Number.isFinite(maxPrice)) filter.price.$lte = maxPrice;
+        }
+
+        // Projection field cần phải trả về
+        const projection = {
+            score: { $meta: "textScore" },
+            name: 1,
+            description: 1,
+            tags: 1,
+            price: 1,
+            category: 1,
+            brand: 1,
+            thumbnail: 1,
+            createdAt: 1
+        }
+
+        const sort = buildSortSearch(req.query.sort);
+
+        const products = await Product.find(filter, projection)
+            .populate("category", "name slug")
+            .populate("brand", "name slug")
+            .sort(sort)
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const totalItems = await Product.countDocuments(filter);
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        res.status(200).json({
+            success: true,
+            message: "Tìm kiếm sản phẩm thành công",
+            data: products,
+            pagination: {
+                page,
+                limit,
+                totalItems,
+                totalPages
+            }
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export { createProductController, updateFullProductController, updateProductController, deleteProductController, getProducts, getProductsDetail, searchProduct };

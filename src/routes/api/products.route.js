@@ -1,5 +1,5 @@
 import express from 'express';
-import { createProductController, deleteProductController, getProducts, getProductsDetail, restoreProductController, updateFullProductController, updateProductController } from '../../controllers/client/product.controller.js';
+import { createProductController, deleteProductController, getProducts, getProductsDetail, restoreProductController, searchProduct, updateFullProductController, updateProductController } from '../../controllers/client/product.controller.js';
 import { adminOnly, optionalAuth, protect } from '../../middleware/auth.js';
 import { createProductValidation, updateProductValidation } from '../../middleware/validators/product.validator.js';
 
@@ -10,16 +10,16 @@ const router = express.Router();
 // Lấy ra danh sách sản phẩm
 router.get('/', optionalAuth, getProducts);
 
+router.get('/search', searchProduct);
 
 // Lấy ra chi tiết sản phẩm
 router.get('/:id', optionalAuth, getProductsDetail);
 
-router.get('/search', searchProduct);
 /**
  * API gợi ý khi user đang gõ
  * GET /api/products/search/suggestions?q=iph
  */
-router.get('/search/suggestions', searchProduct);
+// router.get('/search/suggestions', searchProduct);
 
 // Cần đăng nhập
 // POST /api/v1/products - Tạo sản phẩm mới
