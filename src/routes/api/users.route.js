@@ -13,7 +13,7 @@ const router = express.Router();
 router.get('/profile', protect, getProfile);
 
 // Cập nhật profile  /api/v1/users/profile
-router.put('/profile', protect, updateProfileValidation);
+router.put('/profile', protect, updateProfileValidation, updateProfile);
 
 // /upload-avatar
 router.post('/upload-avatar', protect, uploadAvatar, uploadAvatarController);
@@ -27,7 +27,7 @@ router.put('/addresses/:id', protect, addressValidation, updateAddress);
 // delete address/:id
 router.delete('/addresses/:id', protect, deleteAddresses);
 // update default address
-router.put('addresses/:id/set-default', protect, setDefaultAddress);
+router.put('/addresses/:id/set-default', protect, setDefaultAddress);
 
 
 // middleware protect sẽ kiểm tra auth trước khi vào controller

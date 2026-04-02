@@ -1,0 +1,252 @@
+extends ../../../layouts/admin
+
+block content
+  // Page Header
+  .mb-8
+    .flex.items-center.gap-4
+      a.text-blue-600.hover:text-blue-700(href="/admin/orders")
+        i.fas.fa-arrow-left.text-xl
+      .flex.flex-col
+        h1.text-3xl.font-bold.text-gray-900
+          = 'Order: ' + order.orderNumber
+        p.text-gray-600.mt-2
+          = 'Placed on ' + new Date(order.createdAt).toLocaleDateString() + ' at ' + new Date(order.createdAt).toLocaleTimeString()
+
+  .grid.grid-cols-1(class="lg:grid-cols-3 gap-6")
+    // Left Column - Order Details
+    .col-span-1(class="lg:col-span-2")
+      // Order Items
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Order Items
+
+        .space-y-4
+          if order.items && order.items.length > 0
+            each item in order.items
+              .flex.items-center.justify-between.p-4.border.border-gray-200.rounded-lg
+                .flex.items-center.gap-4
+                  if item.product?.thumbnail
+                    img.w-16.h-16.rounded.object-cover(src=item.product.thumbnail, alt=item.product.name)
+                  else
+                    .w-16.h-16.rounded.bg-gray-200.flex.items-center.justify-center
+                      i.fas.fa-image.text-gray-400
+                  
+                  .flex-1
+                    p.font-medium.text-gray-900= item.product?.name || 'Product'
+                    if item.variant
+                      p.text-sm.text-gray-600= `Variant: ${item.variant}`
+                    p.text-sm.text-gray-500
+                      = `Quantity: ${item.quantity} x $${item.price?.toFixed(2)}`
+                
+                .text-right
+                  p.font-bold.text-gray-900= '$' + (item.quantity * item.price)?.toFixed(2)
+
+            .border-t.pt-4.mt-4
+              .flex.justify-between.mb-2
+                span.text-gray-700 Subtotal
+                span.font-medium= '$' + order.subtotal?.toFixed(2)
+              
+              .flex.justify-between.mb-2
+                span.text-gray-700 Shipping
+                span.font-medium= '$' + (order.shippingFee || 0)?.toFixed(2)
+              
+              .flex.justify-between.mb-2
+                span.text-gray-700 Tax
+                span.font-medium= '$' + (order.tax || 0)?.toFixed(2)
+              
+              .flex.justify-between.text-lg.font-bold.text-gray-900.pt-2.border-t
+                span Total
+                span= '$' + order.totalAmount?.toFixed(2)
+          else
+            p.text-gray-500.text-center.py-4 No items in this order
+
+      // Shipping Address
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Shipping Address
+
+        .p-4.bg-gray-50.rounded-lg
+          p.font-medium.text-gray-900= order.shippingAddress?.fullName
+          p.text-gray-700= `${order.shippingAddress?.street}`
+          p.text-gray-700
+            = `${order.shippingAddress?.ward}, ${order.shippingAddress?.district}, ${order.shippingAddress?.city}`
+          p.text-gray-600.mt-2
+            = `Phone: ${order.shippingAddress?.phone}`
+          if order.shippingAddress?.notes
+            p.text-gray-600.mt-2
+              = `Notes: ${order.shippingAddress.notes}`
+
+      // Billing Address
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Billing Address
+
+        if order.billingAddress
+          .p-4.bg-gray-50.rounded-lg
+            p.font-medium.text-gray-900= order.billingAddress.fullName
+            p.text-gray-700= `${order.billingAddress.street}`
+            p.text-gray-700
+              = `${order.billingAddress.ward}, ${order.billingAddress.district}, ${order.billingAddress.city}`
+            p.text-gray-600.mt-2
+              = `Phone: ${order.billingAddress.phone}`
+        else
+          p.text-gray-500 Same as shipping address
+
+      // Order Timeline
+      .bg-white.rounded-lg.shadow-md.p-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Order Timeline
+
+        .space-y-4
+          - const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered']
+          - const statusColors = {
+          -   'pending': { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-800' },
+          -   'confirmed': { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800' },
+          -   'processing': { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800' },
+          -   'shipped': { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-800' },
+          -   'delivered': { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800' },
+          -   'cancelled': { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800' }
+          - }
+
+          each status in statuses
+            - const isActive = statuses.indexOf(status) === statuses.indexOf(order.status)
+            - const isCompleted = statuses.indexOf(status) < statuses.indexOf(order.status)
+            - const colors = statusColors[status] || statusColors['pending']
+            
+            .flex.items-start.gap-4
+              .flex.flex-col.items-center
+                .w-8.h-8.rounded-full.flex.items-center.justify-center(
+                  class=isCompleted ? 'bg-green-600' : isActive ? 'bg-blue-600' : 'bg-gray-300'
+                )
+                  i.fas(
+                    class=isCompleted ? 'fa-check text-white' : isActive ? 'fa-clock text-white' : 'fa-minus text-white'
+                  )
+                if status !== statuses[statuses.length - 1]
+                  .w-0.5.h-12.bg-gray-300.my-2
+
+              .flex-1.py-2
+                p.font-medium.text-gray-900.capitalize= status
+                p.text-sm.text-gray-600= `Estimated ${status === 'pending' ? 'confirmation' : status === 'confirmed' ? 'processing' : status === 'processing' ? 'shipment' : 'delivery'} within 2-3 business days`
+
+    // Right Column - Status & Payment
+    .col-span-1
+      // Order Status Card
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Order Status
+
+        .mb-6
+          form.space-y-3(method="POST", action=`/admin/orders/${order._id}/status`, id="status-form")
+            label.block.text-sm.font-medium.text-gray-700.mb-2 Update Status
+            select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+              name="status"
+            )
+              optgroup(label="Available Actions")
+                option(value="pending", selected=order.status === 'pending') Pending
+                option(value="confirmed", selected=order.status === 'confirmed') Confirmed
+                option(value="processing", selected=order.status === 'processing') Processing
+                option(value="shipped", selected=order.status === 'shipped') Shipped
+                option(value="delivered", selected=order.status === 'delivered') Delivered
+                option(value="cancelled", selected=order.status === 'cancelled') Cancelled
+            
+            button.w-full.px-4.py-2.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-medium.transition-colors(
+              type="submit"
+            )
+              i.fas.fa-save.mr-2
+              | Update Status
+
+        .p-4.rounded-lg(
+          class={
+            'pending': 'bg-yellow-50 border border-yellow-200',
+            'confirmed': 'bg-blue-50 border border-blue-200',
+            'processing': 'bg-purple-50 border border-purple-200',
+            'shipped': 'bg-indigo-50 border border-indigo-200',
+            'delivered': 'bg-green-50 border border-green-200',
+            'cancelled': 'bg-red-50 border border-red-200'
+          }[order.status]
+        )
+          p.text-sm.font-medium(
+            class={
+              'pending': 'text-yellow-800',
+              'confirmed': 'text-blue-800',
+              'processing': 'text-purple-800',
+              'shipped': 'text-indigo-800',
+              'delivered': 'text-green-800',
+              'cancelled': 'text-red-800'
+            }[order.status]
+          )
+            case order.status
+              when 'pending'
+                | Waiting for confirmation
+              when 'confirmed'
+                | Order confirmed, preparing for shipment
+              when 'processing'
+                | Items being processed and packed
+              when 'shipped'
+                | Package is on the way
+              when 'delivered'
+                | Order delivered successfully
+              when 'cancelled'
+                | Order has been cancelled
+              default
+                | Unknown status
+
+      // Shipping Status Card
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Shipping Information
+
+        .space-y-4
+          if order.tracking
+            .flex.items-center.justify-between.pb-4.border-b
+              span.text-sm.font-medium.text-gray-700 Tracking Number
+              span.text-sm.text-gray-900.font-mono= order.tracking.trackingNumber
+            
+            .flex.items-center.justify-between.pb-4.border-b
+              span.text-sm.font-medium.text-gray-700 Carrier
+              span.text-sm.text-gray-900.capitalize= order.tracking.carrier || 'N/A'
+            
+            .flex.items-center.justify-between
+              span.text-sm.font-medium.text-gray-700 Estimated Delivery
+              span.text-sm.text-gray-900
+                = order.tracking.estimatedDelivery ? new Date(order.tracking.estimatedDelivery).toLocaleDateString() : 'TBD'
+          else
+            p.text-gray-500.text-sm text-center Tracking information not yet available
+
+      // Payment Status Card
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Payment Information
+
+        .space-y-3
+          .flex.items-center.justify-between.pb-3.border-b
+            span.text-sm.font-medium.text-gray-700 Amount
+            span.text-lg.font-bold.text-gray-900= '$' + order.totalAmount?.toFixed(2)
+
+          .flex.items-center.justify-between.pb-3.border-b
+            span.text-sm.font-medium.text-gray-700 Method
+            span.inline-block.px-3.py-1.text-sm.font-medium.rounded-full.bg-gray-100.text-gray-800
+              = order.paymentMethod || 'Not Specified'
+
+          .flex.items-center.justify-between
+            span.text-sm.font-medium.text-gray-700 Status
+            span.inline-block.px-3.py-1.text-sm.font-medium.rounded-full(
+              class=order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+            )
+              = order.paymentStatus === 'paid' ? 'Paid' : 'Pending'
+
+      // Customer Info Card
+      .bg-white.rounded-lg.shadow-md.p-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Customer Information
+
+        .space-y-3
+          a.block.p-3.bg-gray-50.hover:bg-gray-100.rounded-lg.transition-colors(
+            href=`/admin/users/${order.userId}`
+          )
+            p.font-medium.text-gray-900= order.customer?.name || 'Unknown'
+            p.text-sm.text-gray-600= order.customer?.email || 'N/A'
+            p.text-sm.text-gray-500.mt-1
+              i.fas.fa-arrow-right.mr-1
+              | View Full Profile
+
+block scripts
+  script.
+    document.getElementById('status-form')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+      // TODO: Status update logic
+      alert('Order status updated successfully!');
+      location.reload();
+    });

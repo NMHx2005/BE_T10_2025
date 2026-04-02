@@ -1,0 +1,210 @@
+extends ../../../layouts/admin
+include ../../../mixins/cards
+include ../../../mixins/buttons
+
+block content
+  // Page Header
+  .mb-8
+    .flex.items-center.justify-between
+      .flex.flex-col
+        h1.text-3xl.font-bold.text-gray-900 Products Management
+        p.text-gray-600.mt-2 Total: 
+          span.font-semibold #{totalProducts || 0}
+          |  products
+      
+      a.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors.flex.items-center.gap-2(
+        href="/admin/products/new"
+      )
+        i.fas.fa-plus.mr-2
+        | Add New Product
+
+  // Filters & Search
+  .bg-white.rounded-lg.shadow-md.p-6.mb-6
+    .grid.grid-cols-1(class="md:grid-cols-4 gap-4")
+      .form-group
+        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          type="text",
+          placeholder="Search products...",
+          id="search-input"
+        )
+      
+      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        id="category-filter"
+      )
+        option(value="") All Categories
+        if categories && categories.length > 0
+          each category in categories
+            option(value=category._id)
+              = category.name
+      
+      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        id="status-filter"
+      )
+        option(value="") All Status
+        option(value="active") Active
+        option(value="draft") Draft
+        option(value="archived") Archived
+      
+      button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+        type="button",
+        onclick="applyFilters()"
+      )
+        i.fas.fa-filter.mr-2
+        | Apply Filters
+
+  // Products Table
+  if products && products.length > 0
+    .bg-white.rounded-lg.shadow-md.overflow-hidden
+      .overflow-x-auto
+        table.w-full
+          thead.bg-gray-100.border-b.border-gray-200
+            tr
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Product Name
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Category
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Price
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Stock
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Status
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Views
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Created
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Actions
+          
+          tbody.divide-y.divide-gray-200
+            each product in products
+              tr.hover:bg-gray-50.transition-colors
+                // Product Name
+                td.px-6.py-4
+                  .flex.items-center.gap-3
+                    if product.thumbnail
+                      img.w-10.h-10.rounded.object-cover(src=product.thumbnail, alt=product.name)
+                    else
+                      .w-10.h-10.rounded.bg-gray-200.flex.items-center.justify-center
+                        i.fas.fa-image.text-gray-400.text-xs
+                    .flex.flex-col
+                      p.font-medium.text-gray-900.truncate
+                        = product.name
+                      p.text-xs.text-gray-500
+                        = product.sku
+                
+                // Category
+                td.px-6.py-4.text-sm.text-gray-600
+                  = product.category?.name || 'Uncategorized'
+                
+                // Price
+                td.px-6.py-4.text-sm.font-medium.text-gray-900
+                  = '$' + product.price
+                
+                // Stock
+                td.px-6.py-4.text-sm
+                  span(class={
+                    'text-green-600': product.stock > 10,
+                    'text-yellow-600': product.stock <= 10 && product.stock > 0,
+                    'text-red-600': product.stock === 0
+                  })
+                    = product.stock
+                
+                // Status
+                td.px-6.py-4
+                  span(class={
+                    'bg-green-100 text-green-800': product.status === 'active',
+                    'bg-yellow-100 text-yellow-800': product.status === 'draft',
+                    'bg-gray-100 text-gray-800': product.status === 'archived'
+                  }.px-2.py-1.rounded-full.text-xs.font-semibold)
+                    = product.status || 'Active'
+                
+                // Views
+                td.px-6.py-4.text-sm.text-gray-600
+                  = product.viewCount || 0
+                
+                // Created Date
+                td.px-6.py-4.text-sm.text-gray-600
+                  = new Date(product.createdAt).toLocaleDateString()
+                
+                // Actions
+                td.px-6.py-4.text-sm.flex.gap-2
+                  a.text-blue-600.hover:text-blue-700.transition-colors.px-2.py-1(
+                    href=`/admin/products/${product._id}`,
+                    title="Edit"
+                  )
+                    i.fas.fa-edit
+                  
+                  a.text-gray-600.hover:text-gray-700.transition-colors.px-2.py-1(
+                    href=`/products/${product._id}`,
+                    target="_blank",
+                    title="View on site"
+                  )
+                    i.fas.fa-external-link-alt
+                  
+                  button.text-red-600.hover:text-red-700.transition-colors.px-2.py-1(
+                    type="button",
+                    onclick=`deleteProduct('${product._id}')`,
+                    title="Delete"
+                  )
+                    i.fas.fa-trash
+
+      // Pagination
+      if pagination && pagination.pages > 1
+        .bg-gray-50.px-6.py-4.flex.justify-between.items-center
+          p.text-sm.text-gray-600
+            | Showing 
+            span.font-semibold= (pagination.page - 1) * pagination.limit + 1
+            |  to 
+            span.font-semibold= Math.min(pagination.page * pagination.limit, pagination.total)
+            |  of 
+            span.font-semibold= pagination.total
+          
+          .flex.gap-2
+            if pagination.page > 1
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
+                href=`/admin/products?page=${pagination.page - 1}`
+              )
+                i.fas.fa-chevron-left
+            
+            each i in [...Array(pagination.pages).keys()].map(x => x + 1)
+              if i === pagination.page
+                .px-3.py-2.bg-blue-600.text-white.rounded
+                  = i
+              else if i === 1 || i === pagination.pages || (i >= pagination.page - 1 && i <= pagination.page + 1)
+                a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
+                  href=`/admin/products?page=${i}`
+                )
+                  = i
+            
+            if pagination.page < pagination.pages
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
+                href=`/admin/products?page=${pagination.page + 1}`
+              )
+                i.fas.fa-chevron-right
+  else
+    // No Products
+    .bg-white.rounded-lg.shadow-md.p-12.text-center
+      i.fas.fa-box.text-gray-400.text-5xl.mb-4
+      h3.text-xl.font-semibold.text-gray-900.mb-2 No Products Found
+      p.text-gray-600.mb-6 Start by creating your first product
+      a.inline-block.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
+        href="/admin/products/new"
+      )
+        i.fas.fa-plus.mr-2
+        | Create Product
+
+block scripts
+  script.
+    function deleteProduct(productId) {
+      if (confirm('Are you sure you want to delete this product?')) {
+        // TODO: Call API to delete product
+        alert('Product deleted!');
+        location.reload();
+      }
+    }
+
+    function applyFilters() {
+      const search = document.getElementById('search-input')?.value || '';
+      const category = document.getElementById('category-filter')?.value || '';
+      const status = document.getElementById('status-filter')?.value || '';
+      
+      let url = '/admin/products?';
+      if (search) url += `search=${encodeURIComponent(search)}&`;
+      if (category) url += `category=${category}&`;
+      if (status) url += `status=${status}`;
+      
+      window.location.href = url;
+    }

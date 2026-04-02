@@ -1,55 +1,152 @@
 extends ../../layouts/auth
-include ../../mixins/buttons
 
 block content
-  .card.p-8.shadow-2xl.max-w-md.w-full
-    // Logo
+  //- Thẻ ngoài: logo + form (Tailwind có dấu ":" / "/" — phải dùng class="..." để Pug không parse nhầm)
+  .auth-card(class="rounded-2xl p-8 sm:p-10")
+    //- Header
+    a.inline-flex.items-center.gap-2.text-slate-600.transition-colors.text-sm.font-medium.mb-8(href="/", class="hover:text-indigo-600")
+      i.fa-solid.fa-arrow-left
+      span Về trang chủ
+
     .text-center.mb-8
-      i.fas.fa-user-circle.text-6xl.text-blue-600.mb-4
-      h2.text-3xl.font-bold.text-gray-900 Login to Your Account
-      p.text-gray-600.mt-2 Welcome back! Please sign in to your account
-    
-    // Login Form
-    form.space-y-6
-      .form-group
-        label.block.text-sm.font-medium.text-gray-700.mb-2(for="email") Email Address
+      .inline-flex.items-center.justify-center.w-14.h-14.rounded-2xl.bg-gradient-to-br.from-indigo-500.to-violet-600.text-white.text-2xl.shadow-lg.mb-4
+        i.fa-solid.fa-right-to-bracket
+      h1(class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight") Đăng nhập
+      p(class="text-slate-500 mt-2 text-sm sm:text-base") Chào mừng trở lại. Đăng nhập để tiếp tục mua sắm.
+
+    //- Thông báo lỗi / thành công (do JS điền)
+    #auth-alert.hidden.mb-6.rounded-xl.px-4.py-3.text-sm.font-medium(role="alert")
+
+    form#login-form.space-y-5
+      div(class="space-y-1.5")
+        label.block.text-sm.font-semibold.text-slate-700(for="email") Email
         .relative
-          input.form-input.pl-10(type="email", id="email", name="email", placeholder="Enter your email", required)
-          i.fas.fa-envelope.absolute.left-3.top-1/2.transform.-translate-y-1/2.text-gray-400
-      
-      .form-group
-        label.block.text-sm.font-medium.text-gray-700.mb-2(for="password") Password
+          i.fa-regular.fa-envelope.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          input#email.auth-input(type="email", name="email", placeholder="you@example.com", required, autocomplete="email")
+
+      div(class="space-y-1.5")
+        .flex.items-center.justify-between.gap-2
+          label.block.text-sm.font-semibold.text-slate-700(for="password") Mật khẩu
+          a.text-sm.font-medium.text-indigo-600(href="/auth/forgot-password", class="hover:text-indigo-500") Quên mật khẩu?
         .relative
-          input.form-input.pl-10(type="password", id="password", name="password", placeholder="Enter your password", required)
-          i.fas.fa-lock.absolute.left-3.top-1/2.transform.-translate-y-1/2.text-gray-400
-      
-      .flex.items-center.justify-between
-        .flex.items-center
-          input#remember-me.mr-2(type="checkbox", name="remember-me")
-          label.text-sm.text-gray-600(for="remember-me") Remember me
-        
-        a.text-sm.text-blue-600.hover:text-blue-500.font-medium(href="#") Forgot password?
-      
-      button.btn-primary.w-full.py-3.text-lg(type="submit")
-        i.fas.fa-sign-in-alt.mr-2
-        | Sign In
-      
-      .text-center.mt-6
-        .relative
-          .absolute.inset-0.flex.items-center
-            .w-full.border-t.border-gray-300
-          .relative.flex.justify-center.text-sm
-            span.px-2.bg-white.text-gray-500 Or continue with
-      
-      .grid.grid-cols-2.gap-4.mt-6
-        button.w-full.bg-white.border.border-gray-300.rounded-md.px-4.py-2.text-sm.font-medium.text-gray-700.hover:bg-gray-50.flex.items-center.justify-center
-          i.fab.fa-google.text-red-500.mr-2
-          | Google
-        button.w-full.bg-white.border.border-gray-300.rounded-md.px-4.py-2.text-sm.font-medium.text-gray-700.hover:bg-gray-50.flex.items-center.justify-center
-          i.fab.fa-facebook.text-blue-600.mr-2
-          | Facebook
-    
-    // Register link
-    .text-center.mt-8
-      p.text-gray-600 Don't have an account? 
-        a.text-blue-600.hover:text-blue-500.font-medium(href="/auth/register") Sign up here
+          i.fa-solid.fa-lock.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          input#password.auth-input.pr-12(type="password", name="password", placeholder="••••••••", required, autocomplete="current-password")
+          button#toggle-password.absolute.right-2.p-2.text-slate-400(type="button", aria-label="Hiện mật khẩu", class="top-1/2 -translate-y-1/2 hover:text-slate-600")
+            i.fa-regular.fa-eye
+
+      label.flex.items-center.gap-2.cursor-pointer.select-none
+        input.rounded.border-slate-300.text-indigo-600(type="checkbox", name="remember")
+        span.text-sm.text-slate-600 Ghi nhớ đăng nhập
+
+      button#login-submit.auth-btn-primary(type="submit")
+        span#login-submit-text Đăng nhập
+        span#login-submit-loading.hidden.inline-flex.items-center.gap-2
+          i.fa-solid.fa-circle-notch.fa-spin
+          span Đang xử lý...
+
+    .relative.my-8
+      .absolute.inset-0.flex.items-center
+        .w-full.border-t.border-slate-200
+      .relative.flex.justify-center
+        span(class="bg-white/90 px-3 text-xs font-medium text-slate-400 uppercase tracking-wider") hoặc
+
+    p.text-center.text-sm.text-slate-500
+      | Chưa có tài khoản?
+      |
+      a.font-semibold.text-indigo-600.ml-1(href="/auth/register", class="hover:text-indigo-500") Đăng ký ngay
+
+block scripts
+  script.
+    (function () {
+      var API_LOGIN = '/api/v1/auth/login';
+      var form = document.getElementById('login-form');
+      var alertEl = document.getElementById('auth-alert');
+      var submitBtn = document.getElementById('login-submit');
+      var submitText = document.getElementById('login-submit-text');
+      var submitLoading = document.getElementById('login-submit-loading');
+      var pwdInput = document.getElementById('password');
+      var togglePwd = document.getElementById('toggle-password');
+
+      function showAlert(type, message) {
+        alertEl.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border', 'border-red-100', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-100');
+        if (type === 'error') {
+          alertEl.classList.add('bg-red-50', 'text-red-800', 'border', 'border-red-100');
+        } else {
+          alertEl.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-100');
+        }
+        alertEl.textContent = message;
+        alertEl.classList.remove('hidden');
+      }
+
+      function hideAlert() {
+        alertEl.classList.add('hidden');
+        alertEl.textContent = '';
+      }
+
+      function formatApiError(data) {
+        if (!data) return 'Đăng nhập thất bại. Vui lòng thử lại.';
+        if (data.errors && Array.isArray(data.errors) && data.errors.length) {
+          return data.errors.map(function (e) { return e.message || e.msg || ''; }).filter(Boolean).join(' ') || data.message;
+        }
+        return data.message || 'Đăng nhập thất bại.';
+      }
+
+      function setLoading(loading) {
+        submitBtn.disabled = loading;
+        if (loading) {
+          submitText.classList.add('hidden');
+          submitLoading.classList.remove('hidden');
+        } else {
+          submitText.classList.remove('hidden');
+          submitLoading.classList.add('hidden');
+        }
+      }
+
+      togglePwd.addEventListener('click', function () {
+        var isPwd = pwdInput.type === 'password';
+        pwdInput.type = isPwd ? 'text' : 'password';
+        togglePwd.querySelector('i').className = isPwd ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+      });
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        hideAlert();
+
+        var email = document.getElementById('email').value.trim();
+        var password = document.getElementById('password').value;
+
+        if (!email || !password) {
+          showAlert('error', 'Vui lòng nhập email và mật khẩu.');
+          return;
+        }
+
+        setLoading(true);
+        try {
+          var res = await fetch(API_LOGIN, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: password }),
+          });
+          var result = await res.json().catch(function () { return {}; });
+
+          if (!res.ok) {
+            throw new Error(formatApiError(result));
+          }
+
+          if (result.tokens && result.tokens.accessToken) {
+            localStorage.setItem('accessToken', result.tokens.accessToken);
+            localStorage.setItem('refreshToken', result.tokens.refreshToken || '');
+            localStorage.setItem('user', JSON.stringify(result.user || {}));
+          }
+
+          showAlert('success', result.message || 'Đăng nhập thành công. Đang chuyển trang...');
+          setTimeout(function () {
+            window.location.href = '/profile';
+          }, 600);
+        } catch (err) {
+          showAlert('error', err.message || 'Có lỗi xảy ra.');
+        } finally {
+          setLoading(false);
+        }
+      });
+    })();

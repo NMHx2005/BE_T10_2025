@@ -1,0 +1,285 @@
+extends ../../../layouts/admin
+
+block content
+  // Page Header
+  .mb-8
+    .flex.items-center.justify-between
+      .flex.flex-col
+        h1.text-3xl.font-bold.text-gray-900 Categories Management
+        p.text-gray-600.mt-2 Total: 
+          span.font-semibold #{totalCategories || 0}
+          |  categories
+      
+      button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors.flex.items-center.gap-2(
+        type="button",
+        onclick="openAddCategoryModal()"
+      )
+        i.fas.fa-plus.mr-2
+        | Add New Category
+
+  // Filters & Search
+  .bg-white.rounded-lg.shadow-md.p-6.mb-6
+    .grid.grid-cols-1(class="md:grid-cols-3 gap-4")
+      .form-group
+        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          type="text",
+          placeholder="Search categories...",
+          id="search-input"
+        )
+      
+      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        id="status-filter"
+      )
+        option(value="") All Status
+        option(value="active") Active
+        option(value="inactive") Inactive
+      
+      button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+        type="button",
+        onclick="applyFilters()"
+      )
+        i.fas.fa-filter.mr-2
+        | Apply Filters
+
+  .grid.grid-cols-1(class="lg:grid-cols-3 gap-6")
+    // Category Tree (Sidebar)
+    .bg-white.rounded-lg.shadow-md.p-6
+      h2.text-lg.font-semibold.text-gray-900.mb-4 Category Tree
+      
+      if categories && categories.length > 0
+        ul.space-y-2.max-h-96.overflow-y-auto
+          each category in categories
+            li
+              .flex.items-center.justify-between.p-2.rounded.hover:bg-gray-50
+                a.text-gray-700.hover:text-blue-600.flex-1(
+                  href=`#cat-${category._id}`
+                )
+                  if category.icon
+                    i(class=`${category.icon} mr-2`)
+                  = category.name
+                span.text-xs.text-gray-500.bg-gray-100.px-2.py-1.rounded
+                  = category.productCount || 0
+      else
+        p.text-gray-500.text-sm No categories yet
+
+    // Categories List (Main Content)
+    .col-span-1(class="lg:col-span-2")
+      if categories && categories.length > 0
+        .space-y-4
+          each category in categories
+            .bg-white.rounded-lg.shadow-md.p-6.border-l-4.border-l-blue-600(id=`cat-${category._id}`)
+              // Header
+              .flex.items-start.justify-between.mb-4
+                .flex.items-start.gap-4.flex-1
+                  if category.image
+                    img.w-16.h-16.rounded.object-cover(src=category.image, alt=category.name)
+                  else
+                    .w-16.h-16.rounded.bg-gray-200.flex.items-center.justify-center
+                      if category.icon
+                        i(class=`${category.icon} text-gray-400.text-2xl`)
+                      else
+                        i.fas.fa-folder.text-gray-400.text-2xl
+                  
+                  .flex-1
+                    .flex.items-center.gap-2.mb-2
+                      h3.text-lg.font-semibold.text-gray-900
+                        = category.name
+                      span(class={
+                        'bg-green-100 text-green-800': category.status === 'active',
+                        'bg-gray-100 text-gray-800': category.status === 'inactive'
+                      }.px-2.py-1.rounded-full.text-xs.font-semibold)
+                        = category.status || 'Active'
+                    
+                    p.text-sm.text-gray-600.mb-2
+                      = category.slug
+                    
+                    if category.description
+                      p.text-sm.text-gray-700
+                        = category.description.substring(0, 100) + (category.description.length > 100 ? '...' : '')
+
+                // Quick Stats
+                .text-right
+                  .flex.flex-col.items-end.gap-1
+                    p.text-sm.font-medium.text-gray-900
+                      = category.productCount || 0
+                      |  products
+                    if category.parent
+                      p.text-xs.text-gray-500
+                        i.fas.fa-arrow-up.mr-1
+                        | Subcategory
+                    else
+                      p.text-xs.text-gray-500
+                        i.fas.fa-folder-open.mr-1
+                        | Main category
+              
+              // Description
+              if category.description
+                p.text-sm.text-gray-600.mb-4.p-3.bg-gray-50.rounded
+                  = category.description
+
+              // Actions
+              .flex.gap-2.pt-4.border-t.border-gray-200
+                a.flex-1.px-3.py-2.bg-blue-100.text-blue-700.rounded.text-center.hover:bg-blue-200.transition-colors.text-sm.font-medium(
+                  href=`/admin/categories/${category._id}/edit`
+                )
+                  i.fas.fa-edit.mr-1
+                  | Edit
+                
+                button.flex-1.px-3.py-2.bg-orange-100.text-orange-700.rounded.hover:bg-orange-200.transition-colors.text-sm.font-medium(
+                  type="button",
+                  onclick=`moveCategory('${category._id}')`
+                )
+                  i.fas.fa-arrows-alt-v.mr-1
+                  | Move
+                
+                button.flex-1.px-3.py-2.bg-red-100.text-red-700.rounded.hover:bg-red-200.transition-colors.text-sm.font-medium(
+                  type="button",
+                  onclick=`deleteCategory('${category._id}')`
+                )
+                  i.fas.fa-trash.mr-1
+                  | Delete
+      else
+        // No Categories
+        .bg-white.rounded-lg.shadow-md.p-12.text-center.col-span-1(class="lg:col-span-2")
+          i.fas.fa-folder-open.text-gray-400.text-5xl.mb-4
+          h3.text-xl.font-semibold.text-gray-900.mb-2 No Categories Found
+          p.text-gray-600.mb-6 Create your first category to start organizing products
+          button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
+            type="button",
+            onclick="openAddCategoryModal()"
+          )
+            i.fas.fa-plus.mr-2
+            | Create Category
+
+  // Add/Edit Category Modal
+  .fixed.inset-0.bg-black.bg-opacity-50.z-40.hidden.flex.items-center.justify-center.p-4(id="category-modal")
+    .bg-white.rounded-lg.shadow-2xl.w-full.max-w-2xl
+
+      // Modal Header
+      .flex.items-center.justify-between.p-6.border-b.border-gray-200
+        h2.text-2xl.font-bold.text-gray-900 Add New Category
+        button.text-gray-500.hover:text-gray-700.text-2xl(
+          type="button",
+          onclick="closeModal()"
+        )
+          i.fas.fa-times
+
+      // Modal Content
+      form.p-6.space-y-6#category-form(method="POST", action="/admin/categories")
+        .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+          .form-group
+            label.block.text-sm.font-medium.text-gray-700.mb-2(for="name") Category Name
+            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+              type="text",
+              id="name",
+              name="name",
+              placeholder="e.g., Electronics",
+              required
+            )
+          
+          .form-group
+            label.block.text-sm.font-medium.text-gray-700.mb-2(for="parent") Parent Category
+            select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+              id="parent",
+              name="parent"
+            )
+              option(value="") None (Main Category)
+              if categories && categories.length > 0
+                each category in categories
+                  option(value=category._id)
+                    = category.name
+
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="description") Description
+          textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            id="description",
+            name="description",
+            rows="4",
+            placeholder="Category description..."
+          )
+
+        .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+          .form-group
+            label.block.text-sm.font-medium.text-gray-700.mb-2(for="icon") Icon Class (Font Awesome)
+            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+              type="text",
+              id="icon",
+              name="icon",
+              placeholder="e.g., fas fa-laptop"
+            )
+          
+          .form-group
+            label.block.text-sm.font-medium.text-gray-700.mb-2(for="order") Display Order
+            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+              type="number",
+              id="order",
+              name="order",
+              value="0",
+              min="0"
+            )
+
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="image") Category Image
+          input.block.w-full.text-sm.text-gray-500.file:mr-4.file:py-2.file:px-4.file:rounded-lg.file:border-0.file:text-sm.file:font-semibold.file:bg-blue-50.file:text-blue-700.hover:file:bg-blue-100(
+            type="file",
+            id="image",
+            name="image",
+            accept="image/*"
+          )
+
+        .flex.items-center.gap-3
+          input.w-4.h-4.rounded.border-gray-300(
+            type="checkbox",
+            id="status",
+            name="status",
+            checked
+          )
+          label.text-sm.text-gray-700(for="status") Active
+
+      // Modal Footer
+      .flex.gap-3.p-6.border-t.border-gray-200.bg-gray-50.rounded-b-lg
+        button.flex-1.bg-gray-200.hover:bg-gray-300.text-gray-800.font-medium.py-2.px-4.rounded-lg.transition-colors(
+          type="button",
+          onclick="closeModal()"
+        )
+          | Cancel
+        button.flex-1.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+          type="submit",
+          form="category-form"
+        )
+          i.fas.fa-check.mr-2
+          | Save Category
+
+block scripts
+  script.
+    function openAddCategoryModal() {
+      document.getElementById('category-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('category-modal').classList.add('hidden');
+    }
+
+    function deleteCategory(categoryId) {
+      if (confirm('Are you sure? This will not delete products in this category.')) {
+        // TODO: Call API to delete category
+        alert('Category deleted!');
+        location.reload();
+      }
+    }
+
+    function moveCategory(categoryId) {
+      // TODO: Implement category move/reorder functionality
+      alert('Move functionality coming soon!');
+    }
+
+    function applyFilters() {
+      const search = document.getElementById('search-input')?.value || '';
+      const status = document.getElementById('status-filter')?.value || '';
+      
+      let url = '/admin/categories?';
+      if (search) url += `search=${encodeURIComponent(search)}&`;
+      if (status) url += `status=${status}`;
+      
+      window.location.href = url;
+    }

@@ -1,0 +1,194 @@
+extends ../../layouts/main
+
+block content
+  // Page Header
+  .bg-white.border-b.border-gray-200
+    .max-w-6xl.mx-auto.px-4.py-8
+      .flex.items-center.gap-3.mb-4
+        a.text-blue-600.hover:text-blue-700(href="/")
+          i.fas.fa-home
+        i.fas.fa-chevron-right.text-gray-400
+        span.text-gray-700 Shopping Cart
+      h1.text-4xl.font-bold.text-gray-900 Your Cart
+
+  .max-w-6xl.mx-auto.px-4.py-8
+    if cartItems && cartItems.length > 0
+      .grid.grid-cols-1(class="lg:grid-cols-3 gap-8")
+        // Cart Items - Main Column
+        .col-span-1(class="lg:col-span-2")
+          .bg-white.rounded-lg.shadow-md.overflow-hidden
+            // Cart Header
+            .p-6.border-b.border-gray-200
+              .flex.items-center.justify-between
+                .flex.items-center.gap-2
+                  i.fas.fa-shopping-bag.text-blue-600.text-xl
+                  h2.text-lg.font-semibold.text-gray-900
+                    = `${cartItems.length} item${cartItems.length !== 1 ? 's' : ''} in cart`
+                a.text-blue-600.hover:text-blue-700.text-sm(href="#", onclick="return confirm('Clear entire cart?')")
+                  i.fas.fa-trash.mr-1
+                  | Clear Cart
+
+            // Cart Items List
+            .divide-y.divide-gray-200
+              each item in cartItems
+                .p-6.flex.items-center.gap-4.hover:bg-gray-50.transition-colors
+                  // Product Image
+                  a.flex-shrink-0(href=`/products/${item.productId}`)
+                    img.w-20.h-20.rounded.object-cover(
+                      src=item.thumbnail,
+                      alt=item.name,
+                      onerror="this.src='/images/placeholder.png'"
+                    )
+
+                  // Product Info
+                  .flex-1
+                    a.block.font-medium.text-gray-900.hover:text-blue-600(href=`/products/${item.productId}`)
+                      = item.name
+                    p.text-sm.text-gray-600.mt-1
+                      = `SKU: ${item.sku}`
+                    if item.variant
+                      p.text-sm.text-gray-600
+                        = `Variant: ${item.variant}`
+                    p.text-sm.font-semibold.text-gray-900.mt-2
+                      = `$${item.price.toFixed(2)}`
+
+                  // Quantity Controls
+                  .flex.items-center.gap-3.px-4.py-2.bg-gray-100.rounded-lg
+                    button.text-gray-600.hover:text-gray-900(
+                      type="button",
+                      onclick=`updateQuantity('${item.productId}', ${item.quantity - 1})`
+                    )
+                      i.fas.fa-minus.text-sm
+                    span.w-8.text-center.text-gray-900.font-medium= item.quantity
+                    button.text-gray-600.hover:text-gray-900(
+                      type="button",
+                      onclick=`updateQuantity('${item.productId}', ${item.quantity + 1})`
+                    )
+                      i.fas.fa-plus.text-sm
+
+                  // Item Total
+                  .text-right
+                    p.text-lg.font-bold.text-gray-900
+                      = `$${(item.price * item.quantity).toFixed(2)}`
+                    button.mt-2.text-red-600.hover:text-red-700.text-sm.transition-colors(
+                      type="button",
+                      onclick=`removeFromCart('${item.productId}')`
+                    )
+                      i.fas.fa-trash.mr-1
+                      | Remove
+
+        // Cart Summary - Sidebar
+        .col-span-1
+          // Summary Card
+          .bg-white.rounded-lg.shadow-md.p-6.sticky.top-4
+            h3.text-lg.font-semibold.text-gray-900.mb-6 Order Summary
+
+            .space-y-4.mb-6.pb-6.border-b.border-gray-200
+              .flex.justify-between.text-gray-700
+                span Subtotal
+                span.font-medium
+                  = `$${cartSubtotal.toFixed(2)}`
+              
+              .flex.justify-between.text-gray-700
+                span Shipping
+                span.font-medium
+                  = `$${shippingFee.toFixed(2)}`
+              
+              .flex.justify-between.text-gray-700
+                span Tax (estimated)
+                span.font-medium
+                  = `$${cartTax.toFixed(2)}`
+
+              .flex.justify-between.text-lg.font-bold.text-gray-900
+                span Total
+                span
+                  = `$${cartTotal.toFixed(2)}`
+
+            // Promo Code
+            .mb-6
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Promo Code
+              .flex.gap-2
+                input.flex-1.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500.text-sm(
+                  type="text",
+                  placeholder="Enter code",
+                  id="promo-code"
+                )
+                button.px-4.py-2.bg-gray-200.hover:bg-gray-300.rounded-lg.font-medium.transition-colors(
+                  type="button",
+                  onclick="applyPromoCode()"
+                )
+                  i.fas.fa-check
+
+            // Checkout Button
+            a.block.w-full.px-6.py-3.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-semibold.text-center.transition-colors(
+              href="/checkout"
+            )
+              i.fas.fa-arrow-right.mr-2
+              | Proceed to Checkout
+
+            // Continue Shopping
+            a.block.w-full.mt-3.px-6.py-3.border.border-gray-300.text-gray-700.hover:bg-gray-50.rounded-lg.font-medium.text-center.transition-colors(
+              href="/products"
+            )
+              i.fas.fa-arrow-left.mr-2
+              | Continue Shopping
+
+            // Security Info
+            .mt-6.p-4.bg-blue-50.rounded-lg.border.border-blue-100
+              p.text-xs.text-blue-900
+                i.fas.fa-shield-alt.mr-2
+                | Your cart is secure. Continue to checkout with confidence.
+
+    else
+      // Empty Cart
+      .bg-white.rounded-lg.shadow-md.p-12.text-center
+        .mb-6
+          i.fas.fa-shopping-bag.text-6xl.text-gray-300
+
+        h2.text-2xl.font-bold.text-gray-900.mb-2 Your cart is empty
+
+        p.text-gray-600.mb-8
+          | Start shopping and add some items to your cart!
+
+        .space-y-3
+          a.inline-block.px-6.py-3.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-semibold.transition-colors(
+            href="/products"
+          )
+            i.fas.fa-shopping-bag.mr-2
+            | Start Shopping
+
+          a.inline-block.ml-3.px-6.py-3.border.border-blue-600.text-blue-600.hover:bg-blue-50.rounded-lg.font-semibold.transition-colors(
+            href="/"
+          )
+            i.fas.fa-home.mr-2
+            | Back to Home
+
+block scripts
+  script.
+    function updateQuantity(productId, newQuantity) {
+      if (newQuantity < 1) {
+        removeFromCart(productId);
+        return;
+      }
+      // TODO: Send AJAX request to update cart
+      console.log('Update quantity:', productId, newQuantity);
+      location.reload();
+    }
+
+    function removeFromCart(productId) {
+      if (!confirm('Remove this item from cart?')) return;
+      // TODO: Send AJAX request to remove from cart
+      console.log('Remove from cart:', productId);
+      location.reload();
+    }
+
+    function applyPromoCode() {
+      const code = document.getElementById('promo-code').value;
+      if (!code) {
+        alert('Please enter a promo code');
+        return;
+      }
+      // TODO: Send AJAX request to apply promo code
+      console.log('Apply promo code:', code);
+      alert('Promo code applied!');
+    }

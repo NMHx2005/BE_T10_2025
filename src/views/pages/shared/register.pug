@@ -1,74 +1,199 @@
 extends ../../layouts/auth
-include ../../mixins/buttons
 
 block content
-  .card.p-8.shadow-2xl.max-w-md.w-full
-    // Logo
+  .auth-card(class="rounded-2xl p-8 sm:p-10")
+    a.inline-flex.items-center.gap-2.text-slate-600.transition-colors.text-sm.font-medium.mb-8(href="/", class="hover:text-indigo-600")
+      i.fa-solid.fa-arrow-left
+      span Về trang chủ
+
     .text-center.mb-8
-      i.fas.fa-user-plus.text-6xl.text-green-600.mb-4
-      h2.text-3xl.font-bold.text-gray-900 Create Your Account
-      p.text-gray-600.mt-2 Join us today and start managing your products efficiently
-    
-    // Register Form
-    form.space-y-6
-      .grid.grid-cols-1.md:grid-cols-2.gap-4
-        .form-group
-          label.block.text-sm.font-medium.text-gray-700.mb-2(for="firstName") First Name
-          input.form-input(type="text", id="firstName", name="firstName", placeholder="First name", required)
-        
-        .form-group
-          label.block.text-sm.font-medium.text-gray-700.mb-2(for="lastName") Last Name
-          input.form-input(type="text", id="lastName", name="lastName", placeholder="Last name", required)
-      
-      .form-group
-        label.block.text-sm.font-medium.text-gray-700.mb-2(for="email") Email Address
+      .inline-flex.items-center.justify-center.w-14.h-14.rounded-2xl.bg-gradient-to-br.from-violet-500.to-fuchsia-600.text-white.text-2xl.shadow-lg.mb-4
+        i.fa-solid.fa-user-plus
+      h1(class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight") Tạo tài khoản
+      p(class="text-slate-500 mt-2 text-sm sm:text-base") Điền thông tin bên dưới để tạo tài khoản mới.
+
+    #auth-alert.hidden.mb-6.rounded-xl.px-4.py-3.text-sm.font-medium(role="alert")
+
+    form#register-form.space-y-5
+      .grid.gap-4(class="grid-cols-1 sm:grid-cols-2")
+        div(class="space-y-1.5")
+          label.block.text-sm.font-semibold.text-slate-700(for="firstName") Tên
+          .relative
+            i.fa-regular.fa-user.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+            input#firstName.auth-input(type="text", name="firstName", placeholder="Nguyễn", required, autocomplete="given-name")
+
+        div(class="space-y-1.5")
+          label.block.text-sm.font-semibold.text-slate-700(for="lastName") Họ
+          .relative
+            i.fa-regular.fa-user.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+            input#lastName.auth-input(type="text", name="lastName", placeholder="Văn A", required, autocomplete="family-name")
+
+      div(class="space-y-1.5")
+        label.block.text-sm.font-semibold.text-slate-700(for="email") Email
         .relative
-          input.form-input.pl-10(type="email", id="email", name="email", placeholder="Enter your email", required)
-          i.fas.fa-envelope.absolute.left-3.top-1/2.transform.-translate-y-1/2.text-gray-400
-      
-      .form-group
-        label.block.text-sm.font-medium.text-gray-700.mb-2(for="password") Password
+          i.fa-regular.fa-envelope.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          input#email.auth-input(type="email", name="email", placeholder="you@example.com", required, autocomplete="email")
+
+      div(class="space-y-1.5")
+        label.block.text-sm.font-semibold.text-slate-700(for="password") Mật khẩu
         .relative
-          input.form-input.pl-10(type="password", id="password", name="password", placeholder="Create a password", required)
-          i.fas.fa-lock.absolute.left-3.top-1/2.transform.-translate-y-1/2.text-gray-400
-      
-      .form-group
-        label.block.text-sm.font-medium.text-gray-700.mb-2(for="confirmPassword") Confirm Password
+          i.fa-solid.fa-lock.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          input#password.auth-input.pr-12(type="password", name="password", placeholder="Tối thiểu 6 ký tự", required, minlength="6", autocomplete="new-password")
+          button#toggle-password.auth-toggle.absolute.right-2.p-2.text-slate-400(type="button", aria-label="Hiện mật khẩu", class="top-1/2 -translate-y-1/2 hover:text-slate-600")
+            i.fa-regular.fa-eye
+
+      div(class="space-y-1.5")
+        label.block.text-sm.font-semibold.text-slate-700(for="confirmPassword") Xác nhận mật khẩu
         .relative
-          input.form-input.pl-10(type="password", id="confirmPassword", name="confirmPassword", placeholder="Confirm your password", required)
-          i.fas.fa-lock.absolute.left-3.top-1/2.transform.-translate-y-1/2.text-gray-400
-      
-      .form-group
-        label.block.text-sm.font-medium.text-gray-700.mb-2(for="company") Company (Optional)
-        input.form-input(type="text", id="company", name="company", placeholder="Your company name")
-      
-      .flex.items-center
-        input#terms.mr-2(type="checkbox", name="terms", required)
-        label.text-sm.text-gray-600(for="terms") I agree to the 
-          a.text-blue-600.hover:text-blue-500(href="#") Terms and Conditions
-          |  and 
-          a.text-blue-600.hover:text-blue-500(href="#") Privacy Policy
-      
-      button.btn-primary.w-full.py-3.text-lg(type="submit")
-        i.fas.fa-user-plus.mr-2
-        | Create Account
-      
-      .text-center.mt-6
-        .relative
-          .absolute.inset-0.flex.items-center
-            .w-full.border-t.border-gray-300
-          .relative.flex.justify-center.text-sm
-            span.px-2.bg-white.text-gray-500 Or continue with
-      
-      .grid.grid-cols-2.gap-4.mt-6
-        button.w-full.bg-white.border.border-gray-300.rounded-md.px-4.py-2.text-sm.font-medium.text-gray-700.hover:bg-gray-50.flex.items-center.justify-center
-          i.fab.fa-google.text-red-500.mr-2
-          | Google
-        button.w-full.bg-white.border.border-gray-300.rounded-md.px-4.py-2.text-sm.font-medium.text-gray-700.hover:bg-gray-50.flex.items-center.justify-center
-          i.fab.fa-facebook.text-blue-600.mr-2
-          | Facebook
-    
-    // Login link
-    .text-center.mt-8
-      p.text-gray-600 Already have an account? 
-        a.text-blue-600.hover:text-blue-500.font-medium(href="/auth/login") Sign in here
+          i.fa-solid.fa-lock.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          input#confirmPassword.auth-input.pr-12(type="password", name="confirmPassword", placeholder="Nhập lại mật khẩu", required, autocomplete="new-password")
+          button#toggle-confirm.auth-toggle.absolute.right-2.p-2.text-slate-400(type="button", aria-label="Hiện mật khẩu", class="top-1/2 -translate-y-1/2 hover:text-slate-600")
+            i.fa-regular.fa-eye
+
+      div(class="space-y-1.5")
+        label.block.text-sm.font-semibold.text-slate-700(for="company") Công ty (tuỳ chọn)
+        input#company.auth-input-standalone(type="text", name="company", placeholder="Tên công ty", autocomplete="organization")
+
+      label.flex.items-start.gap-3.cursor-pointer.select-none
+        input#terms.mt-1.rounded.border-slate-300.text-indigo-600(type="checkbox", name="terms", required)
+        span.text-sm.text-slate-600
+          | Tôi đồng ý với
+          |
+          a.text-indigo-600(href="#", class="hover:underline") Điều khoản
+          |
+          | và
+          |
+          a.text-indigo-600(href="#", class="hover:underline") Chính sách bảo mật
+
+      button#register-submit.auth-btn-primary(type="submit")
+        span#register-submit-text Đăng ký
+        span#register-submit-loading.hidden.inline-flex.items-center.gap-2
+          i.fa-solid.fa-circle-notch.fa-spin
+          span Đang tạo tài khoản...
+
+    p.text-center.text-sm.text-slate-500.mt-8
+      | Đã có tài khoản?
+      |
+      a.font-semibold.text-indigo-600.ml-1(href="/auth/login", class="hover:text-indigo-500") Đăng nhập
+
+block scripts
+  script.
+    (function () {
+      var API_REGISTER = '/api/v1/auth/register';
+      var form = document.getElementById('register-form');
+      var alertEl = document.getElementById('auth-alert');
+      var submitBtn = document.getElementById('register-submit');
+      var submitText = document.getElementById('register-submit-text');
+      var submitLoading = document.getElementById('register-submit-loading');
+
+      function showAlert(type, message) {
+        alertEl.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border', 'border-red-100', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-100');
+        if (type === 'error') {
+          alertEl.classList.add('bg-red-50', 'text-red-800', 'border', 'border-red-100');
+        } else {
+          alertEl.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-100');
+        }
+        alertEl.textContent = message;
+        alertEl.classList.remove('hidden');
+      }
+
+      function hideAlert() {
+        alertEl.classList.add('hidden');
+        alertEl.textContent = '';
+      }
+
+      function formatApiError(data) {
+        if (!data) return 'Đăng ký thất bại.';
+        if (data.errors && Array.isArray(data.errors) && data.errors.length) {
+          return data.errors.map(function (e) { return e.message || e.msg || ''; }).filter(Boolean).join(' ') || data.message;
+        }
+        return data.message || 'Đăng ký thất bại.';
+      }
+
+      function setLoading(loading) {
+        submitBtn.disabled = loading;
+        if (loading) {
+          submitText.classList.add('hidden');
+          submitLoading.classList.remove('hidden');
+        } else {
+          submitText.classList.remove('hidden');
+          submitLoading.classList.add('hidden');
+        }
+      }
+
+      function bindToggle(btnId, inputId) {
+        var btn = document.getElementById(btnId);
+        var input = document.getElementById(inputId);
+        if (!btn || !input) return;
+        btn.addEventListener('click', function () {
+          var isPwd = input.type === 'password';
+          input.type = isPwd ? 'text' : 'password';
+          btn.querySelector('i').className = isPwd ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+        });
+      }
+      bindToggle('toggle-password', 'password');
+      bindToggle('toggle-confirm', 'confirmPassword');
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        hideAlert();
+
+        var firstName = document.getElementById('firstName').value.trim();
+        var lastName = document.getElementById('lastName').value.trim();
+        var email = document.getElementById('email').value.trim();
+        var password = document.getElementById('password').value;
+        var confirmPassword = document.getElementById('confirmPassword').value;
+        var terms = document.getElementById('terms').checked;
+
+        if (!firstName || !lastName || !email || !password || !confirmPassword) {
+          showAlert('error', 'Vui lòng điền đầy đủ các trường bắt buộc.');
+          return;
+        }
+        if (!terms) {
+          showAlert('error', 'Vui lòng đồng ý điều khoản sử dụng.');
+          return;
+        }
+        if (password !== confirmPassword) {
+          showAlert('error', 'Mật khẩu xác nhận không khớp.');
+          return;
+        }
+
+        var username = (firstName + ' ' + lastName).trim();
+        //- Backend + validator dùng key passwordComfirm (typo trong API)
+        var body = {
+          username: username,
+          email: email,
+          password: password,
+          passwordComfirm: confirmPassword
+        };
+
+        setLoading(true);
+        try {
+          var res = await fetch(API_REGISTER, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          var result = await res.json().catch(function () { return {}; });
+
+          if (!res.ok) {
+            throw new Error(formatApiError(result));
+          }
+
+          if (result.tokens && result.tokens.accessToken) {
+            localStorage.setItem('accessToken', result.tokens.accessToken);
+            localStorage.setItem('refreshToken', result.tokens.refreshToken || '');
+            localStorage.setItem('user', JSON.stringify(result.user || {}));
+          }
+
+          showAlert('success', result.message || 'Đăng ký thành công. Kiểm tra email để kích hoạt tài khoản.');
+          setTimeout(function () {
+            window.location.href = '/profile';
+          }, 1200);
+        } catch (err) {
+          showAlert('error', err.message || 'Có lỗi xảy ra.');
+        } finally {
+          setLoading(false);
+        }
+      });
+    })();

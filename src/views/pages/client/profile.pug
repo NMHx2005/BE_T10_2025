@@ -1,0 +1,176 @@
+extends ../../../layouts/main
+
+block content
+  .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 py-12")
+    .grid.grid-cols-1(class="lg:grid-cols-4 gap-8")
+      // Sidebar Navigation
+      aside.bg-white.rounded-lg.shadow-md.h-fit
+        nav.flex.flex-col
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-blue-600.font-medium(href="/profile")
+            i.fas.fa-user.mr-3
+            | Profile
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile/addresses")
+            i.fas.fa-map-marker.mr-3
+            | Addresses
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile/orders")
+            i.fas.fa-shopping-bag.mr-3
+            | My Orders
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile/settings")
+            i.fas.fa-cog.mr-3
+            | Settings
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/logout")
+            i.fas.fa-sign-out-alt.mr-3
+            | Logout
+
+      // Main Content
+      .col-span-1(class="lg:col-span-3")
+        .bg-white.rounded-lg.shadow-md.p-8
+
+          // Header
+          .flex.items-center.justify-between.mb-8.pb-6.border-b.border-gray-200
+            .flex.items-center.gap-6
+              img.w-20.h-20.rounded-full.object-cover.bg-gray-200(
+                src=user?.avatar || 'https://via.placeholder.com/80?text=User',
+                alt=user?.username || 'User'
+              )
+              .flex.flex-col
+                h1.text-3xl.font-bold.text-gray-900
+                  = user?.username || 'User'
+                p.text-gray-600
+                  = user?.email
+            a.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
+              href="/profile/edit"
+            )
+              i.fas.fa-edit.mr-2
+              | Edit Profile
+
+          // Profile Info
+          h2.text-2xl.font-bold.text-gray-900.mb-6 Personal Information
+
+          form.space-y-6#profile-form(method="POST", action="/profile/update")
+            .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+              .form-group
+                label.block.text-sm.font-medium.text-gray-700.mb-2(for="username") Username
+                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                  type="text",
+                  id="username",
+                  name="username",
+                  value=user?.username || '',
+                  readonly
+                )
+              
+              .form-group
+                label.block.text-sm.font-medium.text-gray-700.mb-2(for="email") Email Address
+                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                  type="email",
+                  id="email",
+                  name="email",
+                  value=user?.email || '',
+                  readonly
+                )
+              
+              .form-group
+                label.block.text-sm.font-medium.text-gray-700.mb-2(for="phone") Phone Number
+                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                  type="tel",
+                  id="phone",
+                  name="phone",
+                  value=user?.phone || ''
+                )
+              
+              .form-group
+                label.block.text-sm.font-medium.text-gray-700.mb-2(for="fullName") Full Name
+                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                  type="text",
+                  id="fullName",
+                  name="fullName",
+                  value=user?.fullName || ''
+                )
+
+            // Avatar Upload
+            .form-group
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Profile Picture
+              .flex.items-center.gap-4
+                img.w-16.h-16.rounded-full.object-cover.bg-gray-200(
+                  src=user?.avatar || 'https://via.placeholder.com/64?text=Avatar',
+                  alt=user?.username || 'User'
+                )
+                .flex-1
+                  input.block.w-full.text-sm.text-gray-500.file:mr-4.file:py-2.file:px-4.file:rounded-lg.file:border-0.file:text-sm.file:font-semibold.file:bg-blue-50.file:text-blue-700.hover:file:bg-blue-100(
+                    type="file",
+                    id="avatar",
+                    name="avatar",
+                    accept="image/*"
+                  )
+                  p.text-xs.text-gray-500.mt-1 JPG, PNG or GIF (Max 5MB)
+
+            // Bio
+            .form-group
+              label.block.text-sm.font-medium.text-gray-700.mb-2(for="bio") Bio
+              textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                id="bio",
+                name="bio",
+                rows="4",
+                placeholder="Tell us about yourself..."
+              )
+                = user?.bio || ''
+
+            // Account Stats
+            .bg-gray-50.rounded-lg.p-6.mt-8
+              h3.text-lg.font-semibold.text-gray-900.mb-4 Account Information
+              .grid.grid-cols-2(class="md:grid-cols-3 gap-6")
+                .text-center
+                  p.text-2xl.font-bold.text-blue-600 12
+                  p.text-sm.text-gray-600 Total Orders
+                .text-center
+                  p.text-2xl.font-bold.text-green-600 $1,234
+                  p.text-sm.text-gray-600 Total Spent
+                .text-center
+                  p.text-2xl.font-bold.text-purple-600 2
+                  p.text-sm.text-gray-600 Addresses
+                .text-center
+                  p.text-2xl.font-bold.text-yellow-600 5
+                  p.text-sm.text-gray-600 Wishlist Items
+                .text-center
+                  p.text-2xl.font-bold.text-orange-600 8
+                  p.text-sm.text-gray-600 Reviews
+                .text-center
+                  p.text-2xl.font-bold.text-gray-600
+                    = user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'
+                  p.text-sm.text-gray-600 Member Since
+
+            // Action Buttons
+            .flex.gap-4.mt-8.pt-6.border-t.border-gray-200
+              button.flex-1.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+                type="submit"
+              )
+                i.fas.fa-save.mr-2
+                | Save Changes
+              
+              a.flex-1.text-center.bg-gray-200.hover:bg-gray-300.text-gray-800.font-medium.py-2.px-4.rounded-lg.transition-colors(
+                href="/profile/settings/password"
+              )
+                i.fas.fa-lock.mr-2
+                | Change Password
+
+          // Danger Zone
+          .mt-12.p-6.border-2.border-red-200.rounded-lg.bg-red-50
+            h3.text-lg.font-semibold.text-red-900.mb-2
+              i.fas.fa-exclamation-triangle.mr-2
+              | Danger Zone
+            p.text-sm.text-red-700.mb-4 These actions cannot be undone. Please be careful.
+            
+            button.bg-red-600.hover:bg-red-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors.w-full(
+              type="button",
+              onclick="if(confirm('Are you sure you want to deactivate your account?')) { window.location.href='/profile/deactivate'; }"
+            )
+              i.fas.fa-ban.mr-2
+              | Deactivate Account
+
+block scripts
+  script.
+    document.getElementById('profile-form')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+      // TODO: Send form data to server
+      alert('Profile updated successfully!');
+    });

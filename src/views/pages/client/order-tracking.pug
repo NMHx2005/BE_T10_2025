@@ -1,0 +1,239 @@
+extends ../../layouts/main
+
+block content
+  // Page Header
+  .bg-white.border-b.border-gray-200
+    .max-w-6xl.mx-auto.px-4.py-8
+      .flex.items-center.gap-3.mb-4
+        a.text-blue-600.hover:text-blue-700(href="/")
+          i.fas.fa-home
+        i.fas.fa-chevron-right.text-gray-400
+        span.text-gray-700 Track Order
+      h1.text-4xl.font-bold.text-gray-900 Track Your Order
+
+  .max-w-6xl.mx-auto.px-4.py-8
+    // Search Section
+    .bg-white.rounded-lg.shadow-md.p-8.mb-8
+      h2.text-2xl.font-semibold.text-gray-900.mb-6 Enter Your Order Number
+
+      form.flex.flex-col(class="md:flex-row gap-3", method="GET", action="/order-tracking")
+        input.flex-1.px-6.py-3.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500.text-lg(
+          type="text",
+          name="orderNumber",
+          placeholder="e.g., ORD-20250402-001",
+          value=currentOrder ? currentOrder.orderNumber : ''
+        )
+        
+        button.px-8.py-3.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-semibold.transition-colors.flex.items-center.justify-center.gap-2.whitespace-nowrap(
+          type="submit"
+        )
+          i.fas.fa-search
+          | Track Order
+
+    if currentOrder
+      .grid.grid-cols-1(class="lg:grid-cols-3 gap-8")
+        // Main Content - Left
+        .col-span-1(class="lg:col-span-2")
+          // Order Status
+          .bg-white.rounded-lg.shadow-md.p-8.mb-8
+            .flex.items-start.justify-between.mb-8
+              .flex.flex-col
+                h3.text-2xl.font-bold.text-gray-900= currentOrder.orderNumber
+                p.text-gray-600.mt-1
+                  = 'Placed on ' + new Date(currentOrder.createdAt).toLocaleDateString() + ' at ' + new Date(currentOrder.createdAt).toLocaleTimeString()
+              
+              span.inline-block.px-4.py-2.text-sm.font-semibold.rounded-full(
+                class={
+                  'pending': 'bg-yellow-100 text-yellow-800',
+                  'confirmed': 'bg-blue-100 text-blue-800',
+                  'processing': 'bg-purple-100 text-purple-800',
+                  'shipped': 'bg-indigo-100 text-indigo-800',
+                  'delivered': 'bg-green-100 text-green-800',
+                  'cancelled': 'bg-red-100 text-red-800'
+                }[currentOrder.status]
+              )
+                = currentOrder.status.charAt(0).toUpperCase() + currentOrder.status.slice(1)
+
+            // Status Timeline
+            .mb-8
+              - const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered']
+              - const statusColors = {
+              -   'pending': { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: 'fa-hourglass-start' },
+              -   'confirmed': { bg: 'bg-blue-100', text: 'text-blue-700', icon: 'fa-check-circle' },
+              -   'processing': { bg: 'bg-purple-100', text: 'text-purple-700', icon: 'fa-cog' },
+              -   'shipped': { bg: 'bg-indigo-100', text: 'text-indigo-700', icon: 'fa-truck' },
+              -   'delivered': { bg: 'bg-green-100', text: 'text-green-700', icon: 'fa-box-open' }
+              - }
+
+              .space-y-4
+                each status, idx in statuses
+                  - const isActive = status === currentOrder.status
+                  - const isCompleted = statuses.indexOf(status) < statuses.indexOf(currentOrder.status)
+                  - const colors = statusColors[status]
+                  
+                  .flex.items-center.gap-4
+                    .flex.flex-col.items-center
+                      .w-12.h-12.rounded-full.flex.items-center.justify-center.transition-all(
+                        class=isCompleted ? 'bg-green-600' : isActive ? colors.bg : 'bg-gray-200'
+                      )
+                        i.fas(
+                          class=`${colors.icon} ${isCompleted ? 'text-white' : isActive ? colors.text : 'text-gray-400'} text-lg`
+                        )
+                      
+                      if idx < statuses.length - 1
+                        .w-1.h-12.my-1(
+                          class=isCompleted ? 'bg-green-600' : isActive ? colors.bg : 'bg-gray-200'
+                        )
+
+                    .flex-1.py-2
+                      .flex.items-center.gap-2
+                        p.font-semibold.text-gray-900.capitalize= status
+                        if isCompleted
+                          i.fas.fa-check.text-green-600.text-sm
+                        else if isActive
+                          i.fas.fa-spinner.text-blue-600.animate-spin.text-sm
+                      
+                      - const statusMessages = {
+                      -   'pending': 'Your order is waiting for confirmation. We will process it soon.',
+                      -   'confirmed': 'Your order has been confirmed. We are preparing it for shipment.',
+                      -   'processing': 'Your order is being packed and prepared for delivery.',
+                      -   'shipped': 'Your package is on the way to you!',
+                      -   'delivered': 'Your order has been delivered successfully.'
+                      - }
+                      
+                      p.text-sm.text-gray-600.mt-1= statusMessages[status]
+
+          // Shipping Information
+          .bg-white.rounded-lg.shadow-md.p-8
+            h3.text-lg.font-semibold.text-gray-900.mb-6 Shipping Information
+
+            if currentOrder.tracking
+              .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+                .p-4.bg-gray-50.rounded-lg
+                  p.text-sm.text-gray-600.mb-2 Carrier
+                  p.font-semibold.text-gray-900
+                    = currentOrder.tracking.carrier || 'Standard Carrier'
+
+                .p-4.bg-gray-50.rounded-lg
+                  p.text-sm.text-gray-600.mb-2 Tracking Number
+                  p.font-mono.font-semibold.text-gray-900
+                    = currentOrder.tracking.trackingNumber
+
+                .p-4.bg-gray-50.rounded-lg(class="md:col-span-2")
+                  p.text-sm.text-gray-600.mb-2 Estimated Delivery
+                  p.font-semibold.text-gray-900.text-lg
+                    = currentOrder.tracking.estimatedDelivery ? new Date(currentOrder.tracking.estimatedDelivery).toLocaleDateString() : 'TBD'
+
+              // Tracking Link
+              a.mt-4.inline-block.px-6.py-2.text-blue-600.hover:text-blue-700.font-medium.border.border-blue-600.rounded-lg(
+                href=`https://track.example.com/?tracking=${currentOrder.tracking.trackingNumber}`,
+                target="_blank"
+              )
+                i.fas.fa-external-link-alt.mr-2
+                | Track on Carrier Website
+            else
+              p.text-gray-600 Tracking information will be available once your order is shipped.
+
+        // Sidebar
+        .col-span-1
+          // Order Details Card
+          .bg-white.rounded-lg.shadow-md.p-6.mb-6
+            h4.text-lg.font-semibold.text-gray-900.mb-4 Order Details
+
+            .space-y-3
+              .pb-3.border-b.border-gray-200
+                p.text-sm.text-gray-600 Items Count
+                p.font-semibold.text-gray-900
+                  = currentOrder.items.length
+
+              .pb-3.border-b.border-gray-200
+                p.text-sm.text-gray-600 Order Total
+                p.text-2xl.font-bold.text-gray-900
+                  = `$${currentOrder.totalAmount.toFixed(2)}`
+
+              .pb-3.border-b.border-gray-200
+                p.text-sm.text-gray-600 Payment Status
+                .mt-2
+                  span.inline-block.px-3.py-1.text-sm.font-medium.rounded-full(
+                    class=currentOrder.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  )
+                    = currentOrder.paymentStatus === 'paid' ? 'Paid' : 'Pending'
+
+              .pb-3.border-b.border-gray-200
+                p.text-sm.text-gray-600 Payment Method
+                p.font-semibold.text-gray-900
+                  = currentOrder.paymentMethod || 'Card'
+
+          // Delivery Address Card
+          .bg-white.rounded-lg.shadow-md.p-6.mb-6
+            h4.text-lg.font-semibold.text-gray-900.mb-4 Delivery Address
+
+            .p-4.bg-gray-50.rounded-lg
+              p.font-semibold.text-gray-900= currentOrder.shippingAddress.fullName
+              p.text-sm.text-gray-700.mt-2= currentOrder.shippingAddress.street
+              p.text-sm.text-gray-700
+                = `${currentOrder.shippingAddress.ward}, ${currentOrder.shippingAddress.district}, ${currentOrder.shippingAddress.city}`
+              p.text-sm.text-gray-600.mt-2
+                = `Phone: ${currentOrder.shippingAddress.phone}`
+
+          // Items Card
+          .bg-white.rounded-lg.shadow-md.p-6
+            h4.text-lg.font-semibold.text-gray-900.mb-4 Items Ordered
+
+            .space-y-3
+              each item in currentOrder.items
+                .flex.items-center.gap-3.pb-3.border-b.border-gray-200.last:border-b-0
+                  if item.product?.thumbnail
+                    img.w-12.h-12.rounded.object-cover(src=item.product.thumbnail, alt=item.product.name)
+                  else
+                    .w-12.h-12.rounded.bg-gray-200.flex.items-center.justify-center
+                      i.fas.fa-image.text-gray-400
+                  
+                  .flex-1.min-w-0
+                    p.text-sm.font-medium.text-gray-900.truncate= item.product?.name || 'Product'
+                    p.text-xs.text-gray-600
+                      = `Qty: ${item.quantity}`
+                  
+                  p.text-sm.font-semibold.text-gray-900.flex-shrink-0
+                    = `$${(item.quantity * item.price).toFixed(2)}`
+
+          // Actions
+          .mt-6.space-y-3
+            a.block.w-full.px-4.py-2.bg-blue-100.hover:bg-blue-200.text-blue-800.rounded-lg.font-medium.text-center.transition-colors(
+              href="/profile/orders"
+            )
+              i.fas.fa-list.mr-2
+              | View All Orders
+
+            a.block.w-full.px-4.py-2.border.border-gray-300.text-gray-700.hover:bg-gray-50.rounded-lg.font-medium.text-center.transition-colors(
+              href="/contact"
+            )
+              i.fas.fa-envelope.mr-2
+              | Contact Support
+
+    else
+      // No Order Found
+      .bg-white.rounded-lg.shadow-md.p-12.text-center
+        .mb-6
+          i.fas.fa-search.text-6xl.text-gray-300
+
+        h2.text-2xl.font-bold.text-gray-900.mb-2 Order Not Found
+
+        p.text-gray-600.mb-8
+          | Please check your order number and try again. You can find your order number on your confirmation email.
+
+        a.inline-block.px-6.py-3.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-semibold.transition-colors(
+          href="/order-tracking"
+        )
+          i.fas.fa-redo.mr-2
+          | Try Again
+
+block scripts
+  script.
+    document.querySelector('form')?.addEventListener('submit', function(e) {
+      const orderNumber = document.querySelector('input[name="orderNumber"]').value;
+      if (!orderNumber) {
+        e.preventDefault();
+        alert('Please enter an order number');
+      }
+    });

@@ -1,0 +1,259 @@
+extends ../../../layouts/main
+
+block content
+  .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 py-12")
+    .grid.grid-cols-1(class="lg:grid-cols-4 gap-8")
+      // Sidebar Navigation
+      aside.bg-white.rounded-lg.shadow-md.h-fit
+        nav.flex.flex-col
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile")
+            i.fas.fa-user.mr-3
+            | Profile
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-blue-600.font-medium(href="/profile/addresses")
+            i.fas.fa-map-marker.mr-3
+            | Addresses
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile/orders")
+            i.fas.fa-shopping-bag.mr-3
+            | My Orders
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile/settings")
+            i.fas.fa-cog.mr-3
+            | Settings
+          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/logout")
+            i.fas.fa-sign-out-alt.mr-3
+            | Logout
+
+      // Main Content
+      .col-span-1(class="lg:col-span-3")
+        // Header
+        .flex.items-center.justify-between.mb-8
+          .flex.flex-col
+            h1.text-3xl.font-bold.text-gray-900 My Addresses
+            p.text-gray-600.mt-2 Manage your delivery addresses
+          a.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
+            href="/profile/addresses/new"
+          )
+            i.fas.fa-plus.mr-2
+            | Add New Address
+
+        if addresses && addresses.length > 0
+          // Addresses Grid
+          .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+            each address in addresses
+              .border-2.rounded-lg.p-6.transition-all(
+                class=address.isDefault ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+              )
+                // Header
+                .flex.items-start.justify-between.mb-4
+                  .flex.items-center.gap-3
+                    h3.text-lg.font-semibold.text-gray-900
+                      = address.fullName
+                    if address.isDefault
+                      span.bg-blue-600.text-white.text-xs.font-bold.px-2.py-1.rounded-full Default
+                  
+                  // Actions
+                  .flex.gap-2
+                    a.text-gray-600.hover:text-blue-600.transition-colors(
+                      href=`/profile/addresses/${address._id}/edit`,
+                      title="Edit address"
+                    )
+                      i.fas.fa-edit.text-lg
+                    button.text-gray-600.hover:text-red-600.transition-colors(
+                      type="button",
+                      onclick=`if(confirm('Are you sure?')) { deleteAddress('${address._id}'); }`,
+                      title="Delete address"
+                    )
+                      i.fas.fa-trash.text-lg
+
+                // Address Details
+                .space-y-2.text-gray-700.mb-4
+                  p
+                    span.font-medium Phone:
+                    |  #{address.phone}
+                  p
+                    span.font-medium Address:
+                    |  #{address.address}
+                  if address.addressNew
+                    p
+                      span.font-medium Apartment/Suite:
+                      |  #{address.addressNew}
+                  p
+                    span.font-medium Ward:
+                    |  #{address.ward}
+                  p
+                    span.font-medium District:
+                    |  #{address.district}
+                  p
+                    span.font-medium City:
+                    |  #{address.city}
+                  if address.note
+                    p.text-sm.text-gray-600.bg-gray-100.p-2.rounded
+                      i.fas.fa-sticky-note.mr-2
+                      = address.note
+
+                // Actions Buttons
+                .flex.gap-2.pt-4.border-t.border-gray-200
+                  if !address.isDefault
+                    button.flex-1.bg-gray-100.hover:bg-gray-200.text-gray-800.font-medium.py-2.px-3.rounded.transition-colors.text-sm(
+                      type="button",
+                      onclick=`setDefaultAddress('${address._id}')`
+                    )
+                      i.fas.fa-check.mr-1
+                      | Set as Default
+        else
+          // No Addresses
+          .bg-white.rounded-lg.shadow-md.p-12.text-center
+            i.fas.fa-map.text-gray-400.text-5xl.mb-4
+            h3.text-xl.font-semibold.text-gray-900.mb-2 No Addresses Yet
+            p.text-gray-600.mb-6 Add your first delivery address to get started
+            a.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
+              href="/profile/addresses/new"
+            )
+              i.fas.fa-plus.mr-2
+              | Add Address
+
+      // Add Address Modal (if on new page)
+      if showForm
+        .fixed.inset-0.bg-black.bg-opacity-50.z-40.flex.items-center.justify-center.p-4(id="address-modal")
+          .bg-white.rounded-lg.shadow-2xl.w-full.max-w-2xl
+
+            // Modal Header
+            .flex.items-center.justify-between.p-6.border-b.border-gray-200
+              h2.text-2xl.font-bold.text-gray-900
+                if addressId
+                  | Edit Address
+                else
+                  | Add New Address
+              button.text-gray-500.hover:text-gray-700.text-2xl(
+                type="button",
+                onclick="document.getElementById('address-modal').remove()"
+              )
+                i.fas.fa-times
+
+            // Modal Content
+            form.p-6.space-y-6#address-form(method="POST", action=addressId ? `/profile/addresses/${addressId}` : `/profile/addresses`)
+              .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+                .form-group
+                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="fullName") Full Name
+                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                    type="text",
+                    id="fullName",
+                    name="fullName",
+                    placeholder="John Doe",
+                    value=currentAddress?.fullName || '',
+                    required
+                  )
+                
+                .form-group
+                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="phone") Phone Number
+                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                    type="tel",
+                    id="phone",
+                    name="phone",
+                    placeholder="+1 (555) 123-4567",
+                    value=currentAddress?.phone || '',
+                    required
+                  )
+
+              .form-group
+                label.block.text-sm.font-medium.text-gray-700.mb-2(for="address") Street Address
+                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                  type="text",
+                  id="address",
+                  name="address",
+                  placeholder="123 Main Street",
+                  value=currentAddress?.address || '',
+                  required
+                )
+
+              .form-group
+                label.block.text-sm.font-medium.text-gray-700.mb-2(for="addressNew") Apartment, Suite, etc. (Optional)
+                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                  type="text",
+                  id="addressNew",
+                  name="addressNew",
+                  placeholder="Apartment 4B",
+                  value=currentAddress?.addressNew || ''
+                )
+
+              .grid.grid-cols-1(class="md:grid-cols-3 gap-6")
+                .form-group
+                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="city") City/Province
+                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                    type="text",
+                    id="city",
+                    name="city",
+                    placeholder="New York",
+                    value=currentAddress?.city || '',
+                    required
+                  )
+                
+                .form-group
+                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="district") District
+                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                    type="text",
+                    id="district",
+                    name="district",
+                    placeholder="Manhattan",
+                    value=currentAddress?.district || '',
+                    required
+                  )
+                
+                .form-group
+                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="ward") Ward/Neighborhood
+                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                    type="text",
+                    id="ward",
+                    name="ward",
+                    placeholder="Ward 1",
+                    value=currentAddress?.ward || ''
+                  )
+
+              .form-group
+                label.block.text-sm.font-medium.text-gray-700.mb-2(for="note") Notes (Optional)
+                textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                  id="note",
+                  name="note",
+                  rows="3",
+                  placeholder="e.g., Gate code: 1234"
+                )
+                  = currentAddress?.note || ''
+
+              .flex.items-center.gap-3
+                input.w-4.h-4.rounded.border-gray-300.cursor-pointer(
+                  type="checkbox",
+                  id="isDefault",
+                  name="isDefault",
+                  checked=currentAddress?.isDefault
+                )
+                label.text-sm.text-gray-700.cursor-pointer(for="isDefault") Set as default address
+
+            // Modal Footer
+            .flex.gap-3.p-6.border-t.border-gray-200.bg-gray-50.rounded-b-lg
+              button.flex-1.bg-gray-200.hover:bg-gray-300.text-gray-800.font-medium.py-2.px-4.rounded-lg.transition-colors(
+                type="button",
+                onclick="document.getElementById('address-modal').remove()"
+              )
+                | Cancel
+              button.flex-1.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+                type="submit",
+                form="address-form"
+              )
+                i.fas.fa-check.mr-2
+                if addressId
+                  | Update Address
+                else
+                  | Add Address
+
+block scripts
+  script.
+    function setDefaultAddress(addressId) {
+      // TODO: Call API to set as default
+      if (confirm('Set this as your default address?')) {
+        alert('Default address updated!');
+      }
+    }
+
+    function deleteAddress(addressId) {
+      // TODO: Call API to delete address
+      alert('Address deleted!');
+    }

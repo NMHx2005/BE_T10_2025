@@ -1,0 +1,318 @@
+extends ../../layouts/main
+
+block content
+  // Page Header
+  .bg-white.border-b.border-gray-200
+    .max-w-6xl.mx-auto.px-4.py-8
+      .flex.items-center.gap-3.mb-4
+        a.text-blue-600.hover:text-blue-700(href="/")
+          i.fas.fa-home
+        i.fas.fa-chevron-right.text-gray-400
+        a.text-blue-600.hover:text-blue-700(href="/cart")
+          | Shopping Cart
+        i.fas.fa-chevron-right.text-gray-400
+        span.text-gray-700 Checkout
+      h1.text-4xl.font-bold.text-gray-900 Secure Checkout
+
+  .max-w-6xl.mx-auto.px-4.py-8
+    form.grid.grid-cols-1(class="lg:grid-cols-3 gap-8", method="POST", action="/checkout", id="checkout-form")
+      // Left Column - Forms
+      .col-span-1(class="lg:col-span-2")
+        // Step 1: Shipping Address
+        .bg-white.rounded-lg.shadow-md.p-6.mb-6
+          .flex.items-center.gap-3.mb-6
+            .w-8.h-8.rounded-full.bg-blue-600.text-white.flex.items-center.justify-center.font-bold 1
+            h2.text-xl.font-semibold.text-gray-900 Shipping Address
+
+          .grid.grid-cols-1(class="md:grid-cols-2 gap-4")
+            .form-group
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Full Name
+              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                type="text",
+                name="shippingName",
+                placeholder="Full name",
+                required
+              )
+            
+            .form-group
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Phone Number
+              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                type="tel",
+                name="shippingPhone",
+                placeholder="Phone number",
+                required
+              )
+          
+          .grid.grid-cols-1(class="md:grid-cols-2 gap-4")
+            .form-group(class="md:col-span-2")
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Street Address
+              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                type="text",
+                name="shippingStreet",
+                placeholder="Street address",
+                required
+              )
+            
+            .form-group
+              label.block.text-sm.font-medium.text-gray-700.mb-2 City
+              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                type="text",
+                name="shippingCity",
+                placeholder="City",
+                required
+              )
+            
+            .form-group
+              label.block.text-sm.font-medium.text-gray-700.mb-2 District
+              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                type="text",
+                name="shippingDistrict",
+                placeholder="District",
+                required
+              )
+
+          .form-group.mt-4
+            label.block.text-sm.font-medium.text-gray-700.mb-2 Additional Notes
+            textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+              name="shippingNotes",
+              rows="3",
+              placeholder="Special instructions or delivery notes"
+            )
+
+        // Step 2: Billing Address
+        .bg-white.rounded-lg.shadow-md.p-6.mb-6
+          .flex.items-center.gap-3.mb-6
+            .w-8.h-8.rounded-full.bg-blue-600.text-white.flex.items-center.justify-center.font-bold 2
+            h2.text-xl.font-semibold.text-gray-900 Billing Address
+
+          .form-group.mb-4
+            input.w-4.h-4.rounded.border-gray-300(
+              type="checkbox",
+              id="same-as-shipping",
+              name="sameAsShipping",
+              checked,
+              onchange="toggleBillingForm()"
+            )
+            label.ml-2.text-sm.font-medium.text-gray-700(for="same-as-shipping")
+              | Same as shipping address
+
+          #billing-form.hidden
+            .grid.grid-cols-1(class="md:grid-cols-2 gap-4")
+              .form-group
+                label.block.text-sm.font-medium.text-gray-700.mb-2 Full Name
+                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                  type="text",
+                  name="billingName",
+                  placeholder="Full name"
+                )
+              
+              .form-group
+                label.block.text-sm.font-medium.text-gray-700.mb-2 Phone Number
+                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                  type="tel",
+                  name="billingPhone",
+                  placeholder="Phone number"
+                )
+            
+            .form-group
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Street Address
+              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                type="text",
+                name="billingStreet",
+                placeholder="Street address"
+              )
+
+        // Step 3: Shipping Method
+        .bg-white.rounded-lg.shadow-md.p-6.mb-6
+          .flex.items-center.gap-3.mb-6
+            .w-8.h-8.rounded-full.bg-blue-600.text-white.flex.items-center.justify-center.font-bold 3
+            h2.text-xl.font-semibold.text-gray-900 Shipping Method
+
+          .space-y-3
+            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
+              input.w-4.h-4.rounded.border-gray-300(
+                type="radio",
+                name="shippingMethod",
+                value="standard",
+                checked
+              )
+              .ml-4.flex-1
+                p.font-medium.text-gray-900 Standard Shipping (3-5 days)
+                p.text-sm.text-gray-600 $5.99 or free on orders over $50
+              span.text-lg.font-bold.text-gray-900 $5.99
+            
+            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
+              input.w-4.h-4.rounded.border-gray-300(
+                type="radio",
+                name="shippingMethod",
+                value="express"
+              )
+              .ml-4.flex-1
+                p.font-medium.text-gray-900 Express Shipping (1-2 days)
+                p.text-sm.text-gray-600 Fast delivery to your doorstep
+              span.text-lg.font-bold.text-gray-900 $12.99
+            
+            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
+              input.w-4.h-4.rounded.border-gray-300(
+                type="radio",
+                name="shippingMethod",
+                value="overnight"
+              )
+              .ml-4.flex-1
+                p.font-medium.text-gray-900 Overnight Shipping (Next day)
+                p.text-sm.text-gray-600 Premium next-day delivery
+              span.text-lg.font-bold.text-gray-900 $24.99
+
+        // Step 4: Payment Method
+        .bg-white.rounded-lg.shadow-md.p-6
+          .flex.items-center.gap-3.mb-6
+            .w-8.h-8.rounded-full.bg-blue-600.text-white.flex.items-center.justify-center.font-bold 4
+            h2.text-xl.font-semibold.text-gray-900 Payment Method
+
+          .space-y-3
+            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
+              input.w-4.h-4.rounded.border-gray-300(
+                type="radio",
+                name="paymentMethod",
+                value="card",
+                checked
+              )
+              .ml-4.flex-1
+                p.font-medium.text-gray-900 Credit / Debit Card
+              i.fas.fa-credit-card.text-gray-400.text-xl
+            
+            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
+              input.w-4.h-4.rounded.border-gray-300(
+                type="radio",
+                name="paymentMethod",
+                value="paypal"
+              )
+              .ml-4.flex-1
+                p.font-medium.text-gray-900 PayPal
+              i.fab.fa-paypal.text-gray-400.text-xl
+            
+            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
+              input.w-4.h-4.rounded.border-gray-300(
+                type="radio",
+                name="paymentMethod",
+                value="bank"
+              )
+              .ml-4.flex-1
+                p.font-medium.text-gray-900 Bank Transfer
+              i.fas.fa-university.text-gray-400.text-xl
+
+      // Right Column - Order Summary
+      .col-span-1
+        .bg-white.rounded-lg.shadow-md.p-6.sticky.top-4
+          h3.text-lg.font-semibold.text-gray-900.mb-6 Order Summary
+
+          // Order Items Preview
+          .space-y-3.mb-6.pb-6.border-b.border-gray-200
+            each item in orderItems
+              .flex.justify-between.text-sm.text-gray-600
+                span
+                  = `${item.name} x ${item.quantity}`
+                span.font-medium
+                  = `$${(item.price * item.quantity).toFixed(2)}`
+
+          // Totals
+          .space-y-3.mb-6.pb-6.border-b.border-gray-200
+            .flex.justify-between.text-gray-700
+              span Subtotal
+              span= `$${subtotal.toFixed(2)}`
+            
+            .flex.justify-between.text-gray-700
+              span Shipping
+              span(id="shipping-cost") $5.99
+            
+            .flex.justify-between.text-gray-700
+              span Tax
+              span= `$${tax.toFixed(2)}`
+
+            .flex.justify-between.text-lg.font-bold.text-gray-900.pt-3.border-t
+              span Total
+              span(id="total-amount")
+                = `$${(subtotal + 5.99 + tax).toFixed(2)}`
+
+          // Promo Code
+          .mb-6
+            label.block.text-sm.font-medium.text-gray-700.mb-2 Promo / Discount Code
+            .flex.gap-2
+              input.flex-1.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500.text-sm(
+                type="text",
+                id="promo-code",
+                placeholder="Enter code"
+              )
+              button.px-4.py-2.bg-gray-200.hover:bg-gray-300.rounded-lg.font-medium.transition-colors(
+                type="button",
+                onclick="applyPromoCode()"
+              )
+                i.fas.fa-check
+
+          // Terms & Conditions
+          .mb-6
+            label.flex.items-start.gap-3
+              input.w-4.h-4.rounded.border-gray-300.mt-1(
+                type="checkbox",
+                name="agreeTerms",
+                required
+              )
+              span.text-sm.text-gray-600
+                | I agree to the 
+                a.text-blue-600.hover:text-blue-700(href="/terms") Terms & Conditions
+                |  and 
+                a.text-blue-600.hover:text-blue-700(href="/privacy") Privacy Policy
+
+          // Submit Button
+          button.w-full.px-6.py-3.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-semibold.transition-colors(
+            type="submit"
+          )
+            i.fas.fa-lock.mr-2
+            | Complete Purchase
+
+          // Back to Cart
+          a.block.w-full.mt-3.px-6.py-3.border.border-gray-300.text-gray-700.hover:bg-gray-50.rounded-lg.font-medium.text-center.transition-colors(
+            href="/cart"
+          )
+            i.fas.fa-arrow-left.mr-2
+            | Back to Cart
+
+          // Security Badge
+          .mt-6.p-4.bg-green-50.rounded-lg.border.border-green-100
+            p.text-xs.text-green-900
+              i.fas.fa-shield-alt.mr-2
+              | Secure SSL connection - Your payment data is encrypted
+
+block scripts
+  script.
+    function toggleBillingForm() {
+      const billingForm = document.getElementById('billing-form');
+      const checkbox = document.getElementById('same-as-shipping');
+      if (checkbox.checked) {
+        billingForm.classList.add('hidden');
+      } else {
+        billingForm.classList.remove('hidden');
+      }
+    }
+
+    function applyPromoCode() {
+      const code = document.getElementById('promo-code').value;
+      if (!code) {
+        alert('Please enter a promo code');
+        return;
+      }
+      // TODO: Apply promo code and update total
+      alert('Promo code applied!');
+      updateTotal();
+    }
+
+    function updateTotal() {
+      // TODO: Recalculate and update total amount
+      console.log('Update total');
+    }
+
+    document.getElementById('checkout-form')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+      // TODO: Process checkout
+      alert('Processing your order...');
+    });

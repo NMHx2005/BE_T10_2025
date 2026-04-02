@@ -1,0 +1,202 @@
+extends ../../../layouts/admin
+
+block content
+  // Page Header
+  .mb-8
+    .flex.items-center.gap-4
+      a.text-blue-600.hover:text-blue-700(href="/admin/products")
+        i.fas.fa-arrow-left.text-xl
+      .flex.flex-col
+        h1.text-3xl.font-bold.text-gray-900
+          if isEdit
+            | Edit Product
+          else
+            | Create New Product
+        p.text-gray-600.mt-2
+          if isEdit
+            = 'Product: ' + product.name
+          else
+            | Add a new product to your catalog
+
+  // Main Form
+  form.space-y-8(method="POST", action=isEdit ? `/admin/products/${product._id}` : "/admin/products", enctype="multipart/form-data", id="product-form")
+    // Basic Information
+    .bg-white.rounded-lg.shadow-md.p-6
+      h2.text-xl.font-semibold.text-gray-900.mb-6 Basic Information
+
+      .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="name") Product Name
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            type="text",
+            id="name",
+            name="name",
+            placeholder="Enter product name",
+            value=isEdit ? product.name : '',
+            required
+          )
+        
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="sku") SKU
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            type="text",
+            id="sku",
+            name="sku",
+            placeholder="Auto-generated if left blank",
+            value=isEdit ? product.sku : '',
+            readonly
+          )
+        
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="category") Category
+          select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            id="category",
+            name="category",
+            required
+          )
+            option(value="") Select a category
+            if categories && categories.length > 0
+              each cat in categories
+                option(value=cat._id, selected=isEdit && product.category?._id === cat._id)
+                  = cat.name
+        
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="brand") Brand
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            type="text",
+            id="brand",
+            name="brand",
+            placeholder="Product brand",
+            value=isEdit ? product.brand : ''
+          )
+
+    // Pricing & Stock
+    .bg-white.rounded-lg.shadow-md.p-6
+      h2.text-xl.font-semibold.text-gray-900.mb-6 Pricing & Stock
+
+      .grid.grid-cols-1(class="md:grid-cols-3 gap-6")
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="price") Price ($)
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            type="number",
+            id="price",
+            name="price",
+            placeholder="0.00",
+            step="0.01",
+            min="0",
+            value=isEdit ? product.price : '',
+            required
+          )
+        
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="compareAtPrice") Compare At Price ($)
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            type="number",
+            id="compareAtPrice",
+            name="compareAtPrice",
+            placeholder="0.00",
+            step="0.01",
+            min="0",
+            value=isEdit ? product.compareAtPrice : ''
+          )
+        
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="stock") Stock Quantity
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            type="number",
+            id="stock",
+            name="stock",
+            placeholder="0",
+            min="0",
+            value=isEdit ? product.stock : '',
+            required
+          )
+
+    // Description
+    .bg-white.rounded-lg.shadow-md.p-6
+      h2.text-xl.font-semibold.text-gray-900.mb-6 Description
+
+      .form-group
+        label.block.text-sm.font-medium.text-gray-700.mb-2(for="description") Product Description
+        textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          id="description",
+          name="description",
+          rows="6",
+          placeholder="Enter detailed product description...",
+          required
+        )
+          = isEdit ? product.description : ''
+        
+        p.text-xs.text-gray-500.mt-2 Supports Markdown formatting
+
+    // Images
+    .bg-white.rounded-lg.shadow-md.p-6
+      h2.text-xl.font-semibold.text-gray-900.mb-6 Images
+
+      .form-group
+        label.block.text-sm.font-medium.text-gray-700.mb-2(for="thumbnail") Thumbnail Image
+        .flex.items-center.gap-4
+          if isEdit && product.thumbnail
+            img.w-20.h-20.rounded.object-cover(src=product.thumbnail, alt="Thumbnail")
+          else
+            .w-20.h-20.rounded.bg-gray-200.flex.items-center.justify-center
+              i.fas.fa-image.text-gray-400.text-2xl
+          
+          input.block.flex-1.text-sm.text-gray-500.file:mr-4.file:py-2.file:px-4.file:rounded-lg.file:border-0.file:text-sm.file:font-semibold.file:bg-blue-50.file:text-blue-700.hover:file:bg-blue-100(
+            type="file",
+            id="thumbnail",
+            name="thumbnail",
+            accept="image/*"
+          )
+        p.text-xs.text-gray-500.mt-2 JPG, PNG, GIF (Max 5MB)
+
+    // Status & SEO
+    .bg-white.rounded-lg.shadow-md.p-6
+      h2.text-xl.font-semibold.text-gray-900.mb-6 Status & SEO
+
+      .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="status") Status
+          select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            id="status",
+            name="status"
+          )
+            option(value="draft") Draft
+            option(value="active", selected=isEdit && product.status === 'active') Active
+            option(value="archived") Archived
+        
+        .form-group
+          .flex.items-center.gap-3
+            input.w-4.h-4.rounded.border-gray-300(
+              type="checkbox",
+              id="featured",
+              name="featured",
+              checked=isEdit && product.featured
+            )
+            label.text-sm.font-medium.text-gray-700(for="featured") Mark as Featured Product
+
+    // Submit Buttons
+    .flex.gap-3.justify-end
+      a.px-6.py-3.border.border-gray-300.rounded-lg.text-gray-700.hover:bg-gray-50.font-medium.transition-colors(
+        href="/admin/products"
+      )
+        i.fas.fa-times.mr-2
+        | Cancel
+      
+      button.px-6.py-3.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-medium.transition-colors(
+        type="submit"
+      )
+        i.fas.fa-save.mr-2
+        if isEdit
+          | Update Product
+        else
+          | Create Product
+
+block scripts
+  script.
+    document.getElementById('product-form')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+      // TODO: Form submission logic
+      alert('Product saved successfully!');
+      location.href = '/admin/products';
+    });

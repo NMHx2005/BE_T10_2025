@@ -1,0 +1,300 @@
+extends ../../../layouts/admin
+
+block content
+  // Page Header
+  .mb-8
+    .flex.items-center.justify-between
+      .flex.flex-col
+        h1.text-3xl.font-bold.text-gray-900 Orders Management
+        p.text-gray-600.mt-2 Total: 
+          span.font-semibold #{totalOrders || 0}
+          |  orders
+      
+      a.bg-green-600.hover:bg-green-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors.flex.items-center.gap-2(
+        href="/admin/orders/export"
+      )
+        i.fas.fa-download.mr-2
+        | Export CSV
+
+  // Summary Cards
+  .grid.grid-cols-1(class="md:grid-cols-4 gap-6 mb-8")
+    .bg-white.rounded-lg.shadow-md.p-6
+      .flex.items-center
+        .flex-shrink-0
+          .w-12.h-12.bg-blue-100.rounded-lg.flex.items-center.justify-center
+            i.fas.fa-shopping-cart.text-blue-600.text-xl
+        .ml-4
+          p.text-sm.font-medium.text-gray-600 Pending
+          p.text-2xl.font-bold.text-gray-900
+            = orders?.filter(o => o.status === 'pending').length || 0
+    
+    .bg-white.rounded-lg.shadow-md.p-6
+      .flex.items-center
+        .flex-shrink-0
+          .w-12.h-12.bg-yellow-100.rounded-lg.flex.items-center.justify-center
+            i.fas.fa-hourglass-half.text-yellow-600.text-xl
+        .ml-4
+          p.text-sm.font-medium.text-gray-600 Processing
+          p.text-2xl.font-bold.text-gray-900
+            = orders?.filter(o => o.status === 'processing' || o.status === 'confirmed').length || 0
+    
+    .bg-white.rounded-lg.shadow-md.p-6
+      .flex.items-center
+        .flex-shrink-0
+          .w-12.h-12.bg-indigo-100.rounded-lg.flex.items-center.justify-center
+            i.fas.fa-truck.text-indigo-600.text-xl
+        .ml-4
+          p.text-sm.font-medium.text-gray-600 Shipped
+          p.text-2xl.font-bold.text-gray-900
+            = orders?.filter(o => o.status === 'shipped').length || 0
+    
+    .bg-white.rounded-lg.shadow-md.p-6
+      .flex.items-center
+        .flex-shrink-0
+          .w-12.h-12.bg-green-100.rounded-lg.flex.items-center.justify-center
+            i.fas.fa-check-circle.text-green-600.text-xl
+        .ml-4
+          p.text-sm.font-medium.text-gray-600 Delivered
+          p.text-2xl.font-bold.text-gray-900
+            = orders?.filter(o => o.status === 'delivered').length || 0
+
+  // Filters & Search
+  .bg-white.rounded-lg.shadow-md.p-6.mb-6
+    .grid.grid-cols-1(class="md:grid-cols-5 gap-4")
+      .form-group
+        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          type="text",
+          placeholder="Search by order #...",
+          id="search-input"
+        )
+      
+      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        id="status-filter"
+      )
+        option(value="") All Status
+        option(value="pending") Pending
+        option(value="confirmed") Confirmed
+        option(value="processing") Processing
+        option(value="shipped") Shipped
+        option(value="delivered") Delivered
+        option(value="cancelled") Cancelled
+      
+      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        id="payment-filter"
+      )
+        option(value="") All Payments
+        option(value="pending") Unpaid
+        option(value="paid") Paid
+        option(value="failed") Failed
+      
+      input.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        type="date",
+        id="date-filter"
+      )
+      
+      button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+        type="button",
+        onclick="applyFilters()"
+      )
+        i.fas.fa-filter.mr-2
+        | Filter
+
+  // Orders Table
+  if orders && orders.length > 0
+    .bg-white.rounded-lg.shadow-md.overflow-hidden
+      .overflow-x-auto
+        table.w-full
+          thead.bg-gray-100.border-b.border-gray-200
+            tr
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Order #
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Customer
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Items
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Total
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Payment
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Status
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Date
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Actions
+          
+          tbody.divide-y.divide-gray-200
+            each order in orders
+              tr.hover:bg-gray-50.transition-colors
+                // Order Number
+                td.px-6.py-4
+                  a.text-blue-600.hover:text-blue-700.font-medium(
+                    href=`/admin/orders/${order._id}`
+                  )
+                    = order.orderNumber
+                
+                // Customer
+                td.px-6.py-4.text-sm
+                  .flex.flex-col
+                    p.font-medium.text-gray-900
+                      = order.customer?.username || 'Guest'
+                    p.text-xs.text-gray-500
+                      = order.customer?.email || 'N/A'
+                
+                // Items Count
+                td.px-6.py-4.text-sm.text-center
+                  span.bg-gray-100.px-2.py-1.rounded-full.text-xs.font-medium
+                    = order.items?.length || 0
+                    |  items
+                
+                // Total
+                td.px-6.py-4.text-sm.font-semibold.text-gray-900
+                  = '$' + order.total.toFixed(2)
+                
+                // Payment Status
+                td.px-6.py-4
+                  span(class={
+                    'bg-green-100 text-green-800': order.payment?.status === 'paid',
+                    'bg-yellow-100 text-yellow-800': order.payment?.status === 'pending',
+                    'bg-red-100 text-red-800': order.payment?.status === 'failed'
+                  }.px-2.py-1.rounded-full.text-xs.font-semibold)
+                    if order.payment?.status === 'paid'
+                      i.fas.fa-check-circle.mr-1
+                      | Paid
+                    else if order.payment?.status === 'pending'
+                      i.fas.fa-clock.mr-1
+                      | Unpaid
+                    else
+                      i.fas.fa-times-circle.mr-1
+                      | Failed
+                
+                // Status
+                td.px-6.py-4
+                  select.text-xs.px-2.py-1.border.border-gray-300.rounded(
+                    onchange=`updateOrderStatus('${order._id}', this.value)`,
+                    value=order.status
+                  )
+                    option(value="pending") Pending
+                    option(value="confirmed") Confirmed
+                    option(value="processing") Processing
+                    option(value="shipped") Shipped
+                    option(value="delivered") Delivered
+                    option(value="cancelled") Cancelled
+                
+                // Date
+                td.px-6.py-4.text-sm.text-gray-600
+                  = new Date(order.createdAt).toLocaleDateString()
+                
+                // Actions
+                td.px-6.py-4.text-sm.flex.gap-2
+                  a.text-blue-600.hover:text-blue-700.transition-colors.px-2.py-1(
+                    href=`/admin/orders/${order._id}`,
+                    title="View details"
+                  )
+                    i.fas.fa-eye
+                  
+                  if order.status !== 'shipped' && order.status !== 'delivered'
+                    button.text-orange-600.hover:text-orange-700.transition-colors.px-2.py-1(
+                      type="button",
+                      onclick=`markAsShipped('${order._id}')`,
+                      title="Mark as shipped"
+                    )
+                      i.fas.fa-truck
+                  
+                  if order.payment?.status === 'pending'
+                    button.text-green-600.hover:text-green-700.transition-colors.px-2.py-1(
+                      type="button",
+                      onclick=`markAsPaid('${order._id}')`,
+                      title="Mark as paid"
+                    )
+                      i.fas.fa-check
+                  
+                  if order.status === 'pending' || order.status === 'confirmed'
+                    button.text-red-600.hover:text-red-700.transition-colors.px-2.py-1(
+                      type="button",
+                      onclick=`cancelOrder('${order._id}')`,
+                      title="Cancel order"
+                    )
+                      i.fas.fa-trash
+
+      // Pagination
+      if pagination && pagination.pages > 1
+        .bg-gray-50.px-6.py-4.flex.justify-between.items-center
+          p.text-sm.text-gray-600
+            | Showing 
+            span.font-semibold= (pagination.page - 1) * pagination.limit + 1
+            |  to 
+            span.font-semibold= Math.min(pagination.page * pagination.limit, pagination.total)
+            |  of 
+            span.font-semibold= pagination.total
+          
+          .flex.gap-2
+            if pagination.page > 1
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
+                href=`/admin/orders?page=${pagination.page - 1}`
+              )
+                i.fas.fa-chevron-left
+            
+            each i in [...Array(Math.min(pagination.pages, 5)).keys()].map(x => Math.max(1, pagination.page - 2) + x)
+              if i <= pagination.pages
+                if i === pagination.page
+                  .px-3.py-2.bg-blue-600.text-white.rounded
+                    = i
+                else
+                  a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
+                    href=`/admin/orders?page=${i}`
+                  )
+                    = i
+            
+            if pagination.page < pagination.pages
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
+                href=`/admin/orders?page=${pagination.page + 1}`
+              )
+                i.fas.fa-chevron-right
+  else
+    // No Orders
+    .bg-white.rounded-lg.shadow-md.p-12.text-center
+      i.fas.fa-inbox.text-gray-400.text-5xl.mb-4
+      h3.text-xl.font-semibold.text-gray-900.mb-2 No Orders Found
+      p.text-gray-600 Orders will appear here once customers start placing them
+
+block scripts
+  script.
+    function updateOrderStatus(orderId, newStatus) {
+      // TODO: Call API to update order status
+      alert(`Order status updated to ${newStatus}!`);
+      location.reload();
+    }
+
+    function markAsShipped(orderId) {
+      const trackingNumber = prompt('Enter tracking number:');
+      if (trackingNumber) {
+        // TODO: Call API to mark as shipped with tracking number
+        alert('Order marked as shipped!');
+        location.reload();
+      }
+    }
+
+    function markAsPaid(orderId) {
+      if (confirm('Mark this order as paid?')) {
+        // TODO: Call API to mark as paid
+        alert('Order marked as paid!');
+        location.reload();
+      }
+    }
+
+    function cancelOrder(orderId) {
+      const reason = prompt('Cancel reason:');
+      if (reason) {
+        // TODO: Call API to cancel order
+        alert('Order cancelled!');
+        location.reload();
+      }
+    }
+
+    function applyFilters() {
+      const search = document.getElementById('search-input')?.value || '';
+      const status = document.getElementById('status-filter')?.value || '';
+      const payment = document.getElementById('payment-filter')?.value || '';
+      const date = document.getElementById('date-filter')?.value || '';
+      
+      let url = '/admin/orders?';
+      if (search) url += `search=${encodeURIComponent(search)}&`;
+      if (status) url += `status=${status}&`;
+      if (payment) url += `payment=${payment}&`;
+      if (date) url += `date=${date}`;
+      
+      window.location.href = url;
+    }

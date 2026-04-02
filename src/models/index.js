@@ -7,3 +7,4 @@ import './RefreshToken.js';
 import './TokenBlacklist.js';
 import './User.js';
 import './Product.js';
+import './Order.js';

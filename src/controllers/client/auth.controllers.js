@@ -250,13 +250,16 @@ const logout = async (req, res, next) => {
 }
 
 const getLoginPage = (req, res) => {
-    res.send('Trang đăng nhập người dùng');
+    res.render('pages/shared/login', { title: 'Đăng nhập' });
 }
 const getRegisterPage = (req, res) => {
-    res.send('Trang đăng kí người dùng');
+    res.render('pages/shared/register', { title: 'Đăng ký' });
 }
 const getLogoutPage = (req, res) => {
-    res.send('Trang đăng xuất người dùng');
+    // Simple frontend logout flow
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.redirect('/auth/login');
 }
 
 

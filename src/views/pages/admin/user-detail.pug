@@ -1,0 +1,235 @@
+extends ../../../layouts/admin
+
+block content
+  // Page Header
+  .mb-8
+    .flex.items-center.gap-4
+      a.text-blue-600.hover:text-blue-700(href="/admin/users")
+        i.fas.fa-arrow-left.text-xl
+      .flex.flex-col
+        h1.text-3xl.font-bold.text-gray-900
+          = 'User Details: ' + user.name
+        p.text-gray-600.mt-2
+          = 'Email: ' + user.email
+
+  .grid.grid-cols-1(class="lg:grid-cols-3 gap-6")
+    // Left Column - User Info
+    .col-span-1(class="lg:col-span-2")
+      // Personal Information
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-6 Personal Information
+
+        form.space-y-4(method="POST", action=`/admin/users/${user._id}`, id="user-form")
+          .grid.grid-cols-1(class="md:grid-cols-2 gap-4")
+            .form-group
+              label.block.text-sm.font-medium.text-gray-700.mb-2 First Name
+              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                type="text",
+                name="firstName",
+                value=user.firstName,
+                placeholder="First name"
+              )
+            
+            .form-group
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Last Name
+              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+                type="text",
+                name="lastName",
+                value=user.lastName,
+                placeholder="Last name"
+              )
+          
+          .form-group
+            label.block.text-sm.font-medium.text-gray-700.mb-2 Email
+            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+              type="email",
+              name="email",
+              value=user.email,
+              placeholder="Email address",
+              disabled
+            )
+            p.text-xs.text-gray-500.mt-1 Email cannot be changed
+          
+          .form-group
+            label.block.text-sm.font-medium.text-gray-700.mb-2 Phone
+            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+              type="tel",
+              name="phone",
+              value=user.phone ? user.phone : '',
+              placeholder="Phone number"
+            )
+
+          .form-group
+            label.block.text-sm.font-medium.text-gray-700.mb-2 Bio
+            textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+              name="bio",
+              rows="4",
+              placeholder="User bio"
+            )
+              = user.bio ? user.bio : ''
+
+          .flex.gap-3.justify-end.pt-4.border-t
+            button.px-4.py-2.border.border-gray-300.rounded-lg.text-gray-700.hover:bg-gray-50.font-medium.transition-colors(
+              type="button",
+              onclick="location.href='/admin/users'"
+            )
+              | Cancel
+            
+            button.px-4.py-2.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-medium.transition-colors(
+              type="submit"
+            )
+              i.fas.fa-save.mr-2
+              | Save Changes
+
+      // Address Information
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Saved Addresses
+
+        if user.addresses && user.addresses.length > 0
+          .space-y-3
+            each addr in user.addresses
+              .flex.items-start.justify-between.p-4.bg-gray-50.rounded-lg
+                .flex-1
+                  .flex.items-center.gap-2.mb-2
+                    strong.text-gray-900= addr.fullName
+                    if addr.isDefault
+                      span.inline-block.px-2.py-1.text-xs.font-medium.bg-blue-100.text-blue-800.rounded Default
+                  p.text-sm.text-gray-600= `${addr.street}, ${addr.ward}, ${addr.district}, ${addr.city}`
+                  p.text-sm.text-gray-500= `Phone: ${addr.phone}`
+                .flex.gap-2.text-right
+                  button.text-red-600.hover:text-red-700.text-sm(type="button")
+                    i.fas.fa-trash
+        else
+          p.text-gray-500.text-center.py-4 No addresses on file
+
+      // Recent Orders
+      .bg-white.rounded-lg.shadow-md.p-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Recent Orders
+
+        if user.recentOrders && user.recentOrders.length > 0
+          .space-y-3
+            each order in user.recentOrders
+              .flex.items-center.justify-between.p-4.border-b.last:border-b-0
+                .flex-1
+                  p.font-medium.text-gray-900= order.orderNumber
+                  p.text-sm.text-gray-500= order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''
+                .flex.items-center.gap-4
+                  .text-right
+                    p.font-medium.text-gray-900= '$' + order.totalAmount?.toFixed(2)
+                    span.inline-block.px-3.py-1.text-xs.font-medium.rounded-full(
+                      class={
+                        'pending': 'bg-yellow-100 text-yellow-800',
+                        'confirmed': 'bg-blue-100 text-blue-800',
+                        'processing': 'bg-purple-100 text-purple-800',
+                        'shipped': 'bg-indigo-100 text-indigo-800',
+                        'delivered': 'bg-green-100 text-green-800',
+                        'cancelled': 'bg-red-100 text-red-800'
+                      }[order.status]
+                    )
+                      = order.status
+                  a.text-blue-600.hover:text-blue-700(href=`/admin/orders/${order._id}`)
+                    i.fas.fa-eye
+        else
+          p.text-gray-500.text-center.py-4 No orders yet
+
+    // Right Column - Account Status
+    .col-span-1
+      // Account Status Card
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Account Status
+
+        .space-y-4
+          // Role
+          .flex.items-center.justify-between.pb-4.border-b
+            .flex.flex-col
+              span.text-sm.font-medium.text-gray-700 Account Type
+              span.text-sm.text-gray-600 Current role
+            span.inline-block.px-3.py-1.text-sm.font-medium.rounded-full(
+              class=user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+            )
+              = user.role === 'admin' ? 'Administrator' : 'Customer'
+
+          // Status
+          .flex.items-center.justify-between.pb-4.border-b
+            .flex.flex-col
+              span.text-sm.font-medium.text-gray-700 Status
+              span.text-sm.text-gray-600 Account state
+            span.inline-block.px-3.py-1.text-sm.font-medium.rounded-full(
+              class=user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+            )
+              = user.status === 'active' ? 'Active' : 'Inactive'
+
+          // Email Verified
+          .flex.items-center.justify-between.pb-4.border-b
+            .flex.flex-col
+              span.text-sm.font-medium.text-gray-700 Email Verified
+              span.text-sm.text-gray-600 Verification status
+            if user.emailVerified
+              span.text-green-600
+                i.fas.fa-check-circle
+            else
+              span.text-gray-400
+                i.fas.fa-circle
+
+          // Member Since
+          .flex.items-center.justify-between
+            .flex.flex-col
+              span.text-sm.font-medium.text-gray-700 Member Since
+              span.text-sm.text-gray-600 Join date
+            span.text-gray-900.font-medium
+              = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'
+
+      // Statistics Card
+      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Statistics
+
+        .space-y-4
+          .p-4.bg-blue-50.rounded-lg
+            p.text-sm.text-gray-600 Total Orders
+            p.text-2xl.font-bold.text-blue-600 
+              = user.totalOrders ? user.totalOrders : '0'
+
+          .p-4.bg-green-50.rounded-lg
+            p.text-sm.text-gray-600 Total Spent
+            p.text-2xl.font-bold.text-green-600 
+              = user.totalSpent ? '$' + user.totalSpent.toFixed(2) : '$0.00'
+
+          .p-4.bg-purple-50.rounded-lg
+            p.text-sm.text-gray-600 Saved Addresses
+            p.text-2xl.font-bold.text-purple-600 
+              = user.addressCount ? user.addressCount : '0'
+
+      // Actions
+      .bg-white.rounded-lg.shadow-md.p-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Actions
+
+        .space-y-3
+          a.w-full.block.px-4.py-2.text-center.bg-yellow-100.hover:bg-yellow-200.text-yellow-800.rounded-lg.font-medium.transition-colors(
+            href="#",
+            onclick="return confirm('Ban this user?')"
+          )
+            i.fas.fa-ban.mr-2
+            | Ban User
+
+          a.w-full.block.px-4.py-2.text-center.bg-blue-100.hover:bg-blue-200.text-blue-800.rounded-lg.font-medium.transition-colors(
+            href="#",
+            onclick="return confirm('Reset password for this user?')"
+          )
+            i.fas.fa-key.mr-2
+            | Reset Password
+
+          a.w-full.block.px-4.py-2.text-center.bg-red-100.hover:bg-red-200.text-red-800.rounded-lg.font-medium.transition-colors(
+            href="#",
+            onclick="return confirm('Delete this user permanently?')"
+          )
+            i.fas.fa-trash.mr-2
+            | Delete User
+
+block scripts
+  script.
+    document.getElementById('user-form')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+      // TODO: Form submission logic
+      alert('User updated successfully!');
+      location.href = '/admin/users';
+    });
