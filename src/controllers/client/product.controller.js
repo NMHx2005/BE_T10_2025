@@ -397,15 +397,15 @@ const toNumber = (value, fallback) => {
 }
 const buildSort = (sort) => {
     const sortMap = {
-        newest: { createAt: -1 },
-        oldest: { createAt: 1 },
+        newest: { createdAt: -1 },
+        oldest: { createdAt: 1 },
         price_asc: { price: 1 },
         price_desc: { price: -1 },
         name_asc: { name: 1 },
         name_desc: { name: -1 },
     }
 
-    return sortMap[sort] || { createAt: -1 };
+    return sortMap[sort] || { createdAt: -1 };
 }
 const getProducts = async (req, res, next) => {
     try {
@@ -450,16 +450,100 @@ const getProducts = async (req, res, next) => {
         // 3. Build sort
         const sort = buildSort(req.query.sort);
 
-        // 4. Query: list + total
-        const products = await Product.find(filter)
-            .populate("category", "name slug")
-            .populate("brand", "name slug")
+        // 4. Query: list + total using aggregation for price filtering
+        let query = Product.aggregate([]);
+
+        // Add match stage for basic filters
+        query = query.match(filter);
+
+        // Add variant price info if needed for sorting/filtering
+        if (Number.isFinite(minPrice) || Number.isFinite(maxPrice)) {
+            query = query
+                .addFields({
+                    variantMinPrice: {
+                        $min: '$variants.price'
+                    }
+                });
+
+            const priceMatchCondition = {};
+            if (Number.isFinite(minPrice)) {
+                priceMatchCondition.variantMinPrice = { $gte: minPrice };
+            }
+            if (Number.isFinite(maxPrice)) {
+                if (priceMatchCondition.variantMinPrice) {
+                    priceMatchCondition.variantMinPrice.$lte = maxPrice;
+                } else {
+                    priceMatchCondition.variantMinPrice = { $lte: maxPrice };
+                }
+            }
+            query = query.match(priceMatchCondition);
+        }
+
+        // Add population and sorting
+        query = query
+            .lookup({
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category'
+            })
+            .unwind({ path: '$category', preserveNullAndEmptyArrays: true })
+            .project({
+                'category.name': 1,
+                'category.slug': 1,
+                _id: 1,
+                name: 1,
+                description: 1,
+                slug: 1,
+                sku: 1,
+                variants: 1,
+                images: 1,
+                brand: 1,
+                tags: 1,
+                featured: 1,
+                rating: 1,
+                viewCount: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                variantMinPrice: 1
+            })
             .sort(sort)
             .skip(skip)
-            .limit(limit)
-            .lean()
+            .limit(limit);
 
-        const totalItems = await Product.countDocuments(filter);
+        const products = await query.exec();
+
+        // Count total items
+        let totalItems;
+        if (Number.isFinite(minPrice) || Number.isFinite(maxPrice)) {
+            // For counting with price filter, use aggregation
+            const countPipeline = [
+                { $match: filter },
+                {
+                    $addFields: {
+                        variantMinPrice: { $min: '$variants.price' }
+                    }
+                }
+            ];
+
+            const priceMatchCondition = {};
+            if (Number.isFinite(minPrice)) {
+                priceMatchCondition.variantMinPrice = { $gte: minPrice };
+            }
+            if (Number.isFinite(maxPrice)) {
+                if (priceMatchCondition.variantMinPrice) {
+                    priceMatchCondition.variantMinPrice.$lte = maxPrice;
+                } else {
+                    priceMatchCondition.variantMinPrice = { $lte: maxPrice };
+                }
+            }
+            countPipeline.push({ $match: priceMatchCondition });
+
+            const countResult = await Product.aggregate(countPipeline);
+            totalItems = countResult.length;
+        } else {
+            totalItems = await Product.countDocuments(filter);
+        }
 
 
         // 5. pagination metedata
