@@ -1,221 +1,297 @@
-extends ../../../layouts/main
-include ../../../mixins/cards
-include ../../../mixins/buttons
+extends ../../layouts/main
 
 block content
-  .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 py-12")
-    // Page Header
-    .mb-8
-      h1.text-4xl.font-bold.text-gray-900.mb-2 Products
-      p.text-lg.text-gray-600 Browse our complete product catalog
-    
-    // Filter Section
-    .grid.grid-cols-1(class="lg:grid-cols-4 gap-8")
-      // Filters Sidebar
-      aside.bg-white.rounded-lg.shadow-md.p-6.h-fit
-        h2.text-lg.font-semibold.text-gray-900.mb-6 Filters
-        
-        form.space-y-6(id="filter-form")
-          // Search
-          .form-group
-            label.block.text-sm.font-medium.text-gray-700.mb-2(for="search") Search
-            input.form-input.w-full.px-3.py-2.border.border-gray-300.rounded-md.focus:outline-none.focus:ring-2.focus:ring-blue-500(
-              type="text",
-              id="search",
-              name="search",
-              placeholder="Search products..."
-            )
-          
-          // Price Range
-          .form-group
-            label.block.text-sm.font-medium.text-gray-700.mb-2 Price Range
-            .space-y-3
-              .flex.gap-2
-                input.form-input.w-1/2.px-3.py-2.border.border-gray-300.rounded-md(
-                  type="number",
-                  name="minPrice",
-                  placeholder="Min",
-                  min="0"
-                )
-                input.form-input.w-1/2.px-3.py-2.border.border-gray-300.rounded-md(
-                  type="number",
-                  name="maxPrice",
-                  placeholder="Max"
-                )
-          
-          // Category Filter
-          .form-group
-            label.block.text-sm.font-medium.text-gray-700.mb-3 Categories
-            .space-y-2
-              if categories && categories.length > 0
-                each category in categories
-                  .flex.items-center
-                    input.w-4.h-4.rounded.border-gray-300(
-                      type="checkbox",
-                      name="category",
-                      value=category._id,
-                      id=`cat-${category._id}`
-                    )
-                    label.ml-3.text-sm.text-gray-600.cursor-pointer(for=`cat-${category._id}`)
-                      = category.name
-              else
-                p.text-sm.text-gray-500 No categories available
-          
-          // Brand Filter (if applicable)
-          .form-group
-            label.block.text-sm.font-medium.text-gray-700.mb-3 Brand
-            input.form-input.w-full.px-3.py-2.border.border-gray-300.rounded-md(
-              type="text",
-              name="brand",
-              placeholder="Filter by brand"
-            )
-          
-          // Sort
-          .form-group
-            label.block.text-sm.font-medium.text-gray-700.mb-2(for="sort") Sort By
-            select.form-input.w-full.px-3.py-2.border.border-gray-300.rounded-md.focus:ring-2.focus:ring-blue-500(
-              id="sort",
-              name="sort"
-            )
-              option(value="newest", selected) Newest
-              option(value="oldest") Oldest
-              option(value="price_asc") Price: Low to High
-              option(value="price_desc") Price: High to Low
-              option(value="name_asc") Name: A to Z
-              option(value="name_desc") Name: Z to A
-          
-          // Apply Filters Button
-          .flex.gap-2
-            button.flex-1.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
-              type="submit",
-              form="filter-form"
-            )
-              i.fas.fa-filter.mr-2
-              | Apply Filters
-            
-            a.flex-1.text-center.bg-gray-200.hover:bg-gray-300.text-gray-800.font-medium.py-2.px-4.rounded-lg.transition-colors(
-              href="/products"
-            )
-              i.fas.fa-redo.mr-2
-              | Clear
+  -
+    var __products = typeof products !== 'undefined' && products ? products : []
+    var __categories = typeof categories !== 'undefined' && categories ? categories : []
+    var __page = typeof page !== 'undefined' ? Math.max(1, page) : 1
+    var __limit = typeof limit !== 'undefined' ? limit : 12
+    var __totalItems = typeof totalItems !== 'undefined' ? totalItems : __products.length
+    var __totalPages = typeof totalPages !== 'undefined' ? Math.max(1, totalPages) : 1
+    var __sort = typeof sort !== 'undefined' ? sort : 'newest'
+    var __search = typeof search !== 'undefined' ? search : ''
+    var __minPrice = typeof minPrice !== 'undefined' && minPrice !== null ? minPrice : ''
+    var __maxPrice = typeof maxPrice !== 'undefined' && maxPrice !== null ? maxPrice : ''
+    var __brand = typeof brand !== 'undefined' ? brand : ''
+    var __selCats = typeof selectedCategoryIds !== 'undefined' && selectedCategoryIds ? selectedCategoryIds.map(String) : []
+    function __vnd(n) {
+      if (n == null || n === '' || Number.isNaN(Number(n))) return '—'
+      return new Intl.NumberFormat('vi-VN').format(Math.round(Number(n))) + '₫'
+    }
+    function __productPrice(p) {
+      if (p.minPrice != null) return __vnd(p.minPrice)
+      if (p.variantMinPrice != null) return __vnd(p.variantMinPrice)
+      if (p.price != null) return __vnd(p.price)
+      return '—'
+    }
+    function __productStock(p) {
+      if (p.totalStock != null) return Number(p.totalStock)
+      if (p.stock != null) return Number(p.stock)
+      return 0
+    }
+    function __productImg(p) {
+      if (p.thumbnail) return p.thumbnail
+      if (p.images && p.images.length) return p.images[0]
+      return null
+    }
+    function __productSnippet(p) {
+      if (p.shortDescription) return p.shortDescription
+      if (p.description) return p.description.length > 100 ? p.description.substring(0, 100) + '…' : p.description
+      return 'Chưa có mô tả'
+    }
+    var __pq = ''
+    if (__search) __pq += '&search=' + encodeURIComponent(__search)
+    if (__minPrice !== '') __pq += '&minPrice=' + encodeURIComponent(String(__minPrice))
+    if (__maxPrice !== '') __pq += '&maxPrice=' + encodeURIComponent(String(__maxPrice))
+    if (__brand) __pq += '&brand=' + encodeURIComponent(__brand)
+    if (__sort && __sort !== 'newest') __pq += '&sort=' + encodeURIComponent(__sort)
+    __selCats.forEach(function (id) { __pq += '&category=' + encodeURIComponent(id) })
 
-      // Products Grid
-      .col-span-1(class="lg:col-span-3")
-        // Results Info
-        if totalItems !== undefined
-          .mb-6.flex.justify-between.items-center
-            p.text-gray-600
-              | Showing 
-              span.font-semibold= (page - 1) * limit + 1
-              |  to 
-              span.font-semibold= Math.min(page * limit, totalItems)
-              |  of 
-              span.font-semibold= totalItems
-              |  products
-        
-        // Products Grid
-        if products && products.length > 0
-          .grid.grid-cols-1(class="md:grid-cols-2 gap-6 mb-8")
-            each product in products
-              .bg-white.rounded-lg.shadow-md.border.border-gray-200.overflow-hidden(class="hover:shadow-lg transition-shadow duration-300")
-                // Product Image
-                a.block.relative.h-48.bg-gray-200.overflow-hidden(href=`/products/${product._id}`)
-                  if product.thumbnail
-                    img.w-full.h-full.object-cover(src=product.thumbnail, alt=product.name)
-                  else if product.images && product.images.length > 0
-                    img.w-full.h-full.object-cover(src=product.images[0], alt=product.name)
-                  else
-                    .w-full.h-full.flex.items-center.justify-center.bg-gray-100
-                      i.fas.fa-image.text-gray-400.text-4xl
-                  
-                  // Category Badge
-                  if product.category
-                    .absolute.top-2.left-2.bg-blue-600.text-white.px-3.py-1.rounded-full.text-xs.font-medium
-                      = product.category.name || 'Uncategorized'
-                
-                // Product Info
-                .p-6
-                  h3.text-lg.font-semibold.text-gray-900.mb-2
-                    a.hover:text-blue-600.transition-colors(href=`/products/${product._id}`)
-                      = product.name
-                  
-                  p.text-gray-600.text-sm.mb-4
-                    = product.description ? product.description.substring(0, 80) + '...' : 'No description'
-                  
-                  // Rating
-                  if product.rating
-                    .flex.items-center.mb-4
-                      .flex.text-yellow-400
-                        - let stars = Math.round(product.rating.average || 0)
-                        - for (let i = 0; i < 5; i++) {
-                          if i < stars
-                            i.fas.fa-star
-                          else
-                            i.far.fa-star
-                        - }
-                      span.text-sm.text-gray-600.ml-2
-                        = `${product.rating.average || 0}/5 (${product.rating.count || 0} reviews)`
-                  
-                  // Price & Stock
-                  .flex.justify-between.items-end
-                    .flex.flex-col
-                      span.text-2xl.font-bold.text-blue-600 $#{product.price}
-                      if product.stock > 0
-                        span.text-xs.text-green-600.font-medium
-                          = product.stock + ' in stock'
-                      else
-                        span.text-xs.text-red-600.font-medium Out of stock
-                    
-                    // Action Button
-                    if product.stock > 0
-                      a.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors.inline-flex.items-center.gap-2(
-                        href=`/products/${product._id}`
-                      )
-                        i.fas.fa-eye
-                        | View
-                    else
-                      button.bg-gray-400.cursor-not-allowed.text-white.font-medium.py-2.px-4.rounded-lg.inline-flex.items-center.gap-2(
-                        disabled
-                      )
-                        i.fas.fa-ban
-                        | Out of Stock
-        else
-          // No Products
-          .text-center.py-12.bg-white.rounded-lg.border.border-gray-200
-            i.fas.fa-inbox.text-gray-400.text-5xl.mb-4
-            h3.text-xl.font-semibold.text-gray-900.mb-2 No products found
-            p.text-gray-600.mb-6 Try adjusting your filters or search criteria
-            a.inline-block.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
-              href="/products"
-            )
-              i.fas.fa-redo.mr-2
-              | Clear Filters
+  //- Tiêu đề trang — cùng tông hero trang chủ (#0d0d0d, cam #f48525)
+  section(class="bg-[#0d0d0d]")
+    div(class="mx-auto max-w-[1440px] px-4 py-12 sm:px-8 lg:px-[128px] lg:py-16")
+      p(class="mb-3 text-xs font-semibold uppercase tracking-wider text-[#f48525]") Danh mục
+      h1(class="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-[2.5rem] lg:leading-tight") Sản phẩm
+      p(class="mt-4 max-w-2xl text-base leading-relaxed text-[#cbd6e2] sm:text-lg")
+        | Khám phá đầy đủ công cụ và thiết bị chính hãng. Lọc theo danh mục, khoảng giá và sắp xếp theo nhu cầu của bạn.
 
-        // Pagination
-        if totalPages && totalPages > 1
-          .flex.justify-center.items-center.gap-2.mt-8
-            if page > 1
-              a.px-3.py-2.border.border-gray-300.rounded-md.text-gray-700.hover:bg-gray-50.transition-colors(
-                href=`/products?page=${page - 1}${minPrice ? `&minPrice=${minPrice}` : ''}${maxPrice ? `&maxPrice=${maxPrice}` : ''}${sort ? `&sort=${sort}` : ''}`
-              )
-                i.fas.fa-chevron-left.mr-1
-                | Previous
-            
-            .flex.gap-1
-              - for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
-                if i === page
-                  .px-3.py-2.bg-blue-600.text-white.rounded-md.font-medium
-                    = i
-                else
-                  a.px-3.py-2.border.border-gray-300.rounded-md.text-gray-700.hover:bg-gray-50.transition-colors(
-                    href=`/products?page=${i}${minPrice ? `&minPrice=${minPrice}` : ''}${maxPrice ? `&maxPrice=${maxPrice}` : ''}${sort ? `&sort=${sort}` : ''}`
+  //- Nội dung: bộ lọc + lưới thẻ (thẻ giống block “Sản phẩm bán chạy” trang chủ)
+  div(class="bg-[#f4f5f7] pb-16 pt-10 lg:pb-20 lg:pt-12")
+    div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+      div(class="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12")
+        //- Sidebar bộ lọc
+        aside(class="lg:col-span-3")
+          div(
+            class="border border-[#dee1e6] bg-white p-6 shadow-[0_2px_4px_rgba(34,37,42,0.06)] lg:sticky lg:top-[100px]"
+          )
+            h2(class="mb-6 text-lg font-semibold text-[#0d0d0d]") Bộ lọc
+            form#filter-form(class="space-y-6" method="get" action="/products")
+              div
+                label.block.text-sm.font-medium(class="mb-2 text-[#181b20]" for="search") Tìm kiếm
+                .relative
+                  i.fa-solid.fa-magnifying-glass.pointer-events-none.absolute.left-3.text-sm(
+                    class="top-1/2 -translate-y-1/2 text-[#323842]"
+                    aria-hidden="true"
                   )
-                    = i
-              - }
-            
-            if page < totalPages
-              a.px-3.py-2.border.border-gray-300.rounded-md.text-gray-700.hover:bg-gray-50.transition-colors(
-                href=`/products?page=${page + 1}${minPrice ? `&minPrice=${minPrice}` : ''}${maxPrice ? `&maxPrice=${maxPrice}` : ''}${sort ? `&sort=${sort}` : ''}`
+                  input#search(
+                    type="search"
+                    name="search"
+                    placeholder="Tên sản phẩm, thương hiệu..."
+                    value=__search
+                    class="h-11 w-full border border-[#dee1e6] pl-10 pr-3 text-sm text-[#181b20] outline-none transition-shadow focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                  )
+
+              div
+                label(class="mb-2 block text-sm font-medium text-[#181b20]") Khoảng giá (₫)
+                div(class="flex gap-2")
+                  input(
+                    type="number"
+                    name="minPrice"
+                    placeholder="Từ"
+                    min="0"
+                    value=__minPrice
+                    class="h-11 w-1/2 border border-[#dee1e6] px-3 text-sm text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                  )
+                  input(
+                    type="number"
+                    name="maxPrice"
+                    placeholder="Đến"
+                    min="0"
+                    value=__maxPrice
+                    class="h-11 w-1/2 border border-[#dee1e6] px-3 text-sm text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                  )
+
+              div
+                label(class="mb-3 block text-sm font-medium text-[#181b20]") Danh mục
+                if __categories.length > 0
+                  ul(class="max-h-48 space-y-2 overflow-y-auto pr-1")
+                    each category in __categories
+                      - var cid = String(category._id)
+                      - var isCatChecked = __selCats.indexOf(cid) >= 0
+                      li.flex.items-center
+                        input.h-4.w-4.rounded.border(
+                          type="checkbox"
+                          name="category"
+                          value=cid
+                          id=`cat-${cid}`
+                          checked=isCatChecked
+                          class="border-[#dee1e6] text-[#f48525] focus:ring-[#f48525]"
+                        )
+                        label.ml-3.cursor-pointer.text-sm(class="text-[#323842] hover:text-[#181b20]" for=`cat-${cid}`)
+                          = category.name
+                else
+                  p.text-sm(class="text-[#323842]") Chưa có danh mục (sẽ hiện khi có dữ liệu)
+
+              div
+                label.block.text-sm.font-medium(class="mb-2 text-[#181b20]" for="brand") Thương hiệu
+                input#brand.w-full.border.px-3.text-sm(
+                  type="text"
+                  name="brand"
+                  placeholder="Ví dụ: Bosch, Makita..."
+                  value=__brand
+                  class="h-11 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                )
+
+              div
+                label.block.text-sm.font-medium(class="mb-2 text-[#181b20]" for="sort") Sắp xếp
+                select#sort.w-full.border.px-3.text-sm(
+                  name="sort"
+                  class="h-11 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                )
+                  option(value="newest" selected=__sort === 'newest') Mới nhất
+                  option(value="oldest" selected=__sort === 'oldest') Cũ nhất
+                  option(value="price_asc" selected=__sort === 'price_asc') Giá tăng dần
+                  option(value="price_desc" selected=__sort === 'price_desc') Giá giảm dần
+                  option(value="name_asc" selected=__sort === 'name_asc') Tên A–Z
+                  option(value="name_desc" selected=__sort === 'name_desc') Tên Z–A
+
+              div(class="flex flex-col gap-3 sm:flex-row")
+                button(
+                  type="submit"
+                  class="inline-flex flex-1 items-center justify-center gap-2 bg-[#f48525] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#e07820] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2"
+                )
+                  i.fa-solid.fa-sliders(aria-hidden="true")
+                  | Áp dụng
+                a(
+                  class="inline-flex flex-1 items-center justify-center gap-2 border border-[#0d0d0d] bg-white py-3 text-sm font-semibold text-[#0d0d0d] transition-colors hover:bg-[#0d0d0d] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2"
+                  href="/products"
+                )
+                  i.fa-solid.fa-rotate-left(aria-hidden="true")
+                  | Xóa lọc
+
+        //- Lưới sản phẩm
+        div(class="lg:col-span-9")
+          div(class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between")
+            div
+              h2(class="text-xl font-bold text-[#0d0d0d] sm:text-2xl") Tất cả sản phẩm
+              p(class="mt-1 text-sm text-[#323842]")
+                if typeof totalItems !== 'undefined'
+                  | Hiển thị&nbsp;
+                  span(class="font-semibold text-[#181b20]")= Math.min((__page - 1) * __limit + 1, __totalItems)
+                  | –
+                  span(class="font-semibold text-[#181b20]")= Math.min(__page * __limit, __totalItems)
+                  | &nbsp;trên&nbsp;
+                  span(class="font-semibold text-[#181b20]")= __totalItems
+                  | &nbsp;sản phẩm
+                else
+                  | Kết nối API sau để hiển thị số lượng và phân trang đầy đủ.
+
+          if __products.length > 0
+            ul.grid.gap-8(
+              class="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+              role="list"
+            )
+              each product in __products
+                - var imgUrl = __productImg(product)
+                - var stockN = __productStock(product)
+                - var avg = product.rating && product.rating.average != null ? Math.round(product.rating.average) : 0
+                li(class="w-full")
+                  article(
+                    class="mx-auto flex h-full w-full max-w-[360px] flex-col overflow-hidden border border-[#eef0f3] bg-white shadow-[0_2px_4px_rgba(34,37,42,0.08)] transition-shadow duration-300 hover:shadow-[0_8px_24px_rgba(34,37,42,0.12)] sm:mx-0 sm:max-w-none"
+                  )
+                    a.relative.block(class="h-[240px] shrink-0 bg-[#f3f4f6] sm:h-[272px]" href=`/products/${product._id}`)
+                      if imgUrl
+                        img(
+                          class="h-full w-full object-cover"
+                          src=imgUrl
+                          alt=product.name
+                          loading="lazy"
+                          decoding="async"
+                        )
+                      else
+                        div(class="flex h-full w-full items-center justify-center bg-[#f3f4f6]")
+                          i.fa-solid.fa-image(class="text-4xl text-[#dee1e6]" aria-hidden="true")
+                      if product.category && product.category.name
+                        span(
+                          class="absolute left-4 top-4 bg-[#0d0d0d] px-2.5 py-0.5 text-xs font-medium text-white"
+                        )= product.category.name
+
+                    div(class="flex flex-1 flex-col px-5 pb-5 pt-4")
+                      if product.rating
+                        div(
+                          class="mb-3 flex gap-0.5"
+                          role="img"
+                        )&attributes({ 'aria-label': 'Đánh giá ' + avg + ' trên 5 sao' })
+                          - for (var s = 1; s <= 5; s++)
+                            if s <= avg
+                              i.fa-solid.fa-star.text-sm(class="text-[#181b20]" aria-hidden="true")
+                            else
+                              i.fa-solid.fa-star.text-sm(class="text-[#dee1e6]" aria-hidden="true")
+                      h3(class="text-base font-semibold leading-snug text-[#181b20]")
+                        a(
+                          class="block w-full line-clamp-2 text-[#181b20] transition-colors hover:text-[#f48525]"
+                          href=`/products/${product._id}`
+                          title=product.name
+                        )= product.name
+                      p(class="mt-2 line-clamp-2 text-sm leading-relaxed text-[#323842]")= __productSnippet(product)
+
+                      div(class="mt-auto flex flex-wrap items-end justify-between gap-3 border-t border-[#f0f1f3] pt-4")
+                        div(class="min-w-0")
+                          p(class="text-lg font-bold text-[#0d0d0d]")= __productPrice(product)
+                          if stockN > 0
+                            p(class="mt-0.5 text-xs font-medium text-emerald-700")= 'Còn ' + stockN + ' sản phẩm'
+                          else
+                            p(class="mt-0.5 text-xs font-medium text-red-600") Hết hàng
+
+                        if stockN > 0
+                          a(
+                            class="inline-flex h-9 shrink-0 items-center gap-1.5 bg-[#f48525] px-3 text-sm font-medium text-white transition-colors hover:bg-[#e07820] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2"
+                            href=`/products/${product._id}`
+                          )
+                            i.fa-solid.fa-eye.text-sm(aria-hidden="true")
+                            | Xem
+                        else
+                          span(
+                            class="inline-flex h-9 cursor-not-allowed items-center gap-1.5 bg-[#dee1e6] px-3 text-sm font-medium text-[#323842]"
+                          )
+                            i.fa-solid.fa-ban.text-sm(aria-hidden="true")
+                            | Hết hàng
+
+          else
+            div(
+              class="flex flex-col items-center justify-center border border-dashed border-[#dee1e6] bg-white px-6 py-16 text-center shadow-[0_2px_4px_rgba(34,37,42,0.06)]"
+            )
+              i.fa-solid.fa-box-open(class="mb-4 text-5xl text-[#dee1e6]" aria-hidden="true")
+              h3(class="text-xl font-semibold text-[#0d0d0d]") Chưa có sản phẩm hiển thị
+              p(class="mt-2 max-w-md text-sm text-[#323842]")
+                | Khi backend truyền danh sách sản phẩm, thẻ sẽ hiển thị theo layout PRO-TOOLS giống trang chủ. Bạn có thể thử bộ lọc hoặc quay lại sau.
+              a(
+                class="mt-8 inline-flex h-12 items-center justify-center border border-[#0d0d0d] bg-white px-8 text-sm font-semibold text-[#0d0d0d] transition-colors hover:bg-[#0d0d0d] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2"
+                href="/"
               )
-                | Next
-                i.fas.fa-chevron-right.ml-1
+                i.fa-solid.fa-house.mr-2(aria-hidden="true")
+                | Về trang chủ
+
+          //- Phân trang (chỉ khi có dữ liệu từ server)
+          if typeof totalPages !== 'undefined' && __totalPages > 1 && __products.length > 0
+            nav.mt-10.flex.justify-center(
+              class="flex-wrap gap-2"
+              aria-label="Phân trang"
+            )
+              if __page > 1
+                a.inline-flex.items-center.gap-1.border.px-4.py-2.text-sm.font-medium.transition-colors(
+                  href=`/products?page=${__page - 1}${__pq}`
+                  class="border-[#dee1e6] text-[#181b20] hover:border-[#f48525] hover:text-[#f48525]"
+                )
+                  i.fa-solid.fa-chevron-left.text-xs(aria-hidden="true")
+                  | Trước
+
+              - for (var i = Math.max(1, __page - 2); i <= Math.min(__totalPages, __page + 2); i++) {
+                if i === __page
+                  span.inline-flex.min-w-10.items-center.justify-center.px-4.py-2.text-sm.font-semibold.text-white(
+                    class="bg-[#f48525]"
+                  )= i
+                else
+                  a.inline-flex.min-w-10.items-center.justify-center.border.px-4.py-2.text-sm.font-medium.transition-colors(
+                    href=`/products?page=${i}${__pq}`
+                    class="border-[#dee1e6] text-[#181b20] hover:border-[#f48525] hover:text-[#f48525]"
+                  )= i
+              - }
+
+              if __page < __totalPages
+                a.inline-flex.items-center.gap-1.border.px-4.py-2.text-sm.font-medium.transition-colors(
+                  href=`/products?page=${__page + 1}${__pq}`
+                  class="border-[#dee1e6] text-[#181b20] hover:border-[#f48525] hover:text-[#f48525]"
+                )
+                  | Sau
+                  i.fa-solid.fa-chevron-right.text-xs(aria-hidden="true")

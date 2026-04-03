@@ -1,110 +1,244 @@
 extends ../../../layouts/main
-include ../../../mixins/cards
-include ../../../mixins/buttons
+
+mixin homeBestsellers()
+  section(class="bg-white py-16 lg:py-20")
+    div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+      header(class="mx-auto mb-12 max-w-[658px] text-center lg:mb-14")
+        h2(
+          class="text-2xl font-bold tracking-tight text-[#0d0d0d] sm:text-3xl lg:text-[2rem] lg:leading-tight"
+        ) Sản phẩm bán chạy
+        p(
+          class="mt-3 text-base leading-relaxed text-[#323842] sm:text-lg"
+        ) Những sản phẩm được tin dùng nhất bởi giới chuyên môn. Cam kết chính hãng và bảo hành dài hạn.
+
+      ul.grid.gap-8(
+        class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        role="list"
+      )
+        each item in bestsellers
+          li(class="w-full")
+            article(
+              class="mx-auto flex w-full max-w-[272px] flex-col overflow-hidden bg-white shadow-[0_2px_4px_rgba(34,37,42,0.08)] transition-shadow duration-300 hover:shadow-[0_8px_24px_rgba(34,37,42,0.12)] sm:mx-0 sm:max-w-none"
+            )
+              a.relative.block(class="h-[272px] shrink-0 bg-[#f3f4f6]" href=item.href)
+                img(
+                  class="h-full w-full object-cover"
+                  src=item.img
+                  alt=item.alt
+                  width="272"
+                  height="272"
+                  loading="lazy"
+                  decoding="async"
+                )
+                span(
+                  class="absolute left-4 top-4 bg-[#0d0d0d] px-2.5 py-0.5 text-xs font-medium text-white"
+                ) Bán chạy
+              div(class="flex flex-1 flex-col px-5 pb-5 pt-4")
+                div(
+                  class="mb-3 flex gap-0.5"
+                  role="img"
+                )&attributes({ 'aria-label': 'Đánh giá ' + item.rating + ' trên 5 sao' })
+                  - for (var s = 1; s <= 5; s++)
+                    if s <= item.rating
+                      i.fa-solid.fa-star.text-sm(class="text-[#181b20]" aria-hidden="true")
+                    else
+                      i.fa-solid.fa-star.text-sm(class="text-[#dee1e6]" aria-hidden="true")
+                h3(class="text-base font-semibold leading-snug text-[#181b20]")
+                  a(
+                    class="block w-full overflow-hidden text-[#181b20] line-clamp-2 transition-colors hover:text-[#f48525]"
+                    href=item.href
+                    title=item.name
+                  )= item.name
+                div(class="mt-auto flex items-end justify-between gap-3 pt-4")
+                  p(
+                    class="text-lg font-bold text-[#0d0d0d]"
+                  )= item.price
+                  button(
+                    type="button"
+                    class="inline-flex h-9 shrink-0 items-center gap-1.5 bg-[#f48525] px-3 text-sm font-medium text-white transition-colors hover:bg-[#e07820] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2"
+                  )&attributes({ 'aria-label': 'Thêm ' + item.name + ' vào giỏ' })
+                    i.fa-solid.fa-bag-shopping.text-sm(aria-hidden="true")
+                    | Thêm
+
+      div(class="mt-12 flex justify-center lg:mt-14")
+        a(
+          class="inline-flex h-14 min-w-[253px] items-center justify-center border border-[#0d0d0d] bg-white px-8 text-sm font-semibold text-[#0d0d0d] transition-colors hover:bg-[#0d0d0d] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2"
+          href="/products"
+        ) Xem tất cả sản phẩm
 
 block content
-  // Hero Section
-  section.bg-gradient-to-r.from-blue-600.to-blue-800.text-white.py-20
-    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
-      .text-center
-        h1.text-5xl.font-bold.mb-6 Welcome to Product Management System
-        p.text-xl.mb-8.max-w-3xl.mx-auto Streamline your product management with our comprehensive solution. Track inventory, manage categories, and boost your business efficiency.
-        .flex.flex-col(class="sm:flex-row gap-4 justify-center")
-          +button-primary('Get Started', '/auth/register', 'fas fa-rocket')
-          +button-secondary('View Products', '/products', 'fas fa-eye')
-  
-  // Features Section
-  section.py-20.bg-white
-    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
-      .text-center.mb-16
-        h2.text-4xl.font-bold.text-gray-900.mb-4 Our Features
-        p.text-xl.text-gray-600.max-w-2xl.mx-auto Everything you need to manage your products efficiently
-      
-      .grid.grid-cols-1(class="md:grid-cols-3 gap-8")
-        .text-center.p-8.rounded-lg.bg-blue-50
-          i.fas.fa-box.text-6xl.text-blue-600.mb-6
-          h3.text-2xl.font-bold.text-gray-900.mb-4 Product Management
-          p.text-gray-600 Efficiently manage your product inventory with our intuitive interface and powerful tools.
-        
-        .text-center.p-8.rounded-lg.bg-green-50
-          i.fas.fa-tags.text-6xl.text-green-600.mb-6
-          h3.text-2xl.font-bold.text-gray-900.mb-4 Category Organization
-          p.text-gray-600 Organize your products with custom categories and tags for better organization.
-        
-        .text-center.p-8.rounded-lg.bg-purple-50
-          i.fas.fa-chart-line.text-6xl.text-purple-600.mb-6
-          h3.text-2xl.font-bold.text-gray-900.mb-4 Analytics & Reports
-          p.text-gray-600 Get insights into your business with detailed analytics and comprehensive reports.
-  
-  // Stats Section
-  section.py-20.bg-gray-50
-    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
-      .grid.grid-cols-2(class="md:grid-cols-4 gap-8 text-center")
-        .stat-item
-          h3.text-4xl.font-bold.text-blue-600.mb-2 1000+
-          p.text-gray-600 Products Managed
-        .stat-item
-          h3.text-4xl.font-bold.text-green-600.mb-2 500+
-          p.text-gray-600 Happy Customers
-        .stat-item
-          h3.text-4xl.font-bold.text-purple-600.mb-2 99.9%
-          p.text-gray-600 Uptime
-        .stat-item
-          h3.text-4xl.font-bold.text-orange-600.mb-2 24/7
-          p.text-gray-600 Support
-  
-  // Sample Products Section
-  section.py-20.bg-white
-    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
-      .text-center.mb-16
-        h2.text-4xl.font-bold.text-gray-900.mb-4 Featured Products
-        p.text-xl.text-gray-600.max-w-2xl.mx-auto Discover our most popular products
-      
-      .grid.grid-cols-1(class="md:grid-cols-2 lg:grid-cols-3 gap-8")
-        .bg-white.rounded-lg.shadow-md.border.border-gray-200.overflow-hidden(class="hover:shadow-lg transition-shadow duration-300")
-          img.w-full.h-48.object-cover(src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400", alt="Wireless Headphones")
-          .p-6
-            h3.text-xl.font-semibold.mb-2 Wireless Headphones
-            p.text-gray-600.mb-4 High-quality wireless headphones with noise cancellation and premium sound quality.
-            .flex.justify-between.items-center.mb-4
-              span.text-2xl.font-bold.text-blue-600 $199.99
-              span.bg-green-100.text-green-800.px-2.py-1.rounded-full.text-sm 25 in stock
-            .flex.gap-2
-              a.bg-blue-600(class="hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center gap-2", href="/products/1")
-                i.fas.fa-eye
-                | View Details
-        
-        .bg-white.rounded-lg.shadow-md.border.border-gray-200.overflow-hidden(class="hover:shadow-lg transition-shadow duration-300")
-          img.w-full.h-48.object-cover(src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400", alt="Smart Watch")
-          .p-6
-            h3.text-xl.font-semibold.mb-2 Smart Watch
-            p.text-gray-600.mb-4 Advanced smartwatch with health monitoring, GPS, and water resistance.
-            .flex.justify-between.items-center.mb-4
-              span.text-2xl.font-bold.text-blue-600 $299.99
-              span.bg-green-100.text-green-800.px-2.py-1.rounded-full.text-sm 15 in stock
-            .flex.gap-2
-              a.bg-blue-600(class="hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center gap-2", href="/products/2")
-                i.fas.fa-eye
-                | View Details
-        
-        .bg-white.rounded-lg.shadow-md.border.border-gray-200.overflow-hidden(class="hover:shadow-lg transition-shadow duration-300")
-          img.w-full.h-48.object-cover(src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400", alt="Running Shoes")
-          .p-6
-            h3.text-xl.font-semibold.mb-2 Running Shoes
-            p.text-gray-600.mb-4 Comfortable running shoes with advanced cushioning and breathable material.
-            .flex.justify-between.items-center.mb-4
-              span.text-2xl.font-bold.text-blue-600 $129.99
-              span.bg-green-100.text-green-800.px-2.py-1.rounded-full.text-sm 40 in stock
-            .flex.gap-2
-              a.bg-blue-600(class="hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center gap-2", href="/products/3")
-                i.fas.fa-eye
-                | View Details
-  
-  // CTA Section
-  section.bg-gradient-to-r.from-gray-900.to-gray-800.text-white.py-20
-    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 text-center")
-      h2.text-4xl.font-bold.mb-6 Ready to Get Started?
-      p.text-xl.mb-8.max-w-2xl.mx-auto Join thousands of businesses already using our product management system.
-      .flex.flex-col(class="sm:flex-row gap-4 justify-center")
-        +button-primary('Start Free Trial', '/auth/register', 'fas fa-play')
-        +button-secondary('Contact Sales', '/contact', 'fas fa-phone')
+  //- Hero — Figma 1440×638: nền #0d0d0d, cột trái overlay 40% + blur 2px, ảnh phải ~592px
+  section(class="relative min-h-[638px] overflow-hidden bg-[#0d0d0d]")
+    div(class="mx-auto flex min-h-[638px] max-w-[1440px] flex-col lg:flex-row")
+      //- Nội dung (mobile: sau ảnh; desktop: trái ~848px)
+      div(
+        class="relative order-2 flex min-h-[480px] flex-1 flex-col justify-center px-4 py-14 sm:px-8 lg:order-1 lg:max-w-[848px] lg:flex-none lg:min-h-[638px] lg:pl-[128px] lg:pr-14 lg:py-20"
+      )
+        div(
+          class="pointer-events-none absolute inset-0 z-0 bg-[rgba(13,13,13,0.4)] backdrop-blur-[2px]"
+          aria-hidden="true"
+        )
+        div(class="relative z-10 max-w-xl lg:max-w-[563px]")
+          p(
+            class="mb-6 inline-flex items-center bg-[#f48525] px-5 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_24px_rgba(244,133,37,0.35)]"
+          ) Quality Guaranteed
+          h1(
+            class="font-bold tracking-tight text-white text-4xl leading-[1.1] sm:text-5xl lg:text-6xl xl:text-[3.5rem] xl:leading-[1.08]"
+          )
+            span.block Đồ nghề chính hãng
+            span.mt-1.block.text-white.opacity-95 — Giá tốt nhất
+          p(
+            class="mt-8 max-w-[563px] text-lg leading-relaxed text-[#cbd6e2] sm:text-xl"
+          ) Cung cấp các giải pháp công cụ cầm tay và máy móc chuyên nghiệp từ những thương hiệu hàng đầu thế giới. Bền bỉ, chính xác và hiệu quả cho mọi công trình.
+          div(class="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center")
+            a(
+              class="inline-flex h-14 items-center justify-center bg-[#f48525] px-10 text-base font-semibold text-white transition-all hover:bg-[#e07820] hover:shadow-[0_12px_40px_rgba(244,133,37,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d0d]"
+              href="/products"
+            ) Mua ngay
+            a(
+              class="inline-flex h-14 items-center justify-center border border-white bg-white px-10 text-base font-semibold text-[#323844] transition-colors hover:border-white/90 hover:bg-white/95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d0d]"
+              href="#"
+            ) Xem bộ sưu tập
+
+      //- Ảnh hero (mobile: trên cùng; desktop: phải 592px)
+      div(class="relative order-1 w-full lg:order-2 lg:w-[592px] lg:flex-none lg:min-h-[638px]")
+        div(class="absolute inset-0 bg-[#d9d9d9] lg:hidden" aria-hidden="true")
+        picture(class="block h-full w-full")
+          img(
+            class="h-56 w-full object-cover sm:h-72 lg:absolute lg:inset-0 lg:h-full lg:min-h-[395px]"
+            src="https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=1400&q=80"
+            alt="Công cụ và thiết bị chuyên nghiệp trong xưởng"
+            width="592"
+            height="395"
+            loading="eager"
+            decoding="async"
+          )
+        div(
+          class="pointer-events-none absolute inset-y-0 left-0 hidden w-24 bg-gradient-to-r from-[#0d0d0d] to-transparent lg:block"
+          aria-hidden="true"
+        )
+
+  //- Danh mục nổi bật — Figma: nền #f9fafb, gạch cam 96×6, 6 ô 184×184
+  -
+    var featuredCategories = [
+      { name: 'Máy Khoan', href: '/products', img: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=400&q=80', alt: 'Máy khoan' },
+      { name: 'Máy Mài', href: '/products', img: 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?auto=format&fit=crop&w=400&q=80', alt: 'Máy mài' },
+      { name: 'Cờ Lê', href: '/products', img: 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=400&q=80', alt: 'Cờ lê và cờ lê vòng' },
+      { name: 'Tua Vít', href: '/products', img: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=400&q=80', alt: 'Tua vít' },
+      { name: 'Thang Nhôm', href: '/products', img: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=400&q=80', alt: 'Thang nhôm' },
+      { name: 'Tủ Đồ Nghề', href: '/products', img: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=400&q=80', alt: 'Tủ đồ nghề' },
+    ]
+  section(class="bg-[#f9fafb] py-16 lg:py-[72px]")
+    div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+      div(class="mb-10 flex flex-col gap-6 sm:mb-12 sm:flex-row sm:items-end sm:justify-between")
+        div
+          h2(class="text-2xl font-bold tracking-tight text-[#0d0d0d] sm:text-3xl") Danh mục nổi bật
+          div(
+            class="mt-3 h-1.5 w-24 bg-[#f48525]"
+            aria-hidden="true"
+          )
+        a.inline-flex.items-center.gap-1.text-sm.font-medium.transition-opacity(
+          class="text-[#f48525] hover:opacity-90"
+          href="/products"
+        )
+          span Xem tất cả danh mục
+          i.fa-solid.fa-chevron-right.text-xs(aria-hidden="true")
+
+      ul.grid.gap-4(
+        class="grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
+        role="list"
+      )
+        each cat in featuredCategories
+          li
+            a(
+              class="group relative block h-[184px] w-full max-w-[184px] overflow-hidden bg-[#0d0d0d] mx-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f9fafb] sm:mx-0 sm:max-w-none"
+              href=cat.href
+            )
+              img(
+                class="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
+                src=cat.img
+                alt=cat.alt
+                width="184"
+                height="184"
+                loading="lazy"
+                decoding="async"
+              )
+              div(
+                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/20"
+                aria-hidden="true"
+              )
+              span(
+                class="absolute inset-0 flex items-center justify-center px-2 text-center text-lg font-semibold text-white drop-shadow-md"
+              )= cat.name
+
+  //- Sản phẩm bán chạy (Figma) — lặp 2 block giống layout trang
+  -
+    var bestsellers = [
+      {
+        name: 'Máy Khoan Động Lực Bosch GSB 550 RE Freedom',
+        price: '1.250.000₫',
+        href: '/products/1',
+        img: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=544&q=80',
+        alt: 'Máy khoan Bosch',
+        rating: 5,
+      },
+      {
+        name: 'Bộ Chìa Khóa Vòng Miệng Stanley 14 Chi Tiết',
+        price: '890.000₫',
+        href: '/products/2',
+        img: 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=544&q=80',
+        alt: 'Bộ cờ lê Stanley',
+        rating: 4,
+      },
+      {
+        name: 'Máy Mài Góc Makita 9553NB (710W)',
+        price: '1.050.000₫',
+        href: '/products/3',
+        img: 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?auto=format&fit=crop&w=544&q=80',
+        alt: 'Máy mài góc Makita',
+        rating: 5,
+      },
+      {
+        name: 'Thang Nhôm Rút Đơn NIKITA AI-38 (3.8m)',
+        price: '1.650.000₫',
+        href: '/products/4',
+        img: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=544&q=80',
+        alt: 'Thang nhôm rút',
+        rating: 5,
+      },
+    ]
+  +homeBestsellers()
+
+  //- Ưu đãi chào mừng — Figma 1:255 (1184×258, cam #f48525, blob + CTA)
+  section(class="bg-white py-12 lg:py-16")
+    div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+      div(
+        class="relative isolate mx-auto max-w-[1184px] min-h-[220px] overflow-hidden bg-[#f48525] shadow-[0_8px_16px_rgba(244,133,37,0.2)] sm:min-h-[240px] lg:min-h-[258px]"
+      )
+        div(
+          class="pointer-events-none absolute right-0 top-0 h-[320px] w-[320px] -translate-y-20 rounded-full bg-white/10 blur-[128px]"
+          aria-hidden="true"
+        )
+        div(
+          class="pointer-events-none absolute left-0 top-[82px] h-64 w-64 -translate-x-20 rounded-full bg-black/10 blur-[80px]"
+          aria-hidden="true"
+        )
+        div(
+          class="relative z-10 flex flex-col gap-8 px-6 py-10 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:px-20 lg:py-14"
+        )
+          div(class="max-w-[520px] flex-1 lg:max-w-none")
+            h2(
+              class="text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-[2rem] lg:leading-tight"
+            ) Ưu đãi chào mừng!
+            p(class="mt-3 text-lg font-medium text-white sm:text-xl") Giảm 20% cho đơn hàng đầu tiên
+            div(class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2")
+              span(class="text-base text-white/80") Nhập mã:
+              span(
+                class="inline-flex items-center bg-white/20 px-3 py-1 text-sm font-semibold tracking-wide text-white/90"
+                role="status"
+              ) WELCOME20
+          div(class="shrink-0")
+            a(
+              class="inline-flex h-16 w-full min-w-0 items-center justify-center bg-[#0d0d0d] px-8 text-base font-semibold text-white shadow-[0_6px_12px_rgba(0,0,0,0.2)] transition-colors hover:bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#f48525] sm:w-auto sm:min-w-[252px]"
+              href="/products"
+            ) Nhận ưu đãi ngay

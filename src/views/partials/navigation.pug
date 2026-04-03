@@ -1,24 +1,133 @@
-//- Navigation partial
-nav.bg-white.shadow-sm.border-b.border-gray-200
-  .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8")
-    .flex.justify-between.items-center.h-16
-      // Logo
-      .flex.items-center
-        a.flex.items-center(href="/")
-          i.fas.fa-box.text-blue-600.text-2xl.mr-2
-          span.text-xl.font-bold.text-gray-900 Product Management
-      
-      // Desktop Navigation
-      .hidden(class="md:flex md:items-center md:space-x-8")
-        a.text-gray-700(class="hover:text-blue-600 transition-colors", href="/") Home
-        a.text-gray-700(class="hover:text-blue-600 transition-colors", href="/products") Products
-        a.text-gray-700(class="hover:text-blue-600 transition-colors", href="/categories") Categories
-        
-        .flex.space-x-4
-          a.text-gray-700(class="hover:text-blue-600 transition-colors px-4 py-2 hover:bg-blue-700 rounded-md hover:text-white", href="/auth/login") Login
-          a.bg-blue-600(class="hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors", href="/auth/register") Sign Up
-      
-      // Mobile menu button
-      .md.hidden
-        button.inline-flex.items-center.justify-center.p-2.rounded-md.text-gray-700(class="hover:text-blue-600 hover:bg-gray-100", type="button")
-          i.fas.fa-bars
+//- Header theo Figma: 81px, nền trắng ~95% + blur 4px, viền #dee1e6, accent #f48525
+//- Các class có [...] đặt trong class="..." (Pug không parse được .max-w-[1440px])
+- var path = typeof currentPath !== 'undefined' ? currentPath : '/'
+- var isHome = path === '/' || path === ''
+- var isProducts = path.indexOf('/products') === 0
+
+nav#site-header.sticky.top-0.z-50(
+  class="border-b border-[#dee1e6] bg-[rgba(255,255,255,0.95)] backdrop-blur-[4px]"
+  role="navigation"
+  aria-label="Thanh điều hướng chính"
+)
+  div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+    div(class="flex h-[81px] items-center justify-between gap-4")
+      //- Trái: logo + menu desktop
+      .flex.min-w-0.flex-1.items-center(class="gap-6 lg:gap-10")
+        a.flex.items-center.gap-2.shrink-0(href="/" class="min-w-0")
+          div(class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[7px] bg-[#f48525]")
+            i.fa-solid.fa-wrench.text-lg.text-white(aria-hidden="true")
+          span.text-lg.font-semibold.tracking-tight(class="text-[#f48525]") PRO-TOOLS
+
+        ul.hidden.items-center(class="lg:flex lg:gap-8")
+          li
+            a.text-sm.font-medium.transition-colors(
+              href="/"
+              class=isHome ? 'text-[#f48525] border-b-2 border-[#f48525] pb-1' : 'text-[#181b20] hover:text-[#f48525] border-b-2 border-transparent pb-1'
+            ) Trang chủ
+          li
+            a.text-sm.font-medium.transition-colors(
+              href="/products"
+              class=isProducts ? 'text-[#f48525] border-b-2 border-[#f48525] pb-1' : 'text-[#181b20] hover:text-[#f48525] border-b-2 border-transparent pb-1'
+            ) Sản phẩm
+          li
+            a.text-sm.font-medium.transition-colors(href="#" class="text-[#181b20] hover:text-[#f48525]") Bộ sưu tập
+          li
+            a.text-sm.font-medium.transition-colors(href="#" class="text-[#181b20] hover:text-[#f48525]") Blog
+          li
+            a.text-sm.font-medium.transition-colors(href="#" class="text-[#181b20] hover:text-[#f48525]") Liên hệ
+
+      //- Phải: tìm kiếm + giỏ + avatar (tablet+)
+      .hidden.items-center(class="md:flex md:gap-5")
+        form.flex.items-center(action="/products" method="get" role="search" class="w-[255px] max-w-[36vw]")
+          label.sr-only(for="header-search") Tìm sản phẩm
+          .relative.w-full
+            i.fa-solid.fa-magnifying-glass.pointer-events-none.absolute.left-3.text-sm(
+              class="top-1/2 -translate-y-1/2 text-[#323842]"
+              aria-hidden="true"
+            )
+            input#header-search.w-full.border.pl-10.pr-3.text-sm.outline-none.transition-shadow(
+              type="search"
+              name="q"
+              placeholder="Tìm sản phẩm..."
+              class="h-[39px] border-[#bdc2cb] text-[#323842] placeholder:text-[#323842]/80 focus:border-[#f48525] focus:ring-2 focus:ring-[#f48525]/25"
+            )
+
+        a.relative.inline-flex.transition-colors(
+          href="#"
+          class="text-[#181b20] hover:text-[#f48525]"
+          aria-label="Giỏ hàng, 3 sản phẩm"
+        )
+          i.fa-solid.fa-bag-shopping.text-2xl(aria-hidden="true")
+          span.absolute.-top-1.min-h-5.min-w-5.rounded-full.px-1.text-center.text-xs.font-semibold.leading-5.text-white(
+            class="left-[14px] bg-[#f48525]"
+          ) 3
+
+        a.relative.inline-flex.shrink-0.items-center.justify-center.overflow-hidden.rounded-full(
+          href="/auth/login"
+          class="h-9 w-9 bg-[#fbe7f8]"
+          aria-label="Tài khoản"
+        )
+          i.fa-solid.fa-user.text-lg(class="text-[#181b20]" aria-hidden="true")
+          span.absolute.bottom-0.right-0.rounded-full.border-white(
+            class="h-[9px] w-[9px] border-[1.5px] bg-[#1dd75b]"
+            aria-hidden="true"
+          )
+
+      //- Mobile: icon tìm + menu
+      .flex.items-center(class="md:hidden gap-3")
+        a(href="/products" class="text-[#181b20]" aria-label="Tìm kiếm")
+          i.fa-solid.fa-magnifying-glass.text-xl(aria-hidden="true")
+        button#nav-mobile-toggle.inline-flex.items-center.justify-center.rounded-md.p-2.transition-colors(
+          type="button"
+          class="text-[#181b20] hover:bg-black/5"
+          aria-expanded="false"
+          aria-controls="mobile-nav-panel"
+        )
+          i.fa-solid.fa-bars.text-xl(aria-hidden="true")
+          span.sr-only Mở menu
+
+  //- Panel menu mobile
+  #mobile-nav-panel.hidden.border-t.px-4.py-4.backdrop-blur-md(
+    class="border-[#dee1e6] bg-[rgba(255,255,255,0.98)] lg:hidden"
+  )
+    form.mb-4(action="/products" method="get" role="search")
+      label.sr-only(for="header-search-mobile") Tìm sản phẩm
+      .relative
+        i.fa-solid.fa-magnifying-glass.pointer-events-none.absolute.left-3.text-sm(class="top-1/2 -translate-y-1/2 text-[#323842]")
+        input#header-search-mobile.w-full.border.pl-10.pr-3.text-sm(
+          type="search"
+          name="q"
+          placeholder="Tìm sản phẩm..."
+          class="h-[39px] border-[#bdc2cb] text-[#323842] focus:border-[#f48525] focus:outline-none focus:ring-2 focus:ring-[#f48525]/25"
+        )
+    ul.flex.flex-col.gap-1
+      li
+        a.block.py-2.text-sm.font-medium(href="/" class=isHome ? 'text-[#f48525]' : 'text-[#181b20]') Trang chủ
+      li
+        a.block.py-2.text-sm.font-medium(href="/products" class=isProducts ? 'text-[#f48525]' : 'text-[#181b20]') Sản phẩm
+      li
+        a.block.py-2.text-sm.font-medium(href="#" class="text-[#181b20]") Bộ sưu tập
+      li
+        a.block.py-2.text-sm.font-medium(href="#" class="text-[#181b20]") Blog
+      li
+        a.block.py-2.text-sm.font-medium(href="#" class="text-[#181b20]") Liên hệ
+    .mt-4.flex.items-center.justify-between.border-t.pt-4(class="border-[#dee1e6]")
+      a.flex.items-center.gap-2.text-sm.font-medium(href="#" class="text-[#181b20]")
+        span.relative.inline-flex
+          i.fa-solid.fa-bag-shopping.text-xl
+          span.absolute.-top-1.left-4.min-h-5.min-w-5.rounded-full.px-1.text-center.text-xs.font-semibold.leading-5.text-white(class="bg-[#f48525]") 3
+        | Giỏ hàng
+      a.flex.items-center.justify-center.rounded-full(href="/auth/login" class="h-9 w-9 bg-[#fbe7f8]" aria-label="Tài khoản")
+        i.fa-solid.fa-user(class="text-[#181b20]")
+
+script.
+  (function () {
+    var btn = document.getElementById('nav-mobile-toggle');
+    var panel = document.getElementById('mobile-nav-panel');
+    if (!btn || !panel) return;
+    btn.addEventListener('click', function () {
+      panel.classList.toggle('hidden');
+      var open = !panel.classList.contains('hidden');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  })();

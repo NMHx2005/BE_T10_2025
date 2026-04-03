@@ -35,6 +35,12 @@ app.use(express.urlencoded({ extended: true }));
 // 5. rate limiting middleware (nếu cần)
 app.use(generalLimiter);
 
+// Locals cho view (active nav, v.v.)
+app.use((req, res, next) => {
+    res.locals.currentPath = req.path || '/';
+    next();
+});
+
 // ROUTES
 // API routes với rate limiting riêng (nếu cần)
 app.use('/api', apiLimiter);

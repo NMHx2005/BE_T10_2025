@@ -1,53 +1,109 @@
-//- Footer partial
-footer.bg-gray-900.text-white
-  .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 py-12")
-    .grid.grid-cols-1(class="md:grid-cols-4 gap-8")
-      // Company Info
-      .col-span-1(class="md:col-span-2")
-        .flex.items-center.mb-4
-          i.fas.fa-box.text-blue-400.text-2xl.mr-2
-          span.text-xl.font-bold Product Management
-        p.text-gray-400.mb-4 A comprehensive product management solution for businesses of all sizes.
-        .flex.space-x-4
-          a.text-gray-400(class="hover:text-white transition-colors", href="#")
-            i.fab.fa-facebook.text-xl
-          a.text-gray-400(class="hover:text-white transition-colors", href="#")
-            i.fab.fa-twitter.text-xl
-          a.text-gray-400(class="hover:text-white transition-colors", href="#")
-            i.fab.fa-linkedin.text-xl
-      
-      // Quick Links
-      .col-span-1
-        h3.text-lg.font-semibold.mb-4 Quick Links
-        ul.space-y-2
-          li
-            a.text-gray-400(class="hover:text-white transition-colors", href="/") Home
-          li
-            a.text-gray-400(class="hover:text-white transition-colors", href="/products") Products
-          li
-            a.text-gray-400(class="hover:text-white transition-colors", href="/about") About
-          li
-            a.text-gray-400(class="hover:text-white transition-colors", href="/contact") Contact
-      
-      // Contact Info
-      .col-span-1
-        h3.text-lg.font-semibold.mb-4 Contact
-        .space-y-2
-          p.text-gray-400
-            i.fas.fa-envelope.mr-2
-            | info@productmanagement.com
-          p.text-gray-400
-            i.fas.fa-phone.mr-2
-            | +1 (555) 123-4567
-          p.text-gray-400
-            i.fas.fa-map-marker-alt.mr-2
-            | 123 Business St, City, State 12345
-  
-  // Bottom bar
-  .border-t.border-gray-800
-    .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 py-4")
-      .flex.flex-col(class="md:flex-row justify-between items-center")
-        p.text-gray-400.text-sm &copy; 2024 Product Management System. All rights reserved.
-        p.text-gray-400.text-sm Made with 
-          i.fas.fa-heart.text-red-500.mx-1
-          |  by Development Team
+//- Footer — Figma 1:3 (#0d0d0d, PRO-TOOLS, 4 cột, newsletter, bottom bar)
+footer(class="bg-[#0d0d0d] text-white")
+  div(class="mx-auto max-w-[1440px] px-4 py-14 sm:px-8 lg:px-[128px] lg:pb-12 lg:pt-20")
+    div(class="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-x-10 xl:gap-x-14")
+      //- Cột 1 — thương hiệu + mạng xã hội
+      div(class="max-w-[280px]")
+        a(class="inline-flex items-center gap-2.5" href="/")
+          span(class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#f48525]")
+            i.fa-solid.fa-wrench(class="text-sm text-white" aria-hidden="true")
+          span(class="text-xl font-bold tracking-wide text-[#f48525]") PRO-TOOLS
+        p(class="mt-6 text-sm leading-relaxed text-[#323842] sm:text-[15px]")
+          | Nhà phân phối dụng cụ cầm tay chuyên nghiệp hàng đầu tại Việt Nam. Chúng tôi cam kết chất lượng sản phẩm và sự hài lòng tuyệt đối của khách hàng.
+        div(class="mt-8 flex gap-4")
+          a(
+            class="flex h-[34px] w-[34px] items-center justify-center bg-white/5 text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525]"
+            href="#"
+            aria-label="Facebook"
+          )
+            i.fa-brands.fa-facebook-f(class="text-[18px]" aria-hidden="true")
+          a(
+            class="flex h-[34px] w-[34px] items-center justify-center bg-white/5 text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525]"
+            href="#"
+            aria-label="Instagram"
+          )
+            i.fa-brands.fa-instagram(class="text-[18px]" aria-hidden="true")
+          a(
+            class="flex h-[34px] w-[34px] items-center justify-center bg-white/5 text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525]"
+            href="#"
+            aria-label="YouTube"
+          )
+            i.fa-brands.fa-youtube(class="text-[18px]" aria-hidden="true")
+
+      //- Cột 2 — Thông tin cửa hàng
+      div
+        div(class="mb-6 flex items-center gap-4")
+          span(class="h-7 w-1 shrink-0 bg-[#f48525]" aria-hidden="true")
+          h3(class="text-lg font-semibold leading-7 text-white") Thông tin cửa hàng
+        nav(aria-label="Thông tin cửa hàng")
+          ul(class="space-y-4 text-sm")
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Về chúng tôi
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Hệ thống cửa hàng
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Tuyển dụng
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Liên hệ với chúng tôi
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Câu hỏi thường gặp (FAQ)
+
+      //- Cột 3 — Chính sách
+      div
+        div(class="mb-6 flex items-center gap-4")
+          span(class="h-7 w-1 shrink-0 bg-[#f48525]" aria-hidden="true")
+          h3(class="text-lg font-semibold leading-7 text-white") Chính sách
+        nav(aria-label="Chính sách")
+          ul(class="space-y-4 text-sm")
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Chính sách bảo hành
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Đổi trả trong 7 ngày
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Phương thức vận chuyển
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Chính sách bảo mật
+            li
+              a(class="text-[#323842] transition-colors hover:text-white" href="#") Điều khoản dịch vụ
+
+      //- Cột 4 — Đăng ký nhận tin + liên hệ
+      div(class="lg:max-w-[272px]")
+        div(class="mb-6 flex items-center gap-4")
+          span(class="h-7 w-1 shrink-0 bg-[#f48525]" aria-hidden="true")
+          h3(class="text-lg font-semibold leading-7 text-white") Đăng ký nhận tin
+        p(class="mb-5 text-sm leading-relaxed text-[#323842]")
+          | Đăng ký để nhận các ưu đãi mới nhất và mẹo vặt cơ khí hàng tuần.
+        form(class="mb-8 flex" action="#" method="get")
+          label(class="sr-only" for="footer-newsletter-email") Email đăng ký nhận tin
+          input#footer-newsletter-email(
+            type="email"
+            name="email"
+            placeholder="Email của bạn..."
+            autocomplete="email"
+            class="h-12 min-w-0 flex-1 border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-[#323842] focus:border-[#f48525] focus:outline-none focus:ring-1 focus:ring-[#f48525]"
+          )
+          button(
+            type="submit"
+            class="flex h-12 w-12 shrink-0 items-center justify-center bg-[#f48525] text-white transition-colors hover:bg-[#e07820] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d0d]"
+            aria-label="Gửi đăng ký email"
+          )
+            i.fa-solid.fa-envelope(class="text-lg" aria-hidden="true")
+        div(class="space-y-4 text-sm text-[#323842]")
+          div(class="flex gap-3")
+            i.fa-solid.fa-phone(class="mt-0.5 shrink-0 text-base text-[#f48525]" aria-hidden="true")
+            p(class="leading-snug") Hotline: 1900 6789 (8h00 - 21h00)
+          div(class="flex gap-3")
+            i.fa-solid.fa-location-dot(class="mt-0.5 shrink-0 text-sm text-[#f48525]" aria-hidden="true")
+            p(class="leading-snug") 123 Đường Kỹ Thuật, Quận Công Nghiệp, TP.HCM
+
+  //- Thanh dưới — viền + bản quyền + cổng thanh toán (ảnh Figma → icon thương hiệu)
+  div(class="border-t border-white/10")
+    div(class="mx-auto max-w-[1184px] px-4 py-8 sm:px-8 lg:px-0")
+      div(class="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between")
+        - var footerYear = new Date().getFullYear()
+        p(class="text-xs leading-normal text-[#323842] sm:text-sm")
+          | © #{footerYear} PRO-TOOLS VIETNAM. ALL RIGHTS RESERVED. DESIGN BY AI.
+        div(class="flex flex-wrap items-center gap-6")
+          i.fab.fa-cc-visa(class="text-[2.25rem] text-[#323842] opacity-90 transition-opacity hover:opacity-100" aria-hidden="true" title="Visa")
+          i.fab.fa-cc-mastercard(class="text-[2.25rem] text-[#323842] opacity-90 transition-opacity hover:opacity-100" aria-hidden="true" title="Mastercard")
+          i.fab.fa-cc-paypal(class="text-[2.25rem] text-[#323842] opacity-90 transition-opacity hover:opacity-100" aria-hidden="true" title="PayPal")
