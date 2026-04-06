@@ -62,16 +62,28 @@ nav#site-header.sticky.top-0.z-50(
             class="left-[14px] bg-[#f48525]"
           ) 3
 
-        a.relative.inline-flex.shrink-0.items-center.justify-center.overflow-hidden.rounded-full(
-          href="/auth/login"
-          class="h-9 w-9 bg-[#fbe7f8]"
-          aria-label="Tài khoản"
-        )
-          i.fa-solid.fa-user.text-lg(class="text-[#181b20]" aria-hidden="true")
-          span.absolute.bottom-0.right-0.rounded-full.border-white(
-            class="h-[9px] w-[9px] border-[1.5px] bg-[#1dd75b]"
-            aria-hidden="true"
+        .relative
+          button#account-menu-button.relative.inline-flex.shrink-0.items-center.justify-center.overflow-hidden.rounded-full(
+            type="button"
+            class="h-9 w-9 bg-[#fbe7f8]"
+            aria-label="Mở menu tài khoản"
+            aria-expanded="false"
+            aria-controls="account-dropdown"
           )
+            i.fa-solid.fa-user.text-lg(class="text-[#181b20]" aria-hidden="true")
+            span.absolute.bottom-0.right-0.rounded-full.border-white(
+              class="h-[9px] w-[9px] border-[1.5px] bg-[#1dd75b]"
+              aria-hidden="true"
+            )
+          #account-dropdown.hidden.absolute.right-0.top-12.w-56.overflow-hidden.border.bg-white(
+            class="border-[#dee1e6] shadow-[0_8px_24px_rgba(34,37,42,0.12)]"
+            role="menu"
+            aria-labelledby="account-menu-button"
+          )
+            p#account-menu-greeting.px-4.py-3.text-xs.font-medium.uppercase.tracking-wide(
+              class="bg-[#f9fafb] text-[#8c8f95]"
+            ) Tài khoản
+            ul#account-menu-list.py-1
 
       //- Mobile: icon tìm + menu
       .flex.items-center(class="md:hidden gap-3")
@@ -117,8 +129,21 @@ nav#site-header.sticky.top-0.z-50(
           i.fa-solid.fa-bag-shopping.text-xl
           span.absolute.-top-1.left-4.min-h-5.min-w-5.rounded-full.px-1.text-center.text-xs.font-semibold.leading-5.text-white(class="bg-[#f48525]") 3
         | Giỏ hàng
-      a.flex.items-center.justify-center.rounded-full(href="/auth/login" class="h-9 w-9 bg-[#fbe7f8]" aria-label="Tài khoản")
+      button#mobile-account-toggle.flex.items-center.justify-center.rounded-full(
+        type="button"
+        class="h-9 w-9 bg-[#fbe7f8]"
+        aria-label="Mở menu tài khoản"
+        aria-expanded="false"
+        aria-controls="mobile-account-dropdown"
+      )
         i.fa-solid.fa-user(class="text-[#181b20]")
+    #mobile-account-dropdown.hidden.mt-3.border.bg-white(
+      class="border-[#dee1e6]"
+    )
+      p#mobile-account-greeting.px-4.py-3.text-xs.font-medium.uppercase.tracking-wide(
+        class="bg-[#f9fafb] text-[#8c8f95]"
+      ) Tài khoản
+      ul#mobile-account-menu.py-1
 
 script.
   (function () {
@@ -130,4 +155,120 @@ script.
       var open = !panel.classList.contains('hidden');
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
+
+    var accountBtn = document.getElementById('account-menu-button');
+    var accountDrop = document.getElementById('account-dropdown');
+    var accountList = document.getElementById('account-menu-list');
+    var accountGreeting = document.getElementById('account-menu-greeting');
+
+    var mobileAccountBtn = document.getElementById('mobile-account-toggle');
+    var mobileAccountDrop = document.getElementById('mobile-account-dropdown');
+    var mobileAccountList = document.getElementById('mobile-account-menu');
+    var mobileAccountGreeting = document.getElementById('mobile-account-greeting');
+
+    function getAuthState() {
+      var token = localStorage.getItem('accessToken');
+      var rawUser = localStorage.getItem('user');
+      var user = null;
+      if (rawUser) {
+        try {
+          user = JSON.parse(rawUser);
+        } catch (e) {
+          user = null;
+        }
+      }
+      return { token: token, user: user, loggedIn: !!token };
+    }
+
+    function itemHtml(item) {
+      return (
+        '<li>' +
+          '<a class="flex items-center gap-3 px-4 py-2 text-sm text-[#181b20] transition-colors hover:bg-[#fff7ef] hover:text-[#f48525]" href="' + item.href + '"' +
+          (item.action ? ' data-action="' + item.action + '"' : '') +
+          '>' +
+            '<i class="' + item.icon + ' text-sm" aria-hidden="true"></i>' +
+            '<span>' + item.label + '</span>' +
+          '</a>' +
+        '</li>'
+      );
+    }
+
+    function renderAccountMenus() {
+      var state = getAuthState();
+      var name = state.user && (state.user.username || state.user.email) ? (state.user.username || state.user.email) : 'Khách';
+      var items = state.loggedIn
+        ? [
+            { href: '/profile', icon: 'fa-regular fa-user', label: 'Trang cá nhân' },
+            { href: '/profile/orders', icon: 'fa-solid fa-bag-shopping', label: 'Đơn hàng của tôi' },
+            { href: '/profile/addresses', icon: 'fa-solid fa-location-dot', label: 'Sổ địa chỉ' },
+            { href: '/auth/logout', icon: 'fa-solid fa-right-from-bracket', label: 'Đăng xuất', action: 'logout' }
+          ]
+        : [
+            { href: '/auth/login', icon: 'fa-solid fa-right-to-bracket', label: 'Đăng nhập' },
+            { href: '/auth/register', icon: 'fa-solid fa-user-plus', label: 'Đăng ký tài khoản' }
+          ];
+
+      if (accountGreeting) accountGreeting.textContent = state.loggedIn ? ('Xin chào, ' + name) : 'Khách';
+      if (mobileAccountGreeting) mobileAccountGreeting.textContent = state.loggedIn ? ('Xin chào, ' + name) : 'Khách';
+      if (accountList) accountList.innerHTML = items.map(itemHtml).join('');
+      if (mobileAccountList) mobileAccountList.innerHTML = items.map(itemHtml).join('');
+    }
+
+    function closeDesktopDropdown() {
+      if (!accountDrop || !accountBtn) return;
+      accountDrop.classList.add('hidden');
+      accountBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    function closeMobileDropdown() {
+      if (!mobileAccountDrop || !mobileAccountBtn) return;
+      mobileAccountDrop.classList.add('hidden');
+      mobileAccountBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    if (accountBtn && accountDrop) {
+      accountBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        accountDrop.classList.toggle('hidden');
+        var open = !accountDrop.classList.contains('hidden');
+        accountBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', function (e) {
+        if (!accountDrop.contains(e.target) && !accountBtn.contains(e.target)) {
+          closeDesktopDropdown();
+        }
+      });
+    }
+
+    if (mobileAccountBtn && mobileAccountDrop) {
+      mobileAccountBtn.addEventListener('click', function () {
+        mobileAccountDrop.classList.toggle('hidden');
+        var open = !mobileAccountDrop.classList.contains('hidden');
+        mobileAccountBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+
+    function handleMenuClick(e) {
+      var link = e.target.closest('a[data-action]');
+      if (!link) return;
+      if (link.dataset.action === 'logout') {
+        e.preventDefault();
+        var state = getAuthState();
+        fetch('/api/v1/auth/logout', {
+          method: 'POST',
+          headers: state.token ? { Authorization: 'Bearer ' + state.token } : {}
+        }).catch(function () {});
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        closeDesktopDropdown();
+        closeMobileDropdown();
+        window.location.href = '/auth/login';
+      }
+    }
+
+    if (accountList) accountList.addEventListener('click', handleMenuClick);
+    if (mobileAccountList) mobileAccountList.addEventListener('click', handleMenuClick);
+
+    renderAccountMenus();
   })();

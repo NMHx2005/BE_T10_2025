@@ -38,6 +38,23 @@ html(lang="en")
     // Footer
     include ../partials/footer
     
+    // Global Notification
+    include ../partials/notification
+    script.
+      (function () {
+        try {
+          var raw = sessionStorage.getItem('app:notice');
+          if (!raw) return;
+          sessionStorage.removeItem('app:notice');
+          var notice = JSON.parse(raw);
+          if (!window.AppNotify || !notice || !notice.type) return;
+          if (notice.type === 'success') return window.AppNotify.success(notice.message || '', notice.title);
+          if (notice.type === 'error') return window.AppNotify.error(notice.message || '', notice.title);
+          if (notice.type === 'warning') return window.AppNotify.warning(notice.message || '', notice.title);
+          window.AppNotify.info(notice.message || '', notice.title);
+        } catch (e) {}
+      })();
+    
     // JavaScript
     // script(src="/js/main.js")
     

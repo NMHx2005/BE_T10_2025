@@ -1,8 +1,12 @@
 import express from 'express';
-import { renderProductsPage } from '../../../controllers/client/productPage.controller.js';
+import {
+    renderProductDetailPage,
+    renderProductsPage,
+} from '../../../controllers/client/productPage.controller.js';
 
 const router = express.Router();
 
 router.get('/', renderProductsPage);
+router.get('/:id', renderProductDetailPage);
 
 export default router;

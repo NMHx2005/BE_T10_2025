@@ -1,5 +1,11 @@
 import express from 'express';
-import { getLoginPage, getLogoutPage, getRegisterPage } from '../../../controllers/client/auth.controllers.js';
+import {
+    getForgotPasswordPage,
+    getLoginPage,
+    getLogoutPage,
+    getRegisterPage,
+    getResetPasswordPage,
+} from '../../../controllers/client/auth.controllers.js';
 
 
 const router = express.Router();
@@ -8,6 +14,8 @@ const router = express.Router();
 router.get('/login', getLoginPage)
 
 router.get('/register', getRegisterPage);
+router.get('/forgot-password', getForgotPasswordPage);
+router.get('/reset-password/:token', getResetPasswordPage);
 
 router.get('/logout', getLogoutPage);
 

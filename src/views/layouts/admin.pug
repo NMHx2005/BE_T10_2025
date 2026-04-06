@@ -13,78 +13,258 @@ html(lang="en")
     
     // Custom CSS
     style.
-      .btn-primary {
-        @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+      :root {
+        --admin-bg: #f4f5f7;
+        --admin-surface: #ffffff;
+        --admin-text: #0d0d0d;
+        --admin-muted: #5f6673;
+        --admin-border: #dee1e6;
+        --admin-accent: #f48525;
+        --admin-accent-hover: #e07820;
+        --admin-shadow: 0 8px 24px rgba(34, 37, 42, 0.08);
       }
-      .btn-secondary {
-        @apply bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+      .admin-shell {
+        background: var(--admin-bg);
+        color: var(--admin-text);
       }
-      .card {
-        @apply bg-white rounded-lg shadow-md border border-gray-200;
+      .admin-shell #admin-sidebar {
+        background: #111317;
+        border-right: 1px solid #242832;
+      }
+      .admin-shell .admin-brand-chip {
+        color: #fbd8b8;
+        border: 1px solid #3b404d;
+        background: #1b1f28;
+      }
+      .admin-shell .admin-nav-link {
+        color: #c9d1da;
+        border: 1px solid transparent;
+      }
+      .admin-shell .admin-nav-link:hover {
+        color: #fff;
+        background: #1f232c;
+        border-color: #303542;
+      }
+      .admin-shell #admin-topbar {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(6px);
+        border-bottom: 1px solid var(--admin-border);
+      }
+      .admin-shell main {
+        background: var(--admin-bg);
+      }
+      .admin-shell .bg-white {
+        border: 1px solid var(--admin-border);
+      }
+      .admin-shell .shadow-md,
+      .admin-shell .shadow-sm {
+        box-shadow: var(--admin-shadow) !important;
+      }
+      .admin-shell .bg-blue-600,
+      .admin-shell .hover\:bg-blue-700:hover {
+        background-color: var(--admin-accent) !important;
+      }
+      .admin-shell .text-blue-600,
+      .admin-shell .hover\:text-blue-700:hover {
+        color: var(--admin-accent) !important;
+      }
+      .admin-shell .focus\:ring-blue-500:focus {
+        --tw-ring-color: rgba(244, 133, 37, 0.3) !important;
+      }
+      .admin-shell .card {
+        background: var(--admin-surface);
+        border: 1px solid var(--admin-border);
+        box-shadow: var(--admin-shadow);
+      }
+      .admin-shell table thead {
+        background: #f8f9fb !important;
+      }
+      .admin-shell table tbody tr:hover {
+        background: #fff9f3 !important;
+      }
+      .admin-shell input,
+      .admin-shell select,
+      .admin-shell textarea {
+        border-color: var(--admin-border);
+      }
+      .admin-shell input:focus,
+      .admin-shell select:focus,
+      .admin-shell textarea:focus {
+        border-color: var(--admin-accent) !important;
+        box-shadow: 0 0 0 3px rgba(244, 133, 37, 0.18) !important;
+      }
+      .admin-shell.pending-auth {
+        visibility: hidden;
       }
     
     block head
 
-  body.bg-gray-100
+  body.admin-shell.pending-auth
+    script.
+      (function () {
+        var token = null;
+        var user = null;
+        var PROFILE_API = '/api/v1/users/profile';
+        function readStoredUser() {
+          try {
+            return JSON.parse(localStorage.getItem('user') || 'null');
+          } catch (e) {
+            return null;
+          }
+        }
+        function parseJwtPayload(jwtToken) {
+          try {
+            if (!jwtToken || jwtToken.split('.').length < 2) return null;
+            var payload = jwtToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+            var json = decodeURIComponent(atob(payload).split('').map(function (c) {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(json);
+          } catch (e) {
+            return null;
+          }
+        }
+        function getRole(storedUser, jwtToken) {
+          if (storedUser && typeof storedUser === 'object') {
+            if (storedUser.role) return String(storedUser.role).toLowerCase();
+            if (storedUser.data && storedUser.data.user && storedUser.data.user.role) return String(storedUser.data.user.role).toLowerCase();
+            if (storedUser.user && storedUser.user.role) return String(storedUser.user.role).toLowerCase();
+          }
+          var decoded = parseJwtPayload(jwtToken);
+          if (decoded && decoded.role) return String(decoded.role).toLowerCase();
+          return null;
+        }
+        function denyAndRedirect() {
+          try {
+            sessionStorage.setItem('app:notice', JSON.stringify({
+              type: 'warning',
+              title: 'Không có quyền truy cập',
+              message: 'Bạn cần đăng nhập bằng tài khoản admin để vào trang quản trị.'
+            }));
+          } catch (e) {}
+          window.location.replace('/');
+        }
+        function allowAccess() {
+          document.body.classList.remove('pending-auth');
+        }
+        try {
+          token = localStorage.getItem('accessToken');
+          user = readStoredUser();
+        } catch (e) {
+          token = null;
+          user = null;
+        }
+        if (!token) {
+          denyAndRedirect();
+          return;
+        }
+        var cachedRole = getRole(user, token);
+
+        // Always verify role with backend profile to avoid stale localStorage role.
+        fetch(PROFILE_API, {
+          method: 'GET',
+          headers: { Authorization: 'Bearer ' + token }
+        })
+          .then(function (res) {
+            if (!res.ok) throw new Error('UNAUTHORIZED');
+            return res.json();
+          })
+          .then(function (data) {
+            var remoteUser = null;
+            if (data && data.data && data.data.user) remoteUser = data.data.user;
+            else if (data && data.user) remoteUser = data.user;
+            else remoteUser = user || {};
+
+            var role = getRole(remoteUser, token) || cachedRole;
+            var status = remoteUser && remoteUser.status ? String(remoteUser.status).toLowerCase() : 'active';
+
+            if (role !== 'admin' || status !== 'active') {
+              denyAndRedirect();
+              return;
+            }
+            try {
+              localStorage.setItem('user', JSON.stringify(remoteUser));
+            } catch (e) {}
+            allowAccess();
+          })
+          .catch(function () {
+            // Fallback to cached role only when profile API is temporarily unavailable.
+            if (cachedRole === 'admin') {
+              allowAccess();
+              return;
+            }
+            denyAndRedirect();
+          });
+      })();
     .flex.h-screen
       // Sidebar
-      aside.w-64.bg-gray-800.text-white.flex.flex-col.h-full
+      aside#admin-sidebar.w-64.text-white.flex.flex-col.h-full
         // Logo
-        .p-6.border-b.border-gray-700
-          .flex.items-center
-            i.fas.fa-cog.text-2xl.text-blue-400.mr-3
-            span.text-xl.font-bold Admin Panel
+        .p-6.border-b(class="border-[#242832]")
+          .flex.items-center.justify-between
+            .flex.items-center
+              i.fas.fa-screwdriver-wrench.text-2xl.mr-3(class="text-[#f48525]")
+              span.text-xl.font-bold PRO-TOOLS
+            span.admin-brand-chip.px-2.py-1.uppercase.tracking-wider(class="text-[10px]") Admin
         
         // User Info
-        .p-6.border-b.border-gray-700
+        .p-6.border-b(class="border-[#242832]")
           .flex.items-center
-            img.w-10.h-10.rounded-full(src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100", alt="Admin")
+            img.w-10.h-10.rounded-full.border(class="border-[#3b404d]" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100", alt="Admin")
             .ml-3
-              p.font-medium Admin User
-              p.text-sm.text-gray-400 Administrator
+              p.font-medium.text-white Admin User
+              p.text-sm(class="text-[#9ba3af]") Administrator
         
         // Navigation
         nav.flex-1.p-4
           ul.space-y-2
             li
-              a.flex.items-center.px-4.py-2.text-gray-300.hover.bg-gray-700.hover.text-white.rounded-md.transition-colors(href="/admin")
+              a.admin-nav-link.flex.items-center.px-4.py-2.rounded-md.transition-colors(href="/admin")
                 i.fas.fa-tachometer-alt.mr-3
                 | Dashboard
             li
-              a.flex.items-center.px-4.py-2.text-gray-300.hover.bg-gray-700.hover.text-white.rounded-md.transition-colors(href="/admin/products")
+              a.admin-nav-link.flex.items-center.px-4.py-2.rounded-md.transition-colors(href="/admin/products")
                 i.fas.fa-box.mr-3
                 | Products
             li
-              a.flex.items-center.px-4.py-2.text-gray-300.hover.bg-gray-700.hover.text-white.rounded-md.transition-colors(href="/admin/users")
+              a.admin-nav-link.flex.items-center.px-4.py-2.rounded-md.transition-colors(href="/admin/orders")
+                i.fas.fa-receipt.mr-3
+                | Orders
+            li
+              a.admin-nav-link.flex.items-center.px-4.py-2.rounded-md.transition-colors(href="/admin/users")
                 i.fas.fa-users.mr-3
                 | Users
             li
-              a.flex.items-center.px-4.py-2.text-gray-300.hover.bg-gray-700.hover.text-white.rounded-md.transition-colors(href="/admin/categories")
+              a.admin-nav-link.flex.items-center.px-4.py-2.rounded-md.transition-colors(href="/admin/categories")
                 i.fas.fa-tags.mr-3
                 | Categories
         
         // Logout
-        .p-4.border-t.border-gray-700
-          a.flex.items-center.px-4.py-2.text-gray-300.hover.bg-gray-700.hover.text-white.rounded-md.transition-colors(href="/logout")
+        .p-4.border-t(class="border-[#242832]")
+          a.admin-nav-link.flex.items-center.px-4.py-2.rounded-md.transition-colors(href="/logout")
             i.fas.fa-sign-out-alt.mr-3
             | Logout
       
       // Main Content
       .flex-1.flex.flex-col.overflow-hidden
         // Top Navigation
-        header.bg-white.shadow-sm.border-b.border-gray-200
+        header#admin-topbar.shadow-sm
           .px-6.py-4
             .flex.items-center.justify-between
-              h1.text-2xl.font-semibold.text-gray-900= pageTitle || 'Dashboard'
+              .flex.flex-col
+                p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Control Panel
+                h1.text-2xl.font-semibold.text-gray-900= pageTitle || 'Dashboard'
               .flex.items-center.space-x-4
-                .relative
+                span.hidden.text-sm.font-medium(class="text-[#5f6673] md:inline") Monday Operations
+                .relative.border.pl-2.pr-3(class="py-1.5 border-[#dee1e6] bg-white")
                   button.flex.items-center.text-sm.rounded-full.focus.outline-none.focus.ring-2.focus.ring-blue-500
                     img.h-8.w-8.rounded-full(src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100", alt="Admin")
                     span.ml-2.text-gray-700 Admin User
         
         // Page Content
-        main.flex-1.overflow-x-hidden.overflow-y-auto.bg-gray-100.p-6
+        main.flex-1.overflow-x-hidden.overflow-y-auto.p-6
           block content
+      include ../partials/notification
     
     // JavaScript
     script(src="/js/admin.js")

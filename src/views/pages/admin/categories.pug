@@ -1,16 +1,17 @@
-extends ../../../layouts/admin
+extends ../../layouts/admin
 
 block content
   // Page Header
-  .mb-8
+  .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.justify-between
       .flex.flex-col
-        h1.text-3xl.font-bold.text-gray-900 Categories Management
+        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Taxonomy
+        h1.text-3xl.font-bold(class="text-[#0d0d0d]") Categories Management
         p.text-gray-600.mt-2 Total: 
           span.font-semibold #{totalCategories || 0}
           |  categories
       
-      button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors.flex.items-center.gap-2(
+      button.text-white.font-medium.py-2.px-6.transition-colors.flex.items-center.gap-2(class="bg-[#f48525] hover:bg-[#e07820]"
         type="button",
         onclick="openAddCategoryModal()"
       )
@@ -18,23 +19,26 @@ block content
         | Add New Category
 
   // Filters & Search
-  .bg-white.rounded-lg.shadow-md.p-6.mb-6
+  .bg-white.p-6.mb-6
     .grid.grid-cols-1(class="md:grid-cols-3 gap-4")
       .form-group
-        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+          class="focus:ring-2 focus:ring-blue-500"
           type="text",
           placeholder="Search categories...",
           id="search-input"
         )
       
-      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg(
+        class="focus:ring-2 focus:ring-blue-500"
         id="status-filter"
       )
         option(value="") All Status
         option(value="active") Active
         option(value="inactive") Inactive
       
-      button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+      button.bg-blue-600.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+        class="hover:bg-blue-700"
         type="button",
         onclick="applyFilters()"
       )
@@ -43,15 +47,15 @@ block content
 
   .grid.grid-cols-1(class="lg:grid-cols-3 gap-6")
     // Category Tree (Sidebar)
-    .bg-white.rounded-lg.shadow-md.p-6
+    .bg-white.p-6
       h2.text-lg.font-semibold.text-gray-900.mb-4 Category Tree
       
       if categories && categories.length > 0
         ul.space-y-2.max-h-96.overflow-y-auto
           each category in categories
             li
-              .flex.items-center.justify-between.p-2.rounded.hover:bg-gray-50
-                a.text-gray-700.hover:text-blue-600.flex-1(
+              .flex.items-center.justify-between.p-2.rounded(class="hover:bg-gray-50")
+                a.text-gray-700.flex-1(class="hover:text-blue-600"
                   href=`#cat-${category._id}`
                 )
                   if category.icon
@@ -67,7 +71,7 @@ block content
       if categories && categories.length > 0
         .space-y-4
           each category in categories
-            .bg-white.rounded-lg.shadow-md.p-6.border-l-4.border-l-blue-600(id=`cat-${category._id}`)
+            .bg-white.p-6.border-l-4(class="border-l-[#f48525]" id=`cat-${category._id}`)
               // Header
               .flex.items-start.justify-between.mb-4
                 .flex.items-start.gap-4.flex-1
@@ -84,10 +88,10 @@ block content
                     .flex.items-center.gap-2.mb-2
                       h3.text-lg.font-semibold.text-gray-900
                         = category.name
-                      span(class={
+                      span.px-2.py-1.rounded-full.text-xs.font-semibold(class={
                         'bg-green-100 text-green-800': category.status === 'active',
                         'bg-gray-100 text-gray-800': category.status === 'inactive'
-                      }.px-2.py-1.rounded-full.text-xs.font-semibold)
+                      })
                         = category.status || 'Active'
                     
                     p.text-sm.text-gray-600.mb-2
@@ -119,20 +123,20 @@ block content
 
               // Actions
               .flex.gap-2.pt-4.border-t.border-gray-200
-                a.flex-1.px-3.py-2.bg-blue-100.text-blue-700.rounded.text-center.hover:bg-blue-200.transition-colors.text-sm.font-medium(
+                a.flex-1.px-3.py-2.bg-blue-100.text-blue-700.rounded.text-center.transition-colors.text-sm.font-medium(class="hover:bg-blue-200"
                   href=`/admin/categories/${category._id}/edit`
                 )
                   i.fas.fa-edit.mr-1
                   | Edit
                 
-                button.flex-1.px-3.py-2.bg-orange-100.text-orange-700.rounded.hover:bg-orange-200.transition-colors.text-sm.font-medium(
+                button.flex-1.px-3.py-2.bg-orange-100.text-orange-700.rounded.transition-colors.text-sm.font-medium(class="hover:bg-orange-200"
                   type="button",
                   onclick=`moveCategory('${category._id}')`
                 )
                   i.fas.fa-arrows-alt-v.mr-1
                   | Move
                 
-                button.flex-1.px-3.py-2.bg-red-100.text-red-700.rounded.hover:bg-red-200.transition-colors.text-sm.font-medium(
+                button.flex-1.px-3.py-2.bg-red-100.text-red-700.rounded.transition-colors.text-sm.font-medium(class="hover:bg-red-200"
                   type="button",
                   onclick=`deleteCategory('${category._id}')`
                 )
@@ -140,11 +144,11 @@ block content
                   | Delete
       else
         // No Categories
-        .bg-white.rounded-lg.shadow-md.p-12.text-center.col-span-1(class="lg:col-span-2")
+        .bg-white.p-12.text-center.col-span-1(class="lg:col-span-2")
           i.fas.fa-folder-open.text-gray-400.text-5xl.mb-4
           h3.text-xl.font-semibold.text-gray-900.mb-2 No Categories Found
           p.text-gray-600.mb-6 Create your first category to start organizing products
-          button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
+          button.bg-blue-600.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(class="hover:bg-blue-700"
             type="button",
             onclick="openAddCategoryModal()"
           )
@@ -158,7 +162,7 @@ block content
       // Modal Header
       .flex.items-center.justify-between.p-6.border-b.border-gray-200
         h2.text-2xl.font-bold.text-gray-900 Add New Category
-        button.text-gray-500.hover:text-gray-700.text-2xl(
+        button.text-gray-500.text-2xl(class="hover:text-gray-700"
           type="button",
           onclick="closeModal()"
         )
@@ -169,7 +173,8 @@ block content
         .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
           .form-group
             label.block.text-sm.font-medium.text-gray-700.mb-2(for="name") Category Name
-            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+              class="focus:ring-2 focus:ring-blue-500"
               type="text",
               id="name",
               name="name",
@@ -179,7 +184,8 @@ block content
           
           .form-group
             label.block.text-sm.font-medium.text-gray-700.mb-2(for="parent") Parent Category
-            select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+              class="focus:ring-2 focus:ring-blue-500"
               id="parent",
               name="parent"
             )
@@ -191,7 +197,8 @@ block content
 
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="description") Description
-          textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
             id="description",
             name="description",
             rows="4",
@@ -201,7 +208,8 @@ block content
         .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
           .form-group
             label.block.text-sm.font-medium.text-gray-700.mb-2(for="icon") Icon Class (Font Awesome)
-            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+              class="focus:ring-2 focus:ring-blue-500"
               type="text",
               id="icon",
               name="icon",
@@ -210,7 +218,8 @@ block content
           
           .form-group
             label.block.text-sm.font-medium.text-gray-700.mb-2(for="order") Display Order
-            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+            input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+              class="focus:ring-2 focus:ring-blue-500"
               type="number",
               id="order",
               name="order",
@@ -220,7 +229,8 @@ block content
 
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="image") Category Image
-          input.block.w-full.text-sm.text-gray-500.file:mr-4.file:py-2.file:px-4.file:rounded-lg.file:border-0.file:text-sm.file:font-semibold.file:bg-blue-50.file:text-blue-700.hover:file:bg-blue-100(
+          input.block.w-full.text-sm.text-gray-500(
+            class="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             type="file",
             id="image",
             name="image",
@@ -238,12 +248,12 @@ block content
 
       // Modal Footer
       .flex.gap-3.p-6.border-t.border-gray-200.bg-gray-50.rounded-b-lg
-        button.flex-1.bg-gray-200.hover:bg-gray-300.text-gray-800.font-medium.py-2.px-4.rounded-lg.transition-colors(
+        button.flex-1.bg-gray-200.text-gray-800.font-medium.py-2.px-4.rounded-lg.transition-colors(class="hover:bg-gray-300"
           type="button",
           onclick="closeModal()"
         )
           | Cancel
-        button.flex-1.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+        button.flex-1.bg-blue-600.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(class="hover:bg-blue-700"
           type="submit",
           form="category-form"
         )

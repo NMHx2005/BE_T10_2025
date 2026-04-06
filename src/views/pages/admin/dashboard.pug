@@ -3,139 +3,69 @@ include ../../mixins/cards
 include ../../mixins/buttons
 
 block content
-  // Page Header
-  .mb-8
-    h1.text-3xl.font-bold.text-gray-900 Dashboard
-    p.text-gray-600 Welcome back! Here's what's happening with your business today.
-  
-  // Stats Cards
-  .grid.grid-cols-1.md.grid-cols-2.lg.grid-cols-4.gap-6.mb-8
-    .card.p-6
-      .flex.items-center
-        .flex-shrink-0
-          .w-12.h-12.bg-blue-100.rounded-lg.flex.items-center.justify-center
-            i.fas.fa-box.text-blue-600.text-xl
-        .ml-4
-          p.text-sm.font-medium.text-gray-600 Total Products
-          p.text-2xl.font-bold.text-gray-900 1,247
-          p.text-sm.text-green-600 +12% from last month
-    
-    .card.p-6
-      .flex.items-center
-        .flex-shrink-0
-          .w-12.h-12.bg-green-100.rounded-lg.flex.items-center.justify-center
-            i.fas.fa-users.text-green-600.text-xl
-        .ml-4
-          p.text-sm.font-medium.text-gray-600 Total Users
-          p.text-2xl.font-bold.text-gray-900 3,456
-          p.text-sm.text-green-600 +8% from last month
-    
-    .card.p-6
-      .flex.items-center
-        .flex-shrink-0
-          .w-12.h-12.bg-yellow-100.rounded-lg.flex.items-center.justify-center
-            i.fas.fa-shopping-cart.text-yellow-600.text-xl
-        .ml-4
-          p.text-sm.font-medium.text-gray-600 Total Orders
-          p.text-2xl.font-bold.text-gray-900 892
-          p.text-sm.text-red-600 -3% from last month
-    
-    .card.p-6
-      .flex.items-center
-        .flex-shrink-0
-          .w-12.h-12.bg-purple-100.rounded-lg.flex.items-center.justify-center
-            i.fas.fa-dollar-sign.text-purple-600.text-xl
-        .ml-4
-          p.text-sm.font-medium.text-gray-600 Revenue
-          p.text-2xl.font-bold.text-gray-900 $45,678
-          p.text-sm.text-green-600 +15% from last month
-  
-  // Charts and Tables Section
-  .grid.grid-cols-1.lg.grid-cols-2.gap-8.mb-8
-    // Sales Chart
-    .card.p-6
-      h3.text-lg.font-semibold.text-gray-900.mb-4 Sales Overview
-      .h-64.bg-gray-50.rounded-lg.flex.items-center.justify-center
+  .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
+    .flex.flex-col.gap-4(class="lg:flex-row lg:items-center lg:justify-between")
+      .space-y-2
+        p.text-xs.uppercase(class="tracking-[0.2em] text-[#8c8f95]") Admin Overview
+        h2.text-3xl.font-bold(class="text-[#0d0d0d]") Operation cockpit
+        p.text-sm(class="text-[#5f6673]") Theo doi tong quan san pham, don hang va hieu suat van hanh trong ngay.
+      .grid.grid-cols-2.gap-3(class="sm:grid-cols-3")
+        a.inline-flex.items-center.justify-center.gap-2.px-4.py-2.text-sm.font-semibold.text-white(class="bg-[#f48525] hover:bg-[#e07820]" href="/admin/products/create")
+          i.fas.fa-plus
+          | Tao san pham
+        a.inline-flex.items-center.justify-center.gap-2.border.px-4.py-2.text-sm.font-semibold(class="border-[#dee1e6] text-[#0d0d0d] hover:bg-[#fff7ef]" href="/admin/orders")
+          i.fas.fa-receipt
+          | Don hang
+        a.inline-flex.items-center.justify-center.gap-2.border.px-4.py-2.text-sm.font-semibold(class="border-[#dee1e6] text-[#0d0d0d] hover:bg-[#fff7ef]" href="/admin/users")
+          i.fas.fa-users
+          | Nguoi dung
+
+  .grid.grid-cols-1.gap-5.mb-8(class="sm:grid-cols-2 xl:grid-cols-4")
+    .bg-white.p-5
+      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Products
+      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]") 1,247
+      p.mt-2.text-xs(class="text-emerald-700") +12% so voi thang truoc
+    .bg-white.p-5
+      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Orders
+      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]") 892
+      p.mt-2.text-xs(class="text-amber-700") 36 don dang xu ly
+    .bg-white.p-5
+      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Revenue
+      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]") $45,678
+      p.mt-2.text-xs(class="text-emerald-700") +15% so voi thang truoc
+    .bg-white.p-5
+      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Low Stock
+      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]") 21
+      p.mt-2.text-xs(class="text-red-700") Can nhap them trong 24h
+
+  .grid.grid-cols-1.gap-6(class="lg:grid-cols-5")
+    .bg-white.p-6(class="lg:col-span-3")
+      .flex.items-center.justify-between.mb-4
+        h3.text-lg.font-semibold(class="text-[#0d0d0d]") Revenue pulse
+        span.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") 30 days
+      .h-64.flex.items-center.justify-center.border(class="border-dashed border-[#dee1e6] bg-[#fafafa]")
         .text-center
-          i.fas.fa-chart-line.text-4xl.text-gray-400.mb-2
-          p.text-gray-500 Chart will be implemented here
-          p.text-sm.text-gray-400 Last 30 days sales data
-    
-    // Recent Orders
-    .card.p-6
-      h3.text-lg.font-semibold.text-gray-900.mb-4 Recent Orders
+          i.fas.fa-chart-line.text-4xl.mb-2(class="text-[#f48525]")
+          p.text-sm.font-medium(class="text-[#323842]") Chart area
+          p.text-xs(class="text-[#8c8f95]") Co the tich hop Chart.js o buoc tiep theo
+    .bg-white.p-6(class="lg:col-span-2")
+      h3.text-lg.font-semibold.mb-4(class="text-[#0d0d0d]") Live activities
       .space-y-4
-        .flex.items-center.justify-between.p-3.bg-gray-50.rounded-lg
-          .flex.items-center
-            .w-10.h-10.bg-blue-100.rounded-full.flex.items-center.justify-center.mr-3
-              i.fas.fa-user.text-blue-600
-            div
-              p.font-medium.text-gray-900 John Doe
-              p.text-sm.text-gray-500 Order #12345
-          .text-right
-            p.font-semibold.text-gray-900 $299.99
-            p.text-sm.text-green-600 Completed
-        
-        .flex.items-center.justify-between.p-3.bg-gray-50.rounded-lg
-          .flex.items-center
-            .w-10.h-10.bg-green-100.rounded-full.flex.items-center.justify-center.mr-3
-              i.fas.fa-user.text-green-600
-            div
-              p.font-medium.text-gray-900 Jane Smith
-              p.text-sm.text-gray-500 Order #12346
-          .text-right
-            p.font-semibold.text-gray-900 $199.99
-            p.text-sm.text-yellow-600 Pending
-        
-        .flex.items-center.justify-between.p-3.bg-gray-50.rounded-lg
-          .flex.items-center
-            .w-10.h-10.bg-purple-100.rounded-full.flex.items-center.justify-center.mr-3
-              i.fas.fa-user.text-purple-600
-            div
-              p.font-medium.text-gray-900 Mike Johnson
-              p.text-sm.text-gray-500 Order #12347
-          .text-right
-            p.font-semibold.text-gray-900 $149.99
-            p.text-sm.text-green-600 Completed
-  
-  // Quick Actions
-  .card.p-6
-    h3.text-lg.font-semibold.text-gray-900.mb-4 Quick Actions
-    .grid.grid-cols-1.md.grid-cols-3.gap-4
-      +button-primary('Add New Product', '/admin/products/create', 'fas fa-plus')
-      +button-secondary('Manage Users', '/admin/users', 'fas fa-users')
-      +button-secondary('View Reports', '/admin/reports', 'fas fa-chart-bar')
-  
-  // Recent Activity
-  .card.p-6.mt-8
-    h3.text-lg.font-semibold.text-gray-900.mb-4 Recent Activity
-    .space-y-4
-      .flex.items-start.space-x-3
-        .flex-shrink-0
-          .w-8.h-8.bg-blue-100.rounded-full.flex.items-center.justify-center
-            i.fas.fa-plus.text-blue-600.text-sm
-        .flex-1
-          p.text-sm.text-gray-900
-            span.font-medium New product added.
-            |  Wireless Headphones
-          p.text-xs.text-gray-500 2 hours ago
-      
-      .flex.items-start.space-x-3
-        .flex-shrink-0
-          .w-8.h-8.bg-green-100.rounded-full.flex.items-center.justify-center
-            i.fas.fa-user.text-green-600.text-sm
-        .flex-1
-          p.text-sm.text-gray-900
-            span.font-medium New user registered.
-            |  john.doe@example.com
-          p.text-xs.text-gray-500 4 hours ago
-      
-      .flex.items-start.space-x-3
-        .flex-shrink-0
-          .w-8.h-8.bg-yellow-100.rounded-full.flex.items-center.justify-center
-            i.fas.fa-edit.text-yellow-600.text-sm
-        .flex-1
-          p.text-sm.text-gray-900
-            span.font-medium Product updated.
-            |  Smart Watch
-          p.text-xs.text-gray-500 6 hours ago
+        .flex.items-start.gap-3
+          .h-8.w-8.flex.items-center.justify-center(class="bg-[#fff2e6] text-[#f48525]")
+            i.fas.fa-box-open.text-xs
+          .flex-1
+            p.text-sm.font-medium(class="text-[#0d0d0d]") New SKU created
+            p.text-xs(class="text-[#8c8f95]") SKU-PT-2026-019 • 10 phut truoc
+        .flex.items-start.gap-3
+          .h-8.w-8.flex.items-center.justify-center(class="bg-[#edf7ff] text-[#1d70b8]")
+            i.fas.fa-user-plus.text-xs
+          .flex-1
+            p.text-sm.font-medium(class="text-[#0d0d0d]") New user registered
+            p.text-xs(class="text-[#8c8f95]") tran.an@example.com • 24 phut truoc
+        .flex.items-start.gap-3
+          .h-8.w-8.flex.items-center.justify-center(class="bg-[#eefbf3] text-[#0f9f53]")
+            i.fas.fa-truck.text-xs
+          .flex-1
+            p.text-sm.font-medium(class="text-[#0d0d0d]") Shipment confirmed
+            p.text-xs(class="text-[#8c8f95]") ORD-2026-1012 • 42 phut truoc

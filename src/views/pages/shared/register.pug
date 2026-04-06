@@ -1,105 +1,98 @@
 extends ../../layouts/auth
 
 block content
-  .auth-card(class="rounded-2xl p-8 sm:p-10")
-    a.inline-flex.items-center.gap-2.text-slate-600.transition-colors.text-sm.font-medium.mb-8(href="/", class="hover:text-indigo-600")
+  .auth-card(class="p-8 sm:p-10")
+    a.inline-flex.items-center.gap-2.transition-colors.text-sm.font-medium.mb-8(href="/", class="text-[#323842] hover:text-[#f48525]")
       i.fa-solid.fa-arrow-left
       span Về trang chủ
 
     .text-center.mb-8
-      .inline-flex.items-center.justify-center.w-14.h-14.rounded-2xl.bg-gradient-to-br.from-violet-500.to-fuchsia-600.text-white.text-2xl.shadow-lg.mb-4
+      .inline-flex.items-center.justify-center.w-14.h-14.text-white.text-2xl.shadow-lg.mb-4(class="bg-[#f48525]")
         i.fa-solid.fa-user-plus
-      h1(class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight") Tạo tài khoản
-      p(class="text-slate-500 mt-2 text-sm sm:text-base") Điền thông tin bên dưới để tạo tài khoản mới.
+      h1(class="text-2xl sm:text-3xl font-bold text-[#0d0d0d] tracking-tight") Tạo tài khoản
+      p(class="text-[#323842] mt-2 text-sm sm:text-base") Điền thông tin bên dưới để tạo tài khoản mới.
 
     #auth-alert.hidden.mb-6.rounded-xl.px-4.py-3.text-sm.font-medium(role="alert")
 
     form#register-form.space-y-5
       .grid.gap-4(class="grid-cols-1 sm:grid-cols-2")
         div(class="space-y-1.5")
-          label.block.text-sm.font-semibold.text-slate-700(for="firstName") Tên
+          label.block.text-sm.font-semibold(for="firstName" class="text-[#181b20]") Tên
           .relative
-            i.fa-regular.fa-user.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+            i.fa-regular.fa-user.absolute.left-3.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2 text-[#323842]")
             input#firstName.auth-input(type="text", name="firstName", placeholder="Nguyễn", required, autocomplete="given-name")
 
         div(class="space-y-1.5")
-          label.block.text-sm.font-semibold.text-slate-700(for="lastName") Họ
+          label.block.text-sm.font-semibold(for="lastName" class="text-[#181b20]") Họ
           .relative
-            i.fa-regular.fa-user.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+            i.fa-regular.fa-user.absolute.left-3.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2 text-[#323842]")
             input#lastName.auth-input(type="text", name="lastName", placeholder="Văn A", required, autocomplete="family-name")
 
       div(class="space-y-1.5")
-        label.block.text-sm.font-semibold.text-slate-700(for="email") Email
+        label.block.text-sm.font-semibold(for="email" class="text-[#181b20]") Email
         .relative
-          i.fa-regular.fa-envelope.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          i.fa-regular.fa-envelope.absolute.left-3.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2 text-[#323842]")
           input#email.auth-input(type="email", name="email", placeholder="you@example.com", required, autocomplete="email")
 
       div(class="space-y-1.5")
-        label.block.text-sm.font-semibold.text-slate-700(for="password") Mật khẩu
+        label.block.text-sm.font-semibold(for="password" class="text-[#181b20]") Mật khẩu
         .relative
-          i.fa-solid.fa-lock.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          i.fa-solid.fa-lock.absolute.left-3.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2 text-[#323842]")
           input#password.auth-input.pr-12(type="password", name="password", placeholder="Tối thiểu 6 ký tự", required, minlength="6", autocomplete="new-password")
-          button#toggle-password.auth-toggle.absolute.right-2.p-2.text-slate-400(type="button", aria-label="Hiện mật khẩu", class="top-1/2 -translate-y-1/2 hover:text-slate-600")
+          button#toggle-password.auth-toggle.absolute.right-2.p-2(type="button", aria-label="Hiện mật khẩu", class="top-1/2 -translate-y-1/2 text-[#323842] hover:text-[#0d0d0d]")
             i.fa-regular.fa-eye
 
       div(class="space-y-1.5")
-        label.block.text-sm.font-semibold.text-slate-700(for="confirmPassword") Xác nhận mật khẩu
+        label.block.text-sm.font-semibold(for="confirmPassword" class="text-[#181b20]") Xác nhận mật khẩu
         .relative
-          i.fa-solid.fa-lock.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          i.fa-solid.fa-lock.absolute.left-3.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2 text-[#323842]")
           input#confirmPassword.auth-input.pr-12(type="password", name="confirmPassword", placeholder="Nhập lại mật khẩu", required, autocomplete="new-password")
-          button#toggle-confirm.auth-toggle.absolute.right-2.p-2.text-slate-400(type="button", aria-label="Hiện mật khẩu", class="top-1/2 -translate-y-1/2 hover:text-slate-600")
+          button#toggle-confirm.auth-toggle.absolute.right-2.p-2(type="button", aria-label="Hiện mật khẩu", class="top-1/2 -translate-y-1/2 text-[#323842] hover:text-[#0d0d0d]")
             i.fa-regular.fa-eye
 
       div(class="space-y-1.5")
-        label.block.text-sm.font-semibold.text-slate-700(for="company") Công ty (tuỳ chọn)
+        label.block.text-sm.font-semibold(for="company" class="text-[#181b20]") Công ty (tuỳ chọn)
         input#company.auth-input-standalone(type="text", name="company", placeholder="Tên công ty", autocomplete="organization")
 
       label.flex.items-start.gap-3.cursor-pointer.select-none
-        input#terms.mt-1.rounded.border-slate-300.text-indigo-600(type="checkbox", name="terms", required)
-        span.text-sm.text-slate-600
+        input#terms.mt-1.rounded(type="checkbox", name="terms", required class="border-[#dee1e6] text-[#f48525]")
+        span.text-sm(class="text-[#323842]")
           | Tôi đồng ý với
           |
-          a.text-indigo-600(href="#", class="hover:underline") Điều khoản
+          a(href="#" class="text-[#f48525] hover:underline") Điều khoản
           |
           | và
           |
-          a.text-indigo-600(href="#", class="hover:underline") Chính sách bảo mật
+          a(href="#" class="text-[#f48525] hover:underline") Chính sách bảo mật
 
       button#register-submit.auth-btn-primary(type="submit")
         span#register-submit-text Đăng ký
-        span#register-submit-loading.hidden.inline-flex.items-center.gap-2
+        span#register-submit-loading.hidden.items-center.gap-2
           i.fa-solid.fa-circle-notch.fa-spin
           span Đang tạo tài khoản...
 
-    p.text-center.text-sm.text-slate-500.mt-8
+    p.text-center.text-sm.mt-8(class="text-[#323842]")
       | Đã có tài khoản?
       |
-      a.font-semibold.text-indigo-600.ml-1(href="/auth/login", class="hover:text-indigo-500") Đăng nhập
+      a.font-semibold.ml-1(href="/auth/login", class="text-[#f48525] hover:text-[#e07820]") Đăng nhập
 
 block scripts
   script.
     (function () {
       var API_REGISTER = '/api/v1/auth/register';
       var form = document.getElementById('register-form');
-      var alertEl = document.getElementById('auth-alert');
       var submitBtn = document.getElementById('register-submit');
       var submitText = document.getElementById('register-submit-text');
       var submitLoading = document.getElementById('register-submit-loading');
 
       function showAlert(type, message) {
-        alertEl.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border', 'border-red-100', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-100');
-        if (type === 'error') {
-          alertEl.classList.add('bg-red-50', 'text-red-800', 'border', 'border-red-100');
-        } else {
-          alertEl.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-100');
-        }
-        alertEl.textContent = message;
-        alertEl.classList.remove('hidden');
+        if (!window.AppNotify) return;
+        if (type === 'error') return window.AppNotify.error(message);
+        return window.AppNotify.success(message);
       }
 
       function hideAlert() {
-        alertEl.classList.add('hidden');
-        alertEl.textContent = '';
+        return;
       }
 
       function formatApiError(data) {
@@ -115,9 +108,11 @@ block scripts
         if (loading) {
           submitText.classList.add('hidden');
           submitLoading.classList.remove('hidden');
+          submitLoading.classList.add('inline-flex');
         } else {
           submitText.classList.remove('hidden');
           submitLoading.classList.add('hidden');
+          submitLoading.classList.remove('inline-flex');
         }
       }
 
@@ -188,7 +183,7 @@ block scripts
 
           showAlert('success', result.message || 'Đăng ký thành công. Kiểm tra email để kích hoạt tài khoản.');
           setTimeout(function () {
-            window.location.href = '/profile';
+            window.location.href = '/';
           }, 1200);
         } catch (err) {
           showAlert('error', err.message || 'Có lỗi xảy ra.');

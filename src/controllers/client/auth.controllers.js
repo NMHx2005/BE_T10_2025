@@ -255,6 +255,16 @@ const getLoginPage = (req, res) => {
 const getRegisterPage = (req, res) => {
     res.render('pages/shared/register', { title: 'Đăng ký' });
 }
+const getForgotPasswordPage = (req, res) => {
+    res.render('pages/shared/forgot-password', { title: 'Quên mật khẩu' });
+}
+const getResetPasswordPage = (req, res) => {
+    const { token = '' } = req.params;
+    res.render('pages/shared/reset-password', {
+        title: 'Đặt lại mật khẩu',
+        token,
+    });
+}
 const getLogoutPage = (req, res) => {
     // Simple frontend logout flow
     res.clearCookie('accessToken');
@@ -346,4 +356,14 @@ const refreshToken = async (req, res, next) => {
 // B2: decoded
 // B3: Tìm user. Tạo refresh token mới
 // Trả về
-export { register, login, logout, getLoginPage, getRegisterPage, getLogoutPage, refreshToken };
+export {
+    register,
+    login,
+    logout,
+    getLoginPage,
+    getRegisterPage,
+    getForgotPasswordPage,
+    getResetPasswordPage,
+    getLogoutPage,
+    refreshToken,
+};

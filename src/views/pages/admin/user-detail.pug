@@ -1,13 +1,14 @@
-extends ../../../layouts/admin
+extends ../../layouts/admin
 
 block content
   // Page Header
-  .mb-8
+  .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.gap-4
       a.text-blue-600.hover:text-blue-700(href="/admin/users")
         i.fas.fa-arrow-left.text-xl
       .flex.flex-col
-        h1.text-3xl.font-bold.text-gray-900
+        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") User Profile
+        h1.text-3xl.font-bold(class="text-[#0d0d0d]")
           = 'User Details: ' + user.name
         p.text-gray-600.mt-2
           = 'Email: ' + user.email
@@ -16,7 +17,7 @@ block content
     // Left Column - User Info
     .col-span-1(class="lg:col-span-2")
       // Personal Information
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-6 Personal Information
 
         form.space-y-4(method="POST", action=`/admin/users/${user._id}`, id="user-form")
@@ -82,7 +83,7 @@ block content
               | Save Changes
 
       // Address Information
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Saved Addresses
 
         if user.addresses && user.addresses.length > 0
@@ -103,7 +104,7 @@ block content
           p.text-gray-500.text-center.py-4 No addresses on file
 
       // Recent Orders
-      .bg-white.rounded-lg.shadow-md.p-6
+      .bg-white.p-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Recent Orders
 
         if user.recentOrders && user.recentOrders.length > 0
@@ -115,7 +116,7 @@ block content
                   p.text-sm.text-gray-500= order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''
                 .flex.items-center.gap-4
                   .text-right
-                    p.font-medium.text-gray-900= '$' + order.totalAmount?.toFixed(2)
+                    p.font-medium.text-gray-900= '$' + ((order.totalAmount || 0).toFixed(2))
                     span.inline-block.px-3.py-1.text-xs.font-medium.rounded-full(
                       class={
                         'pending': 'bg-yellow-100 text-yellow-800',
@@ -135,7 +136,7 @@ block content
     // Right Column - Account Status
     .col-span-1
       // Account Status Card
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Account Status
 
         .space-y-4
@@ -180,7 +181,7 @@ block content
               = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'
 
       // Statistics Card
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Statistics
 
         .space-y-4
@@ -200,7 +201,7 @@ block content
               = user.addressCount ? user.addressCount : '0'
 
       // Actions
-      .bg-white.rounded-lg.shadow-md.p-6
+      .bg-white.p-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Actions
 
         .space-y-3

@@ -11,29 +11,19 @@ html(lang="vi")
     script(src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4")
     style.
       :root {
-        --auth-accent: #4f46e5;
-        --auth-accent-hover: #4338ca;
-        --auth-surface: rgba(255, 255, 255, 0.92);
+        --auth-accent: #f48525;
+        --auth-accent-hover: #e07820;
+        --auth-surface: rgba(255, 255, 255, 0.98);
       }
       body.auth-shell {
         font-family: 'DM Sans', system-ui, sans-serif;
         min-height: 100vh;
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 45%, #312e81 100%);
-      }
-      body.auth-shell::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background:
-          radial-gradient(ellipse 80% 50% at 20% 40%, rgba(99, 102, 241, 0.35), transparent),
-          radial-gradient(ellipse 60% 40% at 80% 60%, rgba(168, 85, 247, 0.25), transparent);
-        pointer-events: none;
+        background: #f4f5f7;
       }
       .auth-card {
         background: var(--auth-surface);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+        border: 1px solid #dee1e6;
+        box-shadow: 0 2px 8px rgba(34, 37, 42, 0.08);
       }
       .auth-input {
         width: 100%;
@@ -46,7 +36,7 @@ html(lang="vi")
       .auth-input:focus {
         outline: none;
         border-color: var(--auth-accent);
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        box-shadow: 0 0 0 3px rgba(244, 133, 37, 0.2);
       }
       .auth-input-standalone {
         width: 100%;
@@ -59,23 +49,22 @@ html(lang="vi")
       .auth-input-standalone:focus {
         outline: none;
         border-color: var(--auth-accent);
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        box-shadow: 0 0 0 3px rgba(244, 133, 37, 0.2);
       }
       .auth-btn-primary {
         width: 100%;
         padding: 0.875rem 1.25rem;
-        border-radius: 0.75rem;
+        border-radius: 0;
         font-weight: 600;
         font-size: 0.9375rem;
         color: #fff;
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        background: #f48525;
         border: none;
         cursor: pointer;
-        transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+        transition: background-color 0.15s, opacity 0.15s;
       }
       .auth-btn-primary:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.45);
+        background: #e07820;
       }
       .auth-btn-primary:disabled {
         opacity: 0.65;
@@ -86,5 +75,6 @@ html(lang="vi")
   body.auth-shell.flex.items-center.justify-center.p-4(class="sm:p-6")
     .relative.z-10.w-full.max-w-md
       block content
+    include ../partials/notification
 
     block scripts

@@ -1,34 +1,43 @@
-extends ../../../layouts/admin
-include ../../../mixins/cards
-include ../../../mixins/buttons
+extends ../../layouts/admin
+include ../../mixins/cards
+include ../../mixins/buttons
 
 block content
+  - const __filters = filters || {}
+  - const __search = __filters.search || ''
+  - const __category = __filters.category || ''
+  - const __status = __filters.status || ''
+  - const __querySuffix = (function(){ const p = []; if (__search) p.push('search=' + encodeURIComponent(__search)); if (__category) p.push('category=' + encodeURIComponent(__category)); if (__status) p.push('status=' + encodeURIComponent(__status)); return p.length ? '&' + p.join('&') : ''; })()
   // Page Header
-  .mb-8
+  .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.justify-between
       .flex.flex-col
-        h1.text-3xl.font-bold.text-gray-900 Products Management
-        p.text-gray-600.mt-2 Total: 
+        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Catalog
+        h1.text-3xl.font-bold(class="text-[#0d0d0d]") Products Management
+        p.mt-2(class="text-[#5f6673]") Total: 
           span.font-semibold #{totalProducts || 0}
           |  products
       
-      a.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors.flex.items-center.gap-2(
-        href="/admin/products/new"
+      a.text-white.font-medium.py-2.px-6.transition-colors.flex.items-center.gap-2(class="bg-[#f48525] hover:bg-[#e07820]"
+        href="/admin/products/create"
       )
         i.fas.fa-plus.mr-2
-        | Add New Product
+        | Add Product
 
   // Filters & Search
-  .bg-white.rounded-lg.shadow-md.p-6.mb-6
+  .bg-white.p-6.mb-6
     .grid.grid-cols-1(class="md:grid-cols-4 gap-4")
       .form-group
-        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+          class="focus:ring-2 focus:ring-blue-500"
           type="text",
           placeholder="Search products...",
-          id="search-input"
+          id="search-input",
+          value=__search
         )
       
-      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg(
+        class="focus:ring-2 focus:ring-blue-500"
         id="category-filter"
       )
         option(value="") All Categories
@@ -37,15 +46,18 @@ block content
             option(value=category._id)
               = category.name
       
-      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg(
+        class="focus:ring-2 focus:ring-blue-500"
         id="status-filter"
       )
         option(value="") All Status
         option(value="active") Active
         option(value="draft") Draft
+        option(value="inactive") Inactive
         option(value="archived") Archived
       
-      button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+      button#apply-filter-btn.bg-blue-600.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+        class="hover:bg-blue-700"
         type="button",
         onclick="applyFilters()"
       )
@@ -54,7 +66,7 @@ block content
 
   // Products Table
   if products && products.length > 0
-    .bg-white.rounded-lg.shadow-md.overflow-hidden
+    .bg-white.overflow-hidden
       .overflow-x-auto
         table.w-full
           thead.bg-gray-100.border-b.border-gray-200
@@ -70,7 +82,7 @@ block content
           
           tbody.divide-y.divide-gray-200
             each product in products
-              tr.hover:bg-gray-50.transition-colors
+              tr.transition-colors(class="hover:bg-gray-50")
                 // Product Name
                 td.px-6.py-4
                   .flex.items-center.gap-3
@@ -87,7 +99,7 @@ block content
                 
                 // Category
                 td.px-6.py-4.text-sm.text-gray-600
-                  = product.category?.name || 'Uncategorized'
+                  = (product.category && product.category.name) || 'Uncategorized'
                 
                 // Price
                 td.px-6.py-4.text-sm.font-medium.text-gray-900
@@ -104,11 +116,11 @@ block content
                 
                 // Status
                 td.px-6.py-4
-                  span(class={
+                  span.px-2.py-1.rounded-full.text-xs.font-semibold(class={
                     'bg-green-100 text-green-800': product.status === 'active',
                     'bg-yellow-100 text-yellow-800': product.status === 'draft',
                     'bg-gray-100 text-gray-800': product.status === 'archived'
-                  }.px-2.py-1.rounded-full.text-xs.font-semibold)
+                  })
                     = product.status || 'Active'
                 
                 // Views
@@ -121,20 +133,20 @@ block content
                 
                 // Actions
                 td.px-6.py-4.text-sm.flex.gap-2
-                  a.text-blue-600.hover:text-blue-700.transition-colors.px-2.py-1(
+                  a.text-blue-600.transition-colors.px-2.py-1(class="hover:text-blue-700"
                     href=`/admin/products/${product._id}`,
                     title="Edit"
                   )
                     i.fas.fa-edit
                   
-                  a.text-gray-600.hover:text-gray-700.transition-colors.px-2.py-1(
+                  a.text-gray-600.transition-colors.px-2.py-1(class="hover:text-gray-700"
                     href=`/products/${product._id}`,
                     target="_blank",
                     title="View on site"
                   )
                     i.fas.fa-external-link-alt
                   
-                  button.text-red-600.hover:text-red-700.transition-colors.px-2.py-1(
+                  button.text-red-600.transition-colors.px-2.py-1(class="hover:text-red-700"
                     type="button",
                     onclick=`deleteProduct('${product._id}')`,
                     title="Delete"
@@ -143,68 +155,124 @@ block content
 
       // Pagination
       if pagination && pagination.pages > 1
+        - const currentPage = Number(pagination.current || pagination.page || 1)
+        - const limit = Number(pagination.limit || 10)
+        - const total = Number(pagination.total || 0)
         .bg-gray-50.px-6.py-4.flex.justify-between.items-center
           p.text-sm.text-gray-600
             | Showing 
-            span.font-semibold= (pagination.page - 1) * pagination.limit + 1
+            span.font-semibold= total > 0 ? ((currentPage - 1) * limit + 1) : 0
             |  to 
-            span.font-semibold= Math.min(pagination.page * pagination.limit, pagination.total)
+            span.font-semibold= Math.min(currentPage * limit, total)
             |  of 
-            span.font-semibold= pagination.total
+            span.font-semibold= total
           
           .flex.gap-2
-            if pagination.page > 1
-              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
-                href=`/admin/products?page=${pagination.page - 1}`
+            if currentPage > 1
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700(class="hover:bg-gray-100"
+                href=`/admin/products?page=${currentPage - 1}${__querySuffix}`
               )
                 i.fas.fa-chevron-left
             
             each i in [...Array(pagination.pages).keys()].map(x => x + 1)
-              if i === pagination.page
+              if i === currentPage
                 .px-3.py-2.bg-blue-600.text-white.rounded
                   = i
-              else if i === 1 || i === pagination.pages || (i >= pagination.page - 1 && i <= pagination.page + 1)
-                a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
-                  href=`/admin/products?page=${i}`
+              else if i === 1 || i === pagination.pages || (i >= currentPage - 1 && i <= currentPage + 1)
+                a.px-3.py-2.border.border-gray-300.rounded.text-gray-700(class="hover:bg-gray-100"
+                  href=`/admin/products?page=${i}${__querySuffix}`
                 )
                   = i
             
-            if pagination.page < pagination.pages
-              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
-                href=`/admin/products?page=${pagination.page + 1}`
+            if currentPage < pagination.pages
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700(class="hover:bg-gray-100"
+                href=`/admin/products?page=${currentPage + 1}${__querySuffix}`
               )
                 i.fas.fa-chevron-right
   else
     // No Products
-    .bg-white.rounded-lg.shadow-md.p-12.text-center
+    .bg-white.p-12.text-center
       i.fas.fa-box.text-gray-400.text-5xl.mb-4
       h3.text-xl.font-semibold.text-gray-900.mb-2 No Products Found
       p.text-gray-600.mb-6 Start by creating your first product
-      a.inline-block.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
-        href="/admin/products/new"
+      a.inline-block.text-white.font-medium.py-2.px-6.transition-colors(class="bg-[#f48525] hover:bg-[#e07820]"
+        href="/admin/products/create"
       )
         i.fas.fa-plus.mr-2
         | Create Product
 
 block scripts
   script.
-    function deleteProduct(productId) {
-      if (confirm('Are you sure you want to delete this product?')) {
-        // TODO: Call API to delete product
-        alert('Product deleted!');
-        location.reload();
+    function getAdminToken() {
+      return localStorage.getItem('accessToken') || '';
+    }
+
+    async function handleDeleteProduct(productId) {
+      if (!confirm('Bạn chắc chắn muốn ẩn/xóa mềm sản phẩm này?')) return;
+      var token = getAdminToken();
+      if (!token) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+        window.location.href = '/auth/login';
+        return;
+      }
+      try {
+        var res = await fetch('/api/v1/products/' + encodeURIComponent(productId) + '/restore', {
+          method: 'PATCH',
+          headers: {
+            Authorization: 'Bearer ' + token
+          }
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.message || 'Không thể xóa sản phẩm.');
+        if (window.AppNotify) window.AppNotify.success(data.message || 'Đã xóa sản phẩm.');
+        setTimeout(function () { window.location.reload(); }, 500);
+      } catch (err) {
+        if (window.AppNotify) window.AppNotify.error(err.message || 'Có lỗi xảy ra.');
       }
     }
 
-    function applyFilters() {
-      const search = document.getElementById('search-input')?.value || '';
-      const category = document.getElementById('category-filter')?.value || '';
-      const status = document.getElementById('status-filter')?.value || '';
-      
-      let url = '/admin/products?';
-      if (search) url += `search=${encodeURIComponent(search)}&`;
-      if (category) url += `category=${category}&`;
-      if (status) url += `status=${status}`;
-      
-      window.location.href = url;
+    function deleteProduct(productId) {
+      return handleDeleteProduct(productId);
     }
+
+    function applyFilters() {
+      var searchInput = document.getElementById('search-input');
+      var categorySelect = document.getElementById('category-filter');
+      var statusSelect = document.getElementById('status-filter');
+      var search = searchInput ? searchInput.value : '';
+      var category = categorySelect ? categorySelect.value : '';
+      var status = statusSelect ? statusSelect.value : '';
+      
+      var params = new URLSearchParams();
+      if (search && search.trim()) params.set('search', search.trim());
+      if (category) params.set('category', category);
+      if (status) params.set('status', status);
+      
+      window.location.href = '/admin/products' + (params.toString() ? ('?' + params.toString()) : '');
+    }
+
+    (function initFilters() {
+      var categorySelect = document.getElementById('category-filter');
+      var statusSelect = document.getElementById('status-filter');
+      if (categorySelect) categorySelect.value = !{JSON.stringify(__category)};
+      if (statusSelect) statusSelect.value = !{JSON.stringify(__status)};
+
+      var searchInput = document.getElementById('search-input');
+      var applyBtn = document.getElementById('apply-filter-btn');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          applyFilters();
+        });
+      }
+      if (searchInput) {
+        searchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+      }
+
+      window.applyFilters = applyFilters;
+    })();

@@ -22,11 +22,12 @@ export const sendVerificationEmail = async (email, token) => {
         const transporter = createTransporter();
 
         // URL xác thực (frontend url + token)
-        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+        const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000';
+        const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
 
         // Nội dung email
         const mailOptions = {
-            form: process.env.EMAIL_USER,
+            from: process.env.EMAIL_USER,
             to: email,
             subject: "Xác thực địa chỉ email của bạn",
             html: `

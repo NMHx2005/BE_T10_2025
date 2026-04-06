@@ -2,65 +2,64 @@ extends ../../layouts/auth
 
 block content
   //- Thẻ ngoài: logo + form (Tailwind có dấu ":" / "/" — phải dùng class="..." để Pug không parse nhầm)
-  .auth-card(class="rounded-2xl p-8 sm:p-10")
+  .auth-card(class="p-8 sm:p-10")
     //- Header
-    a.inline-flex.items-center.gap-2.text-slate-600.transition-colors.text-sm.font-medium.mb-8(href="/", class="hover:text-indigo-600")
+    a.inline-flex.items-center.gap-2.transition-colors.text-sm.font-medium.mb-8(href="/", class="text-[#323842] hover:text-[#f48525]")
       i.fa-solid.fa-arrow-left
       span Về trang chủ
 
     .text-center.mb-8
-      .inline-flex.items-center.justify-center.w-14.h-14.rounded-2xl.bg-gradient-to-br.from-indigo-500.to-violet-600.text-white.text-2xl.shadow-lg.mb-4
+      .inline-flex.items-center.justify-center.w-14.h-14.text-white.text-2xl.shadow-lg.mb-4(class="bg-[#f48525]")
         i.fa-solid.fa-right-to-bracket
-      h1(class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight") Đăng nhập
-      p(class="text-slate-500 mt-2 text-sm sm:text-base") Chào mừng trở lại. Đăng nhập để tiếp tục mua sắm.
+      h1(class="text-2xl sm:text-3xl font-bold text-[#0d0d0d] tracking-tight") Đăng nhập
+      p(class="text-[#323842] mt-2 text-sm sm:text-base") Chào mừng trở lại. Đăng nhập để tiếp tục mua sắm.
 
     //- Thông báo lỗi / thành công (do JS điền)
     #auth-alert.hidden.mb-6.rounded-xl.px-4.py-3.text-sm.font-medium(role="alert")
 
     form#login-form.space-y-5
       div(class="space-y-1.5")
-        label.block.text-sm.font-semibold.text-slate-700(for="email") Email
+        label.block.text-sm.font-semibold(for="email" class="text-[#181b20]") Email
         .relative
-          i.fa-regular.fa-envelope.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          i.fa-regular.fa-envelope.absolute.left-3.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2 text-[#323842]")
           input#email.auth-input(type="email", name="email", placeholder="you@example.com", required, autocomplete="email")
 
       div(class="space-y-1.5")
         .flex.items-center.justify-between.gap-2
-          label.block.text-sm.font-semibold.text-slate-700(for="password") Mật khẩu
-          a.text-sm.font-medium.text-indigo-600(href="/auth/forgot-password", class="hover:text-indigo-500") Quên mật khẩu?
+          label.block.text-sm.font-semibold(for="password" class="text-[#181b20]") Mật khẩu
+          a.text-sm.font-medium(href="/auth/forgot-password", class="text-[#f48525] hover:text-[#e07820]") Quên mật khẩu?
         .relative
-          i.fa-solid.fa-lock.absolute.left-3.text-slate-400.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2")
+          i.fa-solid.fa-lock.absolute.left-3.text-sm.pointer-events-none(class="top-1/2 -translate-y-1/2 text-[#323842]")
           input#password.auth-input.pr-12(type="password", name="password", placeholder="••••••••", required, autocomplete="current-password")
-          button#toggle-password.absolute.right-2.p-2.text-slate-400(type="button", aria-label="Hiện mật khẩu", class="top-1/2 -translate-y-1/2 hover:text-slate-600")
+          button#toggle-password.absolute.right-2.p-2(type="button", aria-label="Hiện mật khẩu", class="top-1/2 -translate-y-1/2 text-[#323842] hover:text-[#0d0d0d]")
             i.fa-regular.fa-eye
 
       label.flex.items-center.gap-2.cursor-pointer.select-none
-        input.rounded.border-slate-300.text-indigo-600(type="checkbox", name="remember")
-        span.text-sm.text-slate-600 Ghi nhớ đăng nhập
+        input.rounded(type="checkbox", name="remember" class="border-[#dee1e6] text-[#f48525]")
+        span.text-sm(class="text-[#323842]") Ghi nhớ đăng nhập
 
       button#login-submit.auth-btn-primary(type="submit")
         span#login-submit-text Đăng nhập
-        span#login-submit-loading.hidden.inline-flex.items-center.gap-2
+        span#login-submit-loading.hidden.items-center.gap-2
           i.fa-solid.fa-circle-notch.fa-spin
           span Đang xử lý...
 
     .relative.my-8
       .absolute.inset-0.flex.items-center
-        .w-full.border-t.border-slate-200
+        .w-full.border-t(class="border-[#eef0f3]")
       .relative.flex.justify-center
-        span(class="bg-white/90 px-3 text-xs font-medium text-slate-400 uppercase tracking-wider") hoặc
+        span(class="bg-white/90 px-3 text-xs font-medium text-[#8c8f95] uppercase tracking-wider") hoặc
 
-    p.text-center.text-sm.text-slate-500
+    p.text-center.text-sm(class="text-[#323842]")
       | Chưa có tài khoản?
       |
-      a.font-semibold.text-indigo-600.ml-1(href="/auth/register", class="hover:text-indigo-500") Đăng ký ngay
+      a.font-semibold.ml-1(href="/auth/register", class="text-[#f48525] hover:text-[#e07820]") Đăng ký ngay
 
 block scripts
   script.
     (function () {
       var API_LOGIN = '/api/v1/auth/login';
       var form = document.getElementById('login-form');
-      var alertEl = document.getElementById('auth-alert');
       var submitBtn = document.getElementById('login-submit');
       var submitText = document.getElementById('login-submit-text');
       var submitLoading = document.getElementById('login-submit-loading');
@@ -68,19 +67,13 @@ block scripts
       var togglePwd = document.getElementById('toggle-password');
 
       function showAlert(type, message) {
-        alertEl.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border', 'border-red-100', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-100');
-        if (type === 'error') {
-          alertEl.classList.add('bg-red-50', 'text-red-800', 'border', 'border-red-100');
-        } else {
-          alertEl.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-100');
-        }
-        alertEl.textContent = message;
-        alertEl.classList.remove('hidden');
+        if (!window.AppNotify) return;
+        if (type === 'error') return window.AppNotify.error(message);
+        return window.AppNotify.success(message);
       }
 
       function hideAlert() {
-        alertEl.classList.add('hidden');
-        alertEl.textContent = '';
+        return;
       }
 
       function formatApiError(data) {
@@ -96,9 +89,11 @@ block scripts
         if (loading) {
           submitText.classList.add('hidden');
           submitLoading.classList.remove('hidden');
+          submitLoading.classList.add('inline-flex');
         } else {
           submitText.classList.remove('hidden');
           submitLoading.classList.add('hidden');
+          submitLoading.classList.remove('inline-flex');
         }
       }
 

@@ -1,16 +1,17 @@
-extends ../../../layouts/admin
+extends ../../layouts/admin
 
 block content
   // Page Header
-  .mb-8
+  .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.justify-between
       .flex.flex-col
-        h1.text-3xl.font-bold.text-gray-900 Orders Management
+        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Fulfillment
+        h1.text-3xl.font-bold(class="text-[#0d0d0d]") Orders Management
         p.text-gray-600.mt-2 Total: 
           span.font-semibold #{totalOrders || 0}
           |  orders
       
-      a.bg-green-600.hover:bg-green-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors.flex.items-center.gap-2(
+      a.text-white.font-medium.py-2.px-6.transition-colors.flex.items-center.gap-2(class="bg-[#f48525] hover:bg-[#e07820]"
         href="/admin/orders/export"
       )
         i.fas.fa-download.mr-2
@@ -26,7 +27,7 @@ block content
         .ml-4
           p.text-sm.font-medium.text-gray-600 Pending
           p.text-2xl.font-bold.text-gray-900
-            = orders?.filter(o => o.status === 'pending').length || 0
+            = (orders || []).filter(o => o.status === 'pending').length || 0
     
     .bg-white.rounded-lg.shadow-md.p-6
       .flex.items-center
@@ -36,7 +37,7 @@ block content
         .ml-4
           p.text-sm.font-medium.text-gray-600 Processing
           p.text-2xl.font-bold.text-gray-900
-            = orders?.filter(o => o.status === 'processing' || o.status === 'confirmed').length || 0
+            = (orders || []).filter(o => o.status === 'processing' || o.status === 'confirmed').length || 0
     
     .bg-white.rounded-lg.shadow-md.p-6
       .flex.items-center
@@ -46,7 +47,7 @@ block content
         .ml-4
           p.text-sm.font-medium.text-gray-600 Shipped
           p.text-2xl.font-bold.text-gray-900
-            = orders?.filter(o => o.status === 'shipped').length || 0
+            = (orders || []).filter(o => o.status === 'shipped').length || 0
     
     .bg-white.rounded-lg.shadow-md.p-6
       .flex.items-center
@@ -56,10 +57,10 @@ block content
         .ml-4
           p.text-sm.font-medium.text-gray-600 Delivered
           p.text-2xl.font-bold.text-gray-900
-            = orders?.filter(o => o.status === 'delivered').length || 0
+            = (orders || []).filter(o => o.status === 'delivered').length || 0
 
   // Filters & Search
-  .bg-white.rounded-lg.shadow-md.p-6.mb-6
+  .bg-white.p-6.mb-6
     .grid.grid-cols-1(class="md:grid-cols-5 gap-4")
       .form-group
         input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
@@ -101,7 +102,7 @@ block content
 
   // Orders Table
   if orders && orders.length > 0
-    .bg-white.rounded-lg.shadow-md.overflow-hidden
+    .bg-white.overflow-hidden
       .overflow-x-auto
         table.w-full
           thead.bg-gray-100.border-b.border-gray-200
@@ -129,14 +130,14 @@ block content
                 td.px-6.py-4.text-sm
                   .flex.flex-col
                     p.font-medium.text-gray-900
-                      = order.customer?.username || 'Guest'
+                      = (order.customer && order.customer.username) || 'Guest'
                     p.text-xs.text-gray-500
-                      = order.customer?.email || 'N/A'
+                      = (order.customer && order.customer.email) || 'N/A'
                 
                 // Items Count
                 td.px-6.py-4.text-sm.text-center
                   span.bg-gray-100.px-2.py-1.rounded-full.text-xs.font-medium
-                    = order.items?.length || 0
+                    = (order.items && order.items.length) || 0
                     |  items
                 
                 // Total
@@ -145,15 +146,15 @@ block content
                 
                 // Payment Status
                 td.px-6.py-4
-                  span(class={
-                    'bg-green-100 text-green-800': order.payment?.status === 'paid',
-                    'bg-yellow-100 text-yellow-800': order.payment?.status === 'pending',
-                    'bg-red-100 text-red-800': order.payment?.status === 'failed'
-                  }.px-2.py-1.rounded-full.text-xs.font-semibold)
-                    if order.payment?.status === 'paid'
+                  span.px-2.py-1.rounded-full.text-xs.font-semibold(class={
+                    'bg-green-100 text-green-800': order.payment && order.payment.status === 'paid',
+                    'bg-yellow-100 text-yellow-800': order.payment && order.payment.status === 'pending',
+                    'bg-red-100 text-red-800': !order.payment || order.payment.status === 'failed'
+                  })
+                    if order.payment && order.payment.status === 'paid'
                       i.fas.fa-check-circle.mr-1
                       | Paid
-                    else if order.payment?.status === 'pending'
+                    else if order.payment && order.payment.status === 'pending'
                       i.fas.fa-clock.mr-1
                       | Unpaid
                     else
@@ -193,7 +194,7 @@ block content
                     )
                       i.fas.fa-truck
                   
-                  if order.payment?.status === 'pending'
+                  if order.payment && order.payment.status === 'pending'
                     button.text-green-600.hover:text-green-700.transition-colors.px-2.py-1(
                       type="button",
                       onclick=`markAsPaid('${order._id}')`,
@@ -245,7 +246,7 @@ block content
                 i.fas.fa-chevron-right
   else
     // No Orders
-    .bg-white.rounded-lg.shadow-md.p-12.text-center
+    .bg-white.p-12.text-center
       i.fas.fa-inbox.text-gray-400.text-5xl.mb-4
       h3.text-xl.font-semibold.text-gray-900.mb-2 No Orders Found
       p.text-gray-600 Orders will appear here once customers start placing them

@@ -21,17 +21,37 @@ block content
     function __productPrice(p) {
       if (p.minPrice != null) return __vnd(p.minPrice)
       if (p.variantMinPrice != null) return __vnd(p.variantMinPrice)
+      if (p.variants && p.variants.length) {
+        var activePrices = p.variants
+          .filter(function (v) { return v && v.isActive !== false && v.price != null })
+          .map(function (v) { return Number(v.price) })
+          .filter(function (n) { return Number.isFinite(n) })
+        if (activePrices.length) return __vnd(Math.min.apply(null, activePrices))
+      }
       if (p.price != null) return __vnd(p.price)
       return '—'
     }
     function __productStock(p) {
       if (p.totalStock != null) return Number(p.totalStock)
+      if (p.variants && p.variants.length) {
+        return p.variants.reduce(function (sum, v) {
+          if (!v || v.isActive === false) return sum
+          var n = Number(v.stock)
+          return Number.isFinite(n) ? sum + n : sum
+        }, 0)
+      }
       if (p.stock != null) return Number(p.stock)
       return 0
     }
     function __productImg(p) {
       if (p.thumbnail) return p.thumbnail
       if (p.images && p.images.length) return p.images[0]
+      if (p.variants && p.variants.length) {
+        var withImg = p.variants.find(function (v) {
+          return v && v.images && v.images.length
+        })
+        if (withImg) return withImg.images[0]
+      }
       return null
     }
     function __productSnippet(p) {

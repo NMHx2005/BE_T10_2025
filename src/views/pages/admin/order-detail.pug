@@ -1,13 +1,14 @@
-extends ../../../layouts/admin
+extends ../../layouts/admin
 
 block content
   // Page Header
-  .mb-8
+  .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.gap-4
       a.text-blue-600.hover:text-blue-700(href="/admin/orders")
         i.fas.fa-arrow-left.text-xl
       .flex.flex-col
-        h1.text-3xl.font-bold.text-gray-900
+        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Order Detail
+        h1.text-3xl.font-bold(class="text-[#0d0d0d]")
           = 'Order: ' + order.orderNumber
         p.text-gray-600.mt-2
           = 'Placed on ' + new Date(order.createdAt).toLocaleDateString() + ' at ' + new Date(order.createdAt).toLocaleTimeString()
@@ -16,7 +17,7 @@ block content
     // Left Column - Order Details
     .col-span-1(class="lg:col-span-2")
       // Order Items
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Order Items
 
         .space-y-4
@@ -24,58 +25,58 @@ block content
             each item in order.items
               .flex.items-center.justify-between.p-4.border.border-gray-200.rounded-lg
                 .flex.items-center.gap-4
-                  if item.product?.thumbnail
+                  if item.product && item.product.thumbnail
                     img.w-16.h-16.rounded.object-cover(src=item.product.thumbnail, alt=item.product.name)
                   else
                     .w-16.h-16.rounded.bg-gray-200.flex.items-center.justify-center
                       i.fas.fa-image.text-gray-400
                   
                   .flex-1
-                    p.font-medium.text-gray-900= item.product?.name || 'Product'
+                    p.font-medium.text-gray-900= (item.product && item.product.name) || 'Product'
                     if item.variant
                       p.text-sm.text-gray-600= `Variant: ${item.variant}`
                     p.text-sm.text-gray-500
-                      = `Quantity: ${item.quantity} x $${item.price?.toFixed(2)}`
+                      = `Quantity: ${item.quantity} x $${item.price != null ? item.price.toFixed(2) : '0.00'}`
                 
                 .text-right
-                  p.font-bold.text-gray-900= '$' + (item.quantity * item.price)?.toFixed(2)
+                  p.font-bold.text-gray-900= '$' + (((item.quantity || 0) * (item.price || 0)).toFixed(2))
 
             .border-t.pt-4.mt-4
               .flex.justify-between.mb-2
                 span.text-gray-700 Subtotal
-                span.font-medium= '$' + order.subtotal?.toFixed(2)
+                span.font-medium= '$' + ((order.subtotal || 0).toFixed(2))
               
               .flex.justify-between.mb-2
                 span.text-gray-700 Shipping
-                span.font-medium= '$' + (order.shippingFee || 0)?.toFixed(2)
+                span.font-medium= '$' + ((order.shippingFee || 0).toFixed(2))
               
               .flex.justify-between.mb-2
                 span.text-gray-700 Tax
-                span.font-medium= '$' + (order.tax || 0)?.toFixed(2)
+                span.font-medium= '$' + ((order.tax || 0).toFixed(2))
               
               .flex.justify-between.text-lg.font-bold.text-gray-900.pt-2.border-t
                 span Total
-                span= '$' + order.totalAmount?.toFixed(2)
+                span= '$' + ((order.totalAmount || 0).toFixed(2))
           else
             p.text-gray-500.text-center.py-4 No items in this order
 
       // Shipping Address
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Shipping Address
 
         .p-4.bg-gray-50.rounded-lg
-          p.font-medium.text-gray-900= order.shippingAddress?.fullName
-          p.text-gray-700= `${order.shippingAddress?.street}`
+          p.font-medium.text-gray-900= (order.shippingAddress && order.shippingAddress.fullName) || ''
+          p.text-gray-700= `${order.shippingAddress && order.shippingAddress.street ? order.shippingAddress.street : ''}`
           p.text-gray-700
-            = `${order.shippingAddress?.ward}, ${order.shippingAddress?.district}, ${order.shippingAddress?.city}`
+            = `${order.shippingAddress && order.shippingAddress.ward ? order.shippingAddress.ward : ''}, ${order.shippingAddress && order.shippingAddress.district ? order.shippingAddress.district : ''}, ${order.shippingAddress && order.shippingAddress.city ? order.shippingAddress.city : ''}`
           p.text-gray-600.mt-2
-            = `Phone: ${order.shippingAddress?.phone}`
-          if order.shippingAddress?.notes
+            = `Phone: ${order.shippingAddress && order.shippingAddress.phone ? order.shippingAddress.phone : ''}`
+          if order.shippingAddress && order.shippingAddress.notes
             p.text-gray-600.mt-2
               = `Notes: ${order.shippingAddress.notes}`
 
       // Billing Address
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Billing Address
 
         if order.billingAddress
@@ -90,7 +91,7 @@ block content
           p.text-gray-500 Same as shipping address
 
       // Order Timeline
-      .bg-white.rounded-lg.shadow-md.p-6
+      .bg-white.p-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Order Timeline
 
         .space-y-4
@@ -118,7 +119,7 @@ block content
                     class=isCompleted ? 'fa-check text-white' : isActive ? 'fa-clock text-white' : 'fa-minus text-white'
                   )
                 if status !== statuses[statuses.length - 1]
-                  .w-0.5.h-12.bg-gray-300.my-2
+                  .h-12.bg-gray-300.my-2(class="w-0.5")
 
               .flex-1.py-2
                 p.font-medium.text-gray-900.capitalize= status
@@ -127,7 +128,7 @@ block content
     // Right Column - Status & Payment
     .col-span-1
       // Order Status Card
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Order Status
 
         .mb-6
@@ -187,7 +188,7 @@ block content
                 | Unknown status
 
       // Shipping Status Card
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Shipping Information
 
         .space-y-4
@@ -208,13 +209,13 @@ block content
             p.text-gray-500.text-sm text-center Tracking information not yet available
 
       // Payment Status Card
-      .bg-white.rounded-lg.shadow-md.p-6.mb-6
+      .bg-white.p-6.mb-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Payment Information
 
         .space-y-3
           .flex.items-center.justify-between.pb-3.border-b
             span.text-sm.font-medium.text-gray-700 Amount
-            span.text-lg.font-bold.text-gray-900= '$' + order.totalAmount?.toFixed(2)
+            span.text-lg.font-bold.text-gray-900= '$' + ((order.totalAmount || 0).toFixed(2))
 
           .flex.items-center.justify-between.pb-3.border-b
             span.text-sm.font-medium.text-gray-700 Method
@@ -229,15 +230,15 @@ block content
               = order.paymentStatus === 'paid' ? 'Paid' : 'Pending'
 
       // Customer Info Card
-      .bg-white.rounded-lg.shadow-md.p-6
+      .bg-white.p-6
         h2.text-xl.font-semibold.text-gray-900.mb-4 Customer Information
 
         .space-y-3
           a.block.p-3.bg-gray-50.hover:bg-gray-100.rounded-lg.transition-colors(
             href=`/admin/users/${order.userId}`
           )
-            p.font-medium.text-gray-900= order.customer?.name || 'Unknown'
-            p.text-sm.text-gray-600= order.customer?.email || 'N/A'
+            p.font-medium.text-gray-900= (order.customer && order.customer.name) || 'Unknown'
+            p.text-sm.text-gray-600= (order.customer && order.customer.email) || 'N/A'
             p.text-sm.text-gray-500.mt-1
               i.fas.fa-arrow-right.mr-1
               | View Full Profile

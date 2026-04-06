@@ -11,54 +11,57 @@ mixin homeBestsellers()
           class="mt-3 text-base leading-relaxed text-[#323842] sm:text-lg"
         ) Những sản phẩm được tin dùng nhất bởi giới chuyên môn. Cam kết chính hãng và bảo hành dài hạn.
 
-      ul.grid.gap-8(
-        class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-        role="list"
-      )
-        each item in bestsellers
-          li(class="w-full")
-            article(
-              class="mx-auto flex w-full max-w-[272px] flex-col overflow-hidden bg-white shadow-[0_2px_4px_rgba(34,37,42,0.08)] transition-shadow duration-300 hover:shadow-[0_8px_24px_rgba(34,37,42,0.12)] sm:mx-0 sm:max-w-none"
-            )
-              a.relative.block(class="h-[272px] shrink-0 bg-[#f3f4f6]" href=item.href)
-                img(
-                  class="h-full w-full object-cover"
-                  src=item.img
-                  alt=item.alt
-                  width="272"
-                  height="272"
-                  loading="lazy"
-                  decoding="async"
-                )
-                span(
-                  class="absolute left-4 top-4 bg-[#0d0d0d] px-2.5 py-0.5 text-xs font-medium text-white"
-                ) Bán chạy
-              div(class="flex flex-1 flex-col px-5 pb-5 pt-4")
-                div(
-                  class="mb-3 flex gap-0.5"
-                  role="img"
-                )&attributes({ 'aria-label': 'Đánh giá ' + item.rating + ' trên 5 sao' })
-                  - for (var s = 1; s <= 5; s++)
-                    if s <= item.rating
-                      i.fa-solid.fa-star.text-sm(class="text-[#181b20]" aria-hidden="true")
-                    else
-                      i.fa-solid.fa-star.text-sm(class="text-[#dee1e6]" aria-hidden="true")
-                h3(class="text-base font-semibold leading-snug text-[#181b20]")
-                  a(
-                    class="block w-full overflow-hidden text-[#181b20] line-clamp-2 transition-colors hover:text-[#f48525]"
-                    href=item.href
-                    title=item.name
-                  )= item.name
-                div(class="mt-auto flex items-end justify-between gap-3 pt-4")
-                  p(
-                    class="text-lg font-bold text-[#0d0d0d]"
-                  )= item.price
-                  button(
-                    type="button"
-                    class="inline-flex h-9 shrink-0 items-center gap-1.5 bg-[#f48525] px-3 text-sm font-medium text-white transition-colors hover:bg-[#e07820] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2"
-                  )&attributes({ 'aria-label': 'Thêm ' + item.name + ' vào giỏ' })
-                    i.fa-solid.fa-bag-shopping.text-sm(aria-hidden="true")
-                    | Thêm
+      if bestsellers && bestsellers.length
+        ul.grid.gap-8(
+          class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          role="list"
+        )
+          each item in bestsellers
+            li(class="w-full")
+              article(
+                class="mx-auto flex w-full max-w-[272px] flex-col overflow-hidden bg-white shadow-[0_2px_4px_rgba(34,37,42,0.08)] transition-shadow duration-300 hover:shadow-[0_8px_24px_rgba(34,37,42,0.12)] sm:mx-0 sm:max-w-none"
+              )
+                a.relative.block(class="h-[272px] shrink-0 bg-[#f3f4f6]" href=item.href)
+                  img(
+                    class="h-full w-full object-cover"
+                    src=item.img
+                    alt=item.alt
+                    width="272"
+                    height="272"
+                    loading="lazy"
+                    decoding="async"
+                  )
+                  span(
+                    class="absolute left-4 top-4 bg-[#0d0d0d] px-2.5 py-0.5 text-xs font-medium text-white"
+                  ) Bán chạy
+                div(class="flex flex-1 flex-col px-5 pb-5 pt-4")
+                  div(
+                    class="mb-3 flex gap-0.5"
+                    role="img"
+                  )&attributes({ 'aria-label': 'Đánh giá ' + item.rating + ' trên 5 sao' })
+                    - for (var s = 1; s <= 5; s++)
+                      if s <= item.rating
+                        i.fa-solid.fa-star.text-sm(class="text-[#181b20]" aria-hidden="true")
+                      else
+                        i.fa-solid.fa-star.text-sm(class="text-[#dee1e6]" aria-hidden="true")
+                  h3(class="text-base font-semibold leading-snug text-[#181b20]")
+                    a(
+                      class="block w-full overflow-hidden text-[#181b20] line-clamp-2 transition-colors hover:text-[#f48525]"
+                      href=item.href
+                      title=item.name
+                    )= item.name
+                  div(class="mt-auto flex items-end justify-between gap-3 pt-4")
+                    p(
+                      class="text-lg font-bold text-[#0d0d0d]"
+                    )= item.price
+                    button(
+                      type="button"
+                      class="inline-flex h-9 shrink-0 items-center gap-1.5 bg-[#f48525] px-3 text-sm font-medium text-white transition-colors hover:bg-[#e07820] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2"
+                    )&attributes({ 'aria-label': 'Thêm ' + item.name + ' vào giỏ' })
+                      i.fa-solid.fa-bag-shopping.text-sm(aria-hidden="true")
+                      | Thêm
+      else
+        p(class="mx-auto max-w-[520px] py-8 text-center text-[#323842]") Chưa có sản phẩm để hiển thị. Hãy thêm sản phẩm trong hệ thống hoặc chạy seed dữ liệu.
 
       div(class="mt-12 flex justify-center lg:mt-14")
         a(
@@ -67,6 +70,10 @@ mixin homeBestsellers()
         ) Xem tất cả sản phẩm
 
 block content
+  //- Dữ liệu từ homeController (DB); fallback khi render trực tiếp
+  - featuredCategories = featuredCategories || []
+  - bestsellers = bestsellers || []
+
   //- Hero — Figma 1440×638: nền #0d0d0d, cột trái overlay 40% + blur 2px, ảnh phải ~592px
   section(class="relative min-h-[638px] overflow-hidden bg-[#0d0d0d]")
     div(class="mx-auto flex min-h-[638px] max-w-[1440px] flex-col lg:flex-row")
@@ -118,16 +125,7 @@ block content
           aria-hidden="true"
         )
 
-  //- Danh mục nổi bật — Figma: nền #f9fafb, gạch cam 96×6, 6 ô 184×184
-  -
-    var featuredCategories = [
-      { name: 'Máy Khoan', href: '/products', img: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=400&q=80', alt: 'Máy khoan' },
-      { name: 'Máy Mài', href: '/products', img: 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?auto=format&fit=crop&w=400&q=80', alt: 'Máy mài' },
-      { name: 'Cờ Lê', href: '/products', img: 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=400&q=80', alt: 'Cờ lê và cờ lê vòng' },
-      { name: 'Tua Vít', href: '/products', img: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=400&q=80', alt: 'Tua vít' },
-      { name: 'Thang Nhôm', href: '/products', img: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=400&q=80', alt: 'Thang nhôm' },
-      { name: 'Tủ Đồ Nghề', href: '/products', img: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=400&q=80', alt: 'Tủ đồ nghề' },
-    ]
+  //- Danh mục nổi bật — 6 danh mục đầu (featured → order) từ API/DB
   section(class="bg-[#f9fafb] py-16 lg:py-[72px]")
     div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
       div(class="mb-10 flex flex-col gap-6 sm:mb-12 sm:flex-row sm:items-end sm:justify-between")
@@ -144,69 +142,37 @@ block content
           span Xem tất cả danh mục
           i.fa-solid.fa-chevron-right.text-xs(aria-hidden="true")
 
-      ul.grid.gap-4(
-        class="grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
-        role="list"
-      )
-        each cat in featuredCategories
-          li
-            a(
-              class="group relative block h-[184px] w-full max-w-[184px] overflow-hidden bg-[#0d0d0d] mx-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f9fafb] sm:mx-0 sm:max-w-none"
-              href=cat.href
-            )
-              img(
-                class="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
-                src=cat.img
-                alt=cat.alt
-                width="184"
-                height="184"
-                loading="lazy"
-                decoding="async"
+      if featuredCategories.length
+        ul.grid.gap-4(
+          class="grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
+          role="list"
+        )
+          each cat in featuredCategories
+            li
+              a(
+                class="group relative mx-auto block h-[184px] w-full max-w-[184px] overflow-hidden bg-[#0d0d0d] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f9fafb] sm:mx-0 sm:max-w-none"
+                href=cat.href
               )
-              div(
-                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/20"
-                aria-hidden="true"
-              )
-              span(
-                class="absolute inset-0 flex items-center justify-center px-2 text-center text-lg font-semibold text-white drop-shadow-md"
-              )= cat.name
+                img(
+                  class="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
+                  src=cat.img
+                  alt=cat.alt
+                  width="184"
+                  height="184"
+                  loading="lazy"
+                  decoding="async"
+                )
+                div(
+                  class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/20"
+                  aria-hidden="true"
+                )
+                span(
+                  class="absolute inset-0 flex items-center justify-center px-2 text-center text-lg font-semibold text-white drop-shadow-md"
+                )= cat.name
+      else
+        p(class="text-center text-[#323842]") Chưa có danh mục. Thêm danh mục hoặc chạy seed dữ liệu.
 
-  //- Sản phẩm bán chạy (Figma) — lặp 2 block giống layout trang
-  -
-    var bestsellers = [
-      {
-        name: 'Máy Khoan Động Lực Bosch GSB 550 RE Freedom',
-        price: '1.250.000₫',
-        href: '/products/1',
-        img: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=544&q=80',
-        alt: 'Máy khoan Bosch',
-        rating: 5,
-      },
-      {
-        name: 'Bộ Chìa Khóa Vòng Miệng Stanley 14 Chi Tiết',
-        price: '890.000₫',
-        href: '/products/2',
-        img: 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=544&q=80',
-        alt: 'Bộ cờ lê Stanley',
-        rating: 4,
-      },
-      {
-        name: 'Máy Mài Góc Makita 9553NB (710W)',
-        price: '1.050.000₫',
-        href: '/products/3',
-        img: 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?auto=format&fit=crop&w=544&q=80',
-        alt: 'Máy mài góc Makita',
-        rating: 5,
-      },
-      {
-        name: 'Thang Nhôm Rút Đơn NIKITA AI-38 (3.8m)',
-        price: '1.650.000₫',
-        href: '/products/4',
-        img: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=544&q=80',
-        alt: 'Thang nhôm rút',
-        rating: 5,
-      },
-    ]
+  //- Sản phẩm bán chạy — 4 sản phẩm từ DB (featured + rating)
   +homeBestsellers()
 
   //- Ưu đãi chào mừng — Figma 1:255 (1184×258, cam #f48525, blob + CTA)

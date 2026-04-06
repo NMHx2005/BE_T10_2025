@@ -66,6 +66,32 @@ function sortForFind(sort) {
     }
 }
 
+function getProductStock(product) {
+    if (!product) return 0;
+    if (product.totalStock != null) return Number(product.totalStock) || 0;
+    if (Array.isArray(product.variants)) {
+        return product.variants.reduce((sum, v) => {
+            if (!v || v.isActive === false) return sum;
+            const n = Number(v.stock);
+            return Number.isFinite(n) ? sum + n : sum;
+        }, 0);
+    }
+    if (product.stock != null) return Number(product.stock) || 0;
+    return 0;
+}
+
+function getGalleryImages(product) {
+    const rootImgs = Array.isArray(product?.images) ? product.images.filter(Boolean) : [];
+    if (rootImgs.length) return rootImgs;
+    if (Array.isArray(product?.variants)) {
+        const variantImgs = product.variants
+            .flatMap((v) => (Array.isArray(v?.images) ? v.images : []))
+            .filter(Boolean);
+        if (variantImgs.length) return variantImgs;
+    }
+    return [];
+}
+
 /**
  * GET /products — SSR danh sách sản phẩm
  */
@@ -136,6 +162,84 @@ export async function renderProductsPage(req, res, next) {
             minPrice: req.query.minPrice !== undefined && req.query.minPrice !== '' ? req.query.minPrice : '',
             maxPrice: req.query.maxPrice !== undefined && req.query.maxPrice !== '' ? req.query.maxPrice : '',
             selectedCategoryIds,
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * GET /products/:id — SSR chi tiết sản phẩm
+ */
+export async function renderProductDetailPage(req, res, next) {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).render('pages/client/product-detail', {
+                title: 'Không tìm thấy sản phẩm',
+                product: null,
+                relatedProducts: [],
+            });
+        }
+
+        const product = await Product.findOne({
+            _id: id,
+            status: 'active',
+            deleted: { $ne: true },
+        })
+            .populate('category', 'name slug')
+            .lean({ virtuals: true });
+
+        if (!product) {
+            return res.status(404).render('pages/client/product-detail', {
+                title: 'Không tìm thấy sản phẩm',
+                product: null,
+                relatedProducts: [],
+            });
+        }
+
+        const productStock = getProductStock(product);
+        const productImages = getGalleryImages(product);
+        const productPrice =
+            product.minPrice ??
+            product.variantMinPrice ??
+            (Array.isArray(product.variants) && product.variants.length
+                ? Math.min(
+                      ...product.variants
+                          .map((v) => Number(v?.price))
+                          .filter((n) => Number.isFinite(n)),
+                  )
+                : null);
+        const compareAtPrice =
+            Array.isArray(product.variants) && product.variants.length
+                ? Math.max(
+                      ...product.variants
+                          .map((v) => Number(v?.compareAtPrice))
+                          .filter((n) => Number.isFinite(n)),
+                  )
+                : null;
+
+        const relatedProducts = await Product.find({
+            _id: { $ne: product._id },
+            category: product.category?._id,
+            status: 'active',
+            deleted: { $ne: true },
+        })
+            .sort({ featured: -1, 'rating.average': -1, createdAt: -1 })
+            .limit(4)
+            .select('name images rating variants')
+            .lean({ virtuals: true });
+
+        return res.render('pages/client/product-detail', {
+            title: `${product.name} — PRO-TOOLS`,
+            product: {
+                ...product,
+                galleryImages: productImages,
+                stockTotal: productStock,
+                displayPrice: productPrice,
+                displayCompareAtPrice: Number.isFinite(compareAtPrice) ? compareAtPrice : null,
+            },
+            relatedProducts,
         });
     } catch (err) {
         next(err);

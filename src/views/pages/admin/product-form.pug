@@ -1,13 +1,14 @@
-extends ../../../layouts/admin
+extends ../../layouts/admin
 
 block content
   // Page Header
-  .mb-8
+  .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.gap-4
-      a.text-blue-600.hover:text-blue-700(href="/admin/products")
+      a.text-blue-600(class="hover:text-blue-700" href="/admin/products")
         i.fas.fa-arrow-left.text-xl
       .flex.flex-col
-        h1.text-3xl.font-bold.text-gray-900
+        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Catalog Item
+        h1.text-3xl.font-bold(class="text-[#0d0d0d]")
           if isEdit
             | Edit Product
           else
@@ -21,13 +22,14 @@ block content
   // Main Form
   form.space-y-8(method="POST", action=isEdit ? `/admin/products/${product._id}` : "/admin/products", enctype="multipart/form-data", id="product-form")
     // Basic Information
-    .bg-white.rounded-lg.shadow-md.p-6
+    .bg-white.p-6
       h2.text-xl.font-semibold.text-gray-900.mb-6 Basic Information
 
       .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="name") Product Name
-          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
             type="text",
             id="name",
             name="name",
@@ -38,7 +40,8 @@ block content
         
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="sku") SKU
-          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
             type="text",
             id="sku",
             name="sku",
@@ -49,7 +52,8 @@ block content
         
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="category") Category
-          select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
             id="category",
             name="category",
             required
@@ -57,12 +61,13 @@ block content
             option(value="") Select a category
             if categories && categories.length > 0
               each cat in categories
-                option(value=cat._id, selected=isEdit && product.category?._id === cat._id)
+                option(value=cat._id, selected=isEdit && product.category && product.category._id === cat._id)
                   = cat.name
         
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="brand") Brand
-          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
             type="text",
             id="brand",
             name="brand",
@@ -71,13 +76,14 @@ block content
           )
 
     // Pricing & Stock
-    .bg-white.rounded-lg.shadow-md.p-6
+    .bg-white.p-6
       h2.text-xl.font-semibold.text-gray-900.mb-6 Pricing & Stock
 
       .grid.grid-cols-1(class="md:grid-cols-3 gap-6")
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="price") Price ($)
-          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
             type="number",
             id="price",
             name="price",
@@ -90,7 +96,8 @@ block content
         
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="compareAtPrice") Compare At Price ($)
-          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
             type="number",
             id="compareAtPrice",
             name="compareAtPrice",
@@ -102,7 +109,8 @@ block content
         
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="stock") Stock Quantity
-          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
             type="number",
             id="stock",
             name="stock",
@@ -113,12 +121,13 @@ block content
           )
 
     // Description
-    .bg-white.rounded-lg.shadow-md.p-6
+    .bg-white.p-6
       h2.text-xl.font-semibold.text-gray-900.mb-6 Description
 
       .form-group
         label.block.text-sm.font-medium.text-gray-700.mb-2(for="description") Product Description
-        textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+          class="focus:ring-2 focus:ring-blue-500"
           id="description",
           name="description",
           rows="6",
@@ -130,7 +139,7 @@ block content
         p.text-xs.text-gray-500.mt-2 Supports Markdown formatting
 
     // Images
-    .bg-white.rounded-lg.shadow-md.p-6
+    .bg-white.p-6
       h2.text-xl.font-semibold.text-gray-900.mb-6 Images
 
       .form-group
@@ -142,7 +151,8 @@ block content
             .w-20.h-20.rounded.bg-gray-200.flex.items-center.justify-center
               i.fas.fa-image.text-gray-400.text-2xl
           
-          input.block.flex-1.text-sm.text-gray-500.file:mr-4.file:py-2.file:px-4.file:rounded-lg.file:border-0.file:text-sm.file:font-semibold.file:bg-blue-50.file:text-blue-700.hover:file:bg-blue-100(
+          input.block.flex-1.text-sm.text-gray-500(
+            class="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             type="file",
             id="thumbnail",
             name="thumbnail",
@@ -151,13 +161,14 @@ block content
         p.text-xs.text-gray-500.mt-2 JPG, PNG, GIF (Max 5MB)
 
     // Status & SEO
-    .bg-white.rounded-lg.shadow-md.p-6
+    .bg-white.p-6
       h2.text-xl.font-semibold.text-gray-900.mb-6 Status & SEO
 
       .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="status") Status
-          select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+          select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
             id="status",
             name="status"
           )
@@ -177,13 +188,14 @@ block content
 
     // Submit Buttons
     .flex.gap-3.justify-end
-      a.px-6.py-3.border.border-gray-300.rounded-lg.text-gray-700.hover:bg-gray-50.font-medium.transition-colors(
+      a.px-6.py-3.border.border-gray-300.rounded-lg.text-gray-700.font-medium.transition-colors(
+        class="hover:bg-gray-50"
         href="/admin/products"
       )
         i.fas.fa-times.mr-2
         | Cancel
       
-      button.px-6.py-3.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-medium.transition-colors(
+      button.px-6.py-3.text-white.rounded-lg.font-medium.transition-colors(class="bg-[#f48525] hover:bg-[#e07820]"
         type="submit"
       )
         i.fas.fa-save.mr-2
@@ -194,9 +206,99 @@ block content
 
 block scripts
   script.
-    document.getElementById('product-form')?.addEventListener('submit', function(e) {
-      e.preventDefault();
-      // TODO: Form submission logic
-      alert('Product saved successfully!');
-      location.href = '/admin/products';
-    });
+    (function () {
+      var form = document.getElementById('product-form');
+      if (!form) return;
+
+      function getToken() {
+        return localStorage.getItem('accessToken') || '';
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function () { resolve(reader.result || ''); };
+          reader.onerror = function () { reject(new Error('Không đọc được file ảnh.')); };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        var token = getToken();
+        if (!token) {
+          if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+          window.location.href = '/auth/login';
+          return;
+        }
+
+        var isEdit = !{JSON.stringify(!!isEdit)};
+        var productId = !{JSON.stringify(product && product._id ? String(product._id) : '')};
+        var name = (document.getElementById('name')?.value || '').trim();
+        var category = (document.getElementById('category')?.value || '').trim();
+        var brand = (document.getElementById('brand')?.value || '').trim();
+        var description = (document.getElementById('description')?.value || '').trim();
+        var price = Number(document.getElementById('price')?.value || 0);
+        var stock = Number(document.getElementById('stock')?.value || 0);
+        var status = (document.getElementById('status')?.value || 'draft').trim();
+        var featured = !!document.getElementById('featured')?.checked;
+        var thumbInput = document.getElementById('thumbnail');
+        var thumbFile = thumbInput && thumbInput.files && thumbInput.files[0] ? thumbInput.files[0] : null;
+        var thumbnail = '';
+
+        if (!name || !category || !description || !Number.isFinite(price) || price < 0 || !Number.isFinite(stock) || stock < 0) {
+          if (window.AppNotify) window.AppNotify.error('Vui lòng nhập đầy đủ thông tin hợp lệ.');
+          return;
+        }
+
+        if (thumbFile) {
+          try {
+            thumbnail = await readFileAsDataUrl(thumbFile);
+          } catch (err) {
+            if (window.AppNotify) window.AppNotify.error(err.message || 'Ảnh không hợp lệ.');
+            return;
+          }
+        } else if (isEdit) {
+          thumbnail = !{JSON.stringify(product && product.thumbnail ? product.thumbnail : '')};
+        }
+
+        var payload = {
+          name: name,
+          category: category,
+          brand: brand || undefined,
+          description: description,
+          price: price,
+          stock: stock,
+          thumbnail: thumbnail || undefined,
+          status: status,
+          featured: featured
+        };
+
+        var endpoint = isEdit && productId ? '/api/v1/products/' + encodeURIComponent(productId) : '/api/v1/products';
+        var method = isEdit ? 'PUT' : 'POST';
+
+        var submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+        try {
+          var res = await fetch(endpoint, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token
+            },
+            body: JSON.stringify(payload)
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.message || 'Không thể lưu sản phẩm.');
+          if (window.AppNotify) window.AppNotify.success(data.message || 'Lưu sản phẩm thành công.');
+          setTimeout(function () {
+            window.location.href = '/admin/products';
+          }, 600);
+        } catch (err) {
+          if (window.AppNotify) window.AppNotify.error(err.message || 'Có lỗi xảy ra.');
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      });
+    })();
