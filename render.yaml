@@ -1,0 +1,17 @@
+# Blueprint Render: Dashboard → New → Blueprint → chọn repo (chỉ dùng nếu file nằm ở root repo).
+# Nếu repo Git của bạn là thư mục cha, trong Dashboard đặt Root Directory = BE_T10_2025 thay vì dùng file này.
+
+services:
+  - type: web
+    name: protools-web
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Thêm trên Dashboard (Secret): MONGODB_URI, JWT_SECRET, APP_PUBLIC_URL,
+      # PAYOS_*, CLOUDINARY_*, EMAIL_*, JWT_REFRESH_SECRET, ALLOWED_ORIGINS, ...

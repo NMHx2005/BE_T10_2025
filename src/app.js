@@ -3,6 +3,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import routes from './routes/index.js';
+
 dotenv.config();
 
 import './models/index.js';
@@ -16,6 +17,11 @@ const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/** Render / uptime probes — đặt trước rate limit */
+app.get('/health', (req, res) => {
+    res.status(200).json({ ok: true });
+});
 
 connectDB();
 
@@ -32,7 +38,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // 4. logger middleware (nếu cần)
 
-// 5. rate limiting middleware (nếu cần)
+// 5. rate limiting (sau /health để probe không bị tính)
 app.use(generalLimiter);
 
 // Locals cho view (active nav, v.v.)
