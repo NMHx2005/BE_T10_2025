@@ -2,70 +2,195 @@ extends ../../layouts/admin
 include ../../mixins/cards
 include ../../mixins/buttons
 
+block head
+  script(src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js")
+
 block content
+  -
+    var st = stats || {};
+    var ob = st.orderByStatus || {};
+    var fmtMoney = function (n) {
+      return (Number(n) || 0).toLocaleString('vi-VN') + ' ₫';
+    };
+
   .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.flex-col.gap-4(class="lg:flex-row lg:items-center lg:justify-between")
       .space-y-2
         p.text-xs.uppercase(class="tracking-[0.2em] text-[#8c8f95]") Admin Overview
-        h2.text-3xl.font-bold(class="text-[#0d0d0d]") Operation cockpit
-        p.text-sm(class="text-[#5f6673]") Theo doi tong quan san pham, don hang va hieu suat van hanh trong ngay.
+        h2.text-3xl.font-bold(class="text-[#0d0d0d]") Tổng quan vận hành
+        p.text-sm(class="text-[#5f6673]") Số liệu thật từ cơ sở dữ liệu: sản phẩm active, đơn hàng, doanh thu 30 ngày (VN), tồn kho thấp.
       .grid.grid-cols-2.gap-3(class="sm:grid-cols-3")
         a.inline-flex.items-center.justify-center.gap-2.px-4.py-2.text-sm.font-semibold.text-white(class="bg-[#f48525] hover:bg-[#e07820]" href="/admin/products/create")
           i.fas.fa-plus
-          | Tao san pham
+          | Tạo sản phẩm
         a.inline-flex.items-center.justify-center.gap-2.border.px-4.py-2.text-sm.font-semibold(class="border-[#dee1e6] text-[#0d0d0d] hover:bg-[#fff7ef]" href="/admin/orders")
           i.fas.fa-receipt
-          | Don hang
+          | Đơn hàng
         a.inline-flex.items-center.justify-center.gap-2.border.px-4.py-2.text-sm.font-semibold(class="border-[#dee1e6] text-[#0d0d0d] hover:bg-[#fff7ef]" href="/admin/users")
           i.fas.fa-users
-          | Nguoi dung
+          | Người dùng
 
   .grid.grid-cols-1.gap-5.mb-8(class="sm:grid-cols-2 xl:grid-cols-4")
     .bg-white.p-5
-      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Products
-      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]") 1,247
-      p.mt-2.text-xs(class="text-emerald-700") +12% so voi thang truoc
+      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Sản phẩm (active)
+      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]")= st.activeProducts != null ? st.activeProducts : '—'
+      p.mt-2.text-xs(class="text-[#5f6673]") Đang bán (status = active)
     .bg-white.p-5
-      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Orders
-      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]") 892
-      p.mt-2.text-xs(class="text-amber-700") 36 don dang xu ly
+      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Đơn hàng
+      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]")= st.totalOrders != null ? st.totalOrders : '—'
+      p.mt-2.text-xs(class="text-amber-700")
+        = (st.ordersInProgress != null ? st.ordersInProgress : 0)
+        |  đơn chưa hoàn tất (pending → shipped)
     .bg-white.p-5
-      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Revenue
-      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]") $45,678
-      p.mt-2.text-xs(class="text-emerald-700") +15% so voi thang truoc
+      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Doanh thu 30 ngày
+      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]")= fmtMoney(st.revenue30)
+      p.mt-2.text-xs(class="text-[#5f6673]") 7 ngày gần nhất: #{fmtMoney(st.revenue7)} · Không tính cancelled/refunded
     .bg-white.p-5
-      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Low Stock
-      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]") 21
-      p.mt-2.text-xs(class="text-red-700") Can nhap them trong 24h
+      p.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") Tồn kho thấp
+      p.mt-2.text-3xl.font-bold(class="text-[#0d0d0d]")= st.lowStockCount != null ? st.lowStockCount : '—'
+      p.mt-2.text-xs(class="text-red-700")
+        | Tổng variant active ≤ #{st.lowStockThreshold != null ? st.lowStockThreshold : 10}
+
+  .bg-white.p-5.mb-8
+    p.text-xs.uppercase.tracking-wider.mb-3(class="text-[#8c8f95]") Đơn theo trạng thái
+    .flex.flex-wrap.gap-2
+      each pair in [['pending','Chờ xử lý'],['confirmed','Xác nhận'],['processing','Đang xử lý'],['shipped','Đang giao'],['delivered','Hoàn thành'],['cancelled','Hủy'],['refunded','Hoàn tiền']]
+        - var c = ob[pair[0]] || 0
+        span.inline-flex.items-center.gap-1.rounded-full.px-3.py-1.text-xs.font-medium(class="bg-[#f4f5f7] text-[#323842]")
+          span= pair[1]
+          span.font-bold= c
 
   .grid.grid-cols-1.gap-6(class="lg:grid-cols-5")
     .bg-white.p-6(class="lg:col-span-3")
-      .flex.items-center.justify-between.mb-4
-        h3.text-lg.font-semibold(class="text-[#0d0d0d]") Revenue pulse
-        span.text-xs.uppercase.tracking-wider(class="text-[#8c8f95]") 30 days
-      .h-64.flex.items-center.justify-center.border(class="border-dashed border-[#dee1e6] bg-[#fafafa]")
-        .text-center
-          i.fas.fa-chart-line.text-4xl.mb-2(class="text-[#f48525]")
-          p.text-sm.font-medium(class="text-[#323842]") Chart area
-          p.text-xs(class="text-[#8c8f95]") Co the tich hop Chart.js o buoc tiep theo
+      .flex.flex-col.gap-3(class="sm:flex-row sm:items-center sm:justify-between mb-4")
+        div
+          h3.text-lg.font-semibold(class="text-[#0d0d0d]") Doanh thu theo ngày
+          p.text-xs(class="text-[#8c8f95]") Đơn không hủy/hoàn · múi giờ Asia/Ho_Chi_Minh
+        .flex.gap-2
+          button.rounded-lg.border.px-3.py-1.text-xs.font-semibold.transition-colors(
+            type="button"
+            class="border-[#dee1e6] text-[#0d0d0d] hover:bg-[#fff7ef]"
+            id="chart-range-7"
+          ) 7 ngày
+          button.rounded-lg.border.px-3.py-1.text-xs.font-semibold.transition-colors(
+            type="button"
+            class="border-[#dee1e6] text-[#0d0d0d] hover:bg-[#fff7ef]"
+            id="chart-range-30"
+          ) 30 ngày
+      .relative.h-72.w-full
+        canvas#revenue-chart(aria-label="Biểu đồ doanh thu")
+
     .bg-white.p-6(class="lg:col-span-2")
-      h3.text-lg.font-semibold.mb-4(class="text-[#0d0d0d]") Live activities
-      .space-y-4
-        .flex.items-start.gap-3
-          .h-8.w-8.flex.items-center.justify-center(class="bg-[#fff2e6] text-[#f48525]")
-            i.fas.fa-box-open.text-xs
-          .flex-1
-            p.text-sm.font-medium(class="text-[#0d0d0d]") New SKU created
-            p.text-xs(class="text-[#8c8f95]") SKU-PT-2026-019 • 10 phut truoc
-        .flex.items-start.gap-3
-          .h-8.w-8.flex.items-center.justify-center(class="bg-[#edf7ff] text-[#1d70b8]")
-            i.fas.fa-user-plus.text-xs
-          .flex-1
-            p.text-sm.font-medium(class="text-[#0d0d0d]") New user registered
-            p.text-xs(class="text-[#8c8f95]") tran.an@example.com • 24 phut truoc
-        .flex.items-start.gap-3
-          .h-8.w-8.flex.items-center.justify-center(class="bg-[#eefbf3] text-[#0f9f53]")
-            i.fas.fa-truck.text-xs
-          .flex-1
-            p.text-sm.font-medium(class="text-[#0d0d0d]") Shipment confirmed
-            p.text-xs(class="text-[#8c8f95]") ORD-2026-1012 • 42 phut truoc
+      h3.text-lg.font-semibold.mb-2(class="text-[#0d0d0d]") Hoạt động gần đây
+      p.text-xs.mb-4(class="text-[#8c8f95]") AuditLog (sản phẩm) + đơn hàng + đăng ký user
+      if activities && activities.length
+        .space-y-4
+          each item in activities
+            .flex.items-start.gap-3
+              .h-8.w-8.flex.flex-shrink-0.items-center.justify-center(class=item.chipClass || 'bg-[#f4f5f7] text-[#5f6673]')
+                i(class=`fas ${item.icon || 'fa-circle'} text-xs`)
+              .flex-1.min-w-0
+                p.text-sm.font-medium.truncate(class="text-[#0d0d0d]")= item.title
+                if item.subtitle
+                  p.text-xs.truncate(class="text-[#8c8f95]")= item.subtitle
+                p.text-xs(class="mt-0.5 text-[#8c8f95]")= item.rel
+      else
+        p.text-sm(class="text-[#8c8f95]") Chưa có dữ liệu hoạt động.
+
+  .grid.grid-cols-1.gap-6(class="lg:grid-cols-2")
+    .bg-white.p-6
+      h3.text-lg.font-semibold.mb-4(class="text-[#0d0d0d]") Sản phẩm sắp hết hàng
+      if lowStockProducts && lowStockProducts.length
+        ul.divide-y(class="divide-[#dee1e6]")
+          each p in lowStockProducts
+            li.py-3.flex.items-center.justify-between.gap-3
+              div.min-w-0
+                p.text-sm.font-medium.truncate(class="text-[#0d0d0d]")= p.name
+                p.text-xs(class="text-[#8c8f95]")= p.slug
+              .flex.items-center.gap-3.flex-shrink-0
+                span.text-sm.font-bold.text-red-700= p.totalStock
+                a.text-xs.font-semibold(class="text-[#f48525] hover:underline" href=`/admin/products/${p._id}`) Sửa
+      else
+        p.text-sm(class="text-[#8c8f95]") Không có SKU nào dưới ngưỡng.
+
+    .bg-white.p-6
+      h3.text-lg.font-semibold.mb-2(class="text-[#0d0d0d]") Ghi chú
+      ul.text-sm.space-y-2(class="text-[#5f6673] list-disc list-inside")
+        li Doanh thu = tổng trường Order.total theo ngày tạo đơn.
+        li Tồn kho thấp = tổng stock các variant isActive ≤ ngưỡng.
+        li AuditLog ghi nhận khi cập nhật / xóa mềm / khôi phục sản phẩm (API).
+
+block scripts
+  script.
+    (function () {
+      var labelsFull = !{JSON.stringify(chartLabels30 || [])};
+      var valuesFull = !{JSON.stringify(chartValues30 || [])};
+      function sliceLast(n) {
+        var start = Math.max(0, labelsFull.length - n);
+        return {
+          labels: labelsFull.slice(start),
+          values: valuesFull.slice(start),
+        };
+      }
+      var ctx = document.getElementById('revenue-chart');
+      if (!ctx || !window.Chart) return;
+      var data30 = { labels: labelsFull, values: valuesFull };
+      var data7 = sliceLast(7);
+      var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data30.labels,
+          datasets: [
+            {
+              label: 'Doanh thu (₫)',
+              data: data30.values,
+              borderColor: '#f48525',
+              backgroundColor: 'rgba(244, 133, 37, 0.12)',
+              fill: true,
+              tension: 0.25,
+              pointRadius: 2,
+              pointHoverRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (c) {
+                  var v = c.parsed.y;
+                  return (v != null ? v : 0).toLocaleString('vi-VN') + ' ₫';
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+              grid: { display: false },
+            },
+            y: {
+              ticks: {
+                callback: function (val) {
+                  return Number(val).toLocaleString('vi-VN');
+                },
+              },
+            },
+          },
+        },
+      });
+      function setRange(days) {
+        var pack = days <= 7 ? data7 : data30;
+        chart.data.labels = pack.labels;
+        chart.data.datasets[0].data = pack.values;
+        chart.update();
+      }
+      var b7 = document.getElementById('chart-range-7');
+      var b30 = document.getElementById('chart-range-30');
+      if (b7) b7.addEventListener('click', function () { setRange(7); });
+      if (b30) b30.addEventListener('click', function () { setRange(30); });
+    })();

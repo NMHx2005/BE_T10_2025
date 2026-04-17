@@ -43,3 +43,6 @@ export const upload = multer({
 
 
 export const uploadAvatar = upload.single('avatar');
+
+/** Ảnh sản phẩm (field name: image) — dùng với Cloudinary */
+export const uploadProductImage = upload.single('image');

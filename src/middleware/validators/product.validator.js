@@ -44,8 +44,9 @@ export const createProductValidation = [
         .withMessage('Danh mục sản phẩm không hợp lệ.'),
     body('brand')
         .optional()
-        .isMongoId()
-        .withMessage('Thương hiệu sản phẩm không hợp lệ.'),
+        .trim()
+        .isLength({ max: 120 })
+        .withMessage('Tên thương hiệu không quá 120 ký tự.'),
     body('stock')
         .optional(),
 
@@ -81,8 +82,9 @@ export const updateProductValidation = [
         .withMessage("Category ID không hợp lệ"),
     body("brand")
         .optional()
-        .isMongoId()
-        .withMessage("Brand ID không hợp lệ"),
+        .trim()
+        .isLength({ max: 120 })
+        .withMessage("Tên thương hiệu không quá 120 ký tự"),
     body("variants")
         .optional()
         .isArray()

@@ -1,17 +1,16 @@
 // Xử lý các thao tác liên quan đến password của người dùng
 
 import User from "../../models/User.js";
-import { hashPassword, comparePassword } from "../../utils/password.js";
+import { hashPassword } from "../../utils/password.js";
+import { ValidationError, NotFoundError } from "../../utils/errors.js";
+import { generatePasswordResetToken, verifyPasswordResetToken } from "../../config/jwt.js";
+import { sendPasswordResetEmail } from "../../services/email/email.service.js";
 
-
-
-// Đổi mật khẩu
+// Đổi mật khẩu (đã đăng nhập)
 export const changePassword = async (req, res, next) => {
     try {
-        // B1: Lấy dữ liệu từ request
         const { currentPassword, newPassword, newPasswordComfirm } = req.body;
 
-        // B2: Validate inpot
         if (!currentPassword || !newPassword || !newPasswordComfirm) {
             throw new Error('Vui lòng cung cấp đầy đủ thông tin.');
         }
@@ -24,79 +23,111 @@ export const changePassword = async (req, res, next) => {
             throw new Error('Mật khẩu mới phải khác mật khẩu hiện tại.');
         }
 
-        // B3: Lấy user và password (phải select password)
         const user = await User.findById(req.user._id).select('+password');
 
         if (!user) {
             throw new Error('Người dùng không tồn tại.');
         }
 
-        // B4: Kiểm tra mật khẩu hiện tại
         const isCurrentPasswordValid = await user.comparePassword(currentPassword);
 
         if (!isCurrentPasswordValid) {
             throw new Error('Mật khẩu hiện tại không đúng.');
         }
 
-        // B5: Hash mật khẩu mới
         const hashedNewPassword = await hashPassword(newPassword);
 
-        // B6: Cập nhật mật khẩu mới
         user.password = hashedNewPassword;
-        user.passwordChangedAt = Date.now();
-
+        user.passwordComfirm = hashedNewPassword;
         await user.save();
 
-        // B7: Gửi phản hồi thành công
         res.status(200).json({
             message: 'Đổi mật khẩu thành công.'
         });
     } catch (error) {
         next(error);
     }
-}
+};
 
+/**
+ * POST /api/v1/auth/forgot-password
+ */
+export const forgotPassword = async (req, res, next) => {
+    try {
+        const emailRaw = req.body?.email;
+        const email = emailRaw ? String(emailRaw).trim().toLowerCase() : '';
+        const safeMessage =
+            'Nếu email đã đăng ký trong hệ thống, bạn sẽ nhận được link đặt lại mật khẩu.';
 
+        if (!email) {
+            throw new ValidationError('Vui lòng nhập email.');
+        }
 
-// Reset mật khẩu
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(200).json({ success: true, message: safeMessage });
+        }
+
+        const token = generatePasswordResetToken(user._id);
+        try {
+            await sendPasswordResetEmail(user.email, token);
+        } catch (mailErr) {
+            console.error('sendPasswordResetEmail:', mailErr);
+            throw new ValidationError(
+                'Không gửi được email. Kiểm tra cấu hình EMAIL_USER / EMAIL_PASSWORD trong .env.'
+            );
+        }
+
+        return res.status(200).json({ success: true, message: safeMessage });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Reset mật khẩu qua link email
 export const resetPassword = async (req, res, next) => {
     try {
         const { token } = req.params;
         const { password, passwordConfirm } = req.body;
 
-        // B1: Validate input
         if (!password || !passwordConfirm) {
-            throw new Error('Vui lòng cung cấp đầy đủ thông tin.');
+            throw new ValidationError('Vui lòng nhập đầy đủ mật khẩu và xác nhận.');
         }
         if (password !== passwordConfirm) {
-            throw new Error('Mật khẩu và xác nhận mật khẩu không khớp.');
+            throw new ValidationError('Mật khẩu và xác nhận mật khẩu không khớp.');
+        }
+        if (password.length < 6) {
+            throw new ValidationError('Mật khẩu phải có ít nhất 6 ký tự.');
         }
 
-        // verify reset token
-        // giải mã token
-        // lấy ra user
-        // kiểm tra xem token có hợp lệ và có hết hạn k
+        let payload;
+        try {
+            payload = verifyPasswordResetToken(token);
+        } catch {
+            throw new ValidationError('Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.');
+        }
 
-        const hashedToken = await hashPassword(password);
+        const user = await User.findById(payload.userId).select('+password');
+        if (!user) {
+            throw new NotFoundError('Tài khoản không tồn tại.');
+        }
 
-        // B2: Cập nhật mật khẩu mới cho user
-
-        // Lưu thông tin đã cập nhật
+        const hashed = await hashPassword(password);
+        user.password = hashed;
+        user.passwordComfirm = hashed;
+        await user.save();
 
         res.status(200).json({
+            success: true,
             message: 'Đặt lại mật khẩu thành công.'
         });
     } catch (error) {
         next(error);
     }
-}
-
-
-
-
+};
 
 export default {
     changePassword,
+    forgotPassword,
     resetPassword
-}
-
+};

@@ -1,318 +1,286 @@
 extends ../../layouts/main
 
 block content
-  // Page Header
-  .bg-white.border-b.border-gray-200
-    .max-w-6xl.mx-auto.px-4.py-8
-      .flex.items-center.gap-3.mb-4
-        a.text-blue-600.hover:text-blue-700(href="/")
-          i.fas.fa-home
-        i.fas.fa-chevron-right.text-gray-400
-        a.text-blue-600.hover:text-blue-700(href="/cart")
-          | Shopping Cart
-        i.fas.fa-chevron-right.text-gray-400
-        span.text-gray-700 Checkout
-      h1.text-4xl.font-bold.text-gray-900 Secure Checkout
+  section(class="bg-[#0d0d0d]")
+    div(class="mx-auto max-w-[1440px] px-4 py-10 sm:px-8 lg:px-[128px]")
+      p(class="text-xs font-semibold uppercase tracking-wider text-[#f48525]") Thanh toán
+      h1(class="text-3xl font-bold text-white") Hoàn tất đơn hàng
 
-  .max-w-6xl.mx-auto.px-4.py-8
-    form.grid.grid-cols-1(class="lg:grid-cols-3 gap-8", method="POST", action="/checkout", id="checkout-form")
-      // Left Column - Forms
-      .col-span-1(class="lg:col-span-2")
-        // Step 1: Shipping Address
-        .bg-white.rounded-lg.shadow-md.p-6.mb-6
-          .flex.items-center.gap-3.mb-6
-            .w-8.h-8.rounded-full.bg-blue-600.text-white.flex.items-center.justify-center.font-bold 1
-            h2.text-xl.font-semibold.text-gray-900 Shipping Address
+  div(class="bg-[#f4f5f7] pb-16 pt-8")
+    div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+      #checkout-empty.hidden.border.bg-white.p-10.text-center(class="border-[#dee1e6]")
+        p(class="text-[#181b20]") Giỏ hàng trống.
+        a.mt-4.inline-block.text-sm.font-semibold(class="text-[#f48525]" href="/products") Tiếp tục mua sắm
 
-          .grid.grid-cols-1(class="md:grid-cols-2 gap-4")
-            .form-group
-              label.block.text-sm.font-medium.text-gray-700.mb-2 Full Name
-              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                type="text",
-                name="shippingName",
-                placeholder="Full name",
-                required
+      #checkout-main.hidden.grid.grid-cols-1.gap-8(class="lg:grid-cols-12")
+        .space-y-6(class="lg:col-span-7")
+          .border.bg-white.p-6(class="border-[#dee1e6]")
+            h2.text-lg.font-bold(class="text-[#0d0d0d]") Địa chỉ giao hàng
+            p.mt-1.text-sm(class="text-[#323842]") Chọn địa chỉ đã lưu hoặc nhập mới.
+            .mt-4
+              label.block.text-xs.font-semibold.mb-1(for="saved-address" class="text-[#323842]") Địa chỉ đã lưu
+              select#saved-address.w-full.border.px-3.text-sm(
+                class="py-2 border-[#dee1e6] text-[#181b20]"
               )
-            
-            .form-group
-              label.block.text-sm.font-medium.text-gray-700.mb-2 Phone Number
-              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                type="tel",
-                name="shippingPhone",
-                placeholder="Phone number",
-                required
-              )
-          
-          .grid.grid-cols-1(class="md:grid-cols-2 gap-4")
-            .form-group(class="md:col-span-2")
-              label.block.text-sm.font-medium.text-gray-700.mb-2 Street Address
-              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                type="text",
-                name="shippingStreet",
-                placeholder="Street address",
-                required
-              )
-            
-            .form-group
-              label.block.text-sm.font-medium.text-gray-700.mb-2 City
-              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                type="text",
-                name="shippingCity",
-                placeholder="City",
-                required
-              )
-            
-            .form-group
-              label.block.text-sm.font-medium.text-gray-700.mb-2 District
-              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                type="text",
-                name="shippingDistrict",
-                placeholder="District",
-                required
-              )
+                option(value="") — Nhập thủ công —
+            form#checkout-form.mt-4.space-y-4
+              .grid.grid-cols-1.gap-4(class="md:grid-cols-2")
+                div
+                  label.block.text-sm.font-semibold.mb-1(for="ship-name") Họ tên
+                  input#ship-name.w-full.border.px-3.text-sm(class="py-2 border-[#dee1e6]" type="text" required)
+                div
+                  label.block.text-sm.font-semibold.mb-1(for="ship-phone") Điện thoại
+                  input#ship-phone.w-full.border.px-3.text-sm(class="py-2 border-[#dee1e6]" type="tel" required placeholder="0xxxxxxxxx")
+              div
+                label.block.text-sm.font-semibold.mb-1(for="ship-address") Địa chỉ
+                input#ship-address.w-full.border.px-3.text-sm(class="py-2 border-[#dee1e6]" type="text" required)
+              .grid.grid-cols-1.gap-4(class="md:grid-cols-3")
+                div
+                  label.block.text-sm.font-semibold.mb-1(for="ship-ward") Phường/Xã
+                  input#ship-ward.w-full.border.px-3.text-sm(class="py-2 border-[#dee1e6]" type="text" required)
+                div
+                  label.block.text-sm.font-semibold.mb-1(for="ship-district") Quận/Huyện
+                  input#ship-district.w-full.border.px-3.text-sm(class="py-2 border-[#dee1e6]" type="text" required)
+                div
+                  label.block.text-sm.font-semibold.mb-1(for="ship-city") Tỉnh/TP
+                  input#ship-city.w-full.border.px-3.text-sm(class="py-2 border-[#dee1e6]" type="text" required)
+              div
+                label.block.text-sm.font-semibold.mb-1(for="ship-note") Ghi chú
+                input#ship-note.w-full.border.px-3.text-sm(class="py-2 border-[#dee1e6]" type="text")
 
-          .form-group.mt-4
-            label.block.text-sm.font-medium.text-gray-700.mb-2 Additional Notes
-            textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-              name="shippingNotes",
-              rows="3",
-              placeholder="Special instructions or delivery notes"
-            )
+          .border.bg-white.p-6(class="border-[#dee1e6]")
+            h2.text-lg.font-bold(class="text-[#0d0d0d]") Hình thức thanh toán
+            .mt-4.space-y-3
+              label.flex.cursor-pointer.items-center.gap-2.text-sm(class="text-[#181b20]")
+                input#pay-cod(name="pay" type="radio" value="cod" checked)
+                span Thanh toán khi nhận hàng (COD)
+              label.flex.cursor-pointer.items-center.gap-2.text-sm(class="text-[#181b20]")
+                input#pay-payos(name="pay" type="radio" value="payos")
+                span Chuyển khoản / QR (PayOS)
 
-        // Step 2: Billing Address
-        .bg-white.rounded-lg.shadow-md.p-6.mb-6
-          .flex.items-center.gap-3.mb-6
-            .w-8.h-8.rounded-full.bg-blue-600.text-white.flex.items-center.justify-center.font-bold 2
-            h2.text-xl.font-semibold.text-gray-900 Billing Address
-
-          .form-group.mb-4
-            input.w-4.h-4.rounded.border-gray-300(
-              type="checkbox",
-              id="same-as-shipping",
-              name="sameAsShipping",
-              checked,
-              onchange="toggleBillingForm()"
-            )
-            label.ml-2.text-sm.font-medium.text-gray-700(for="same-as-shipping")
-              | Same as shipping address
-
-          #billing-form.hidden
-            .grid.grid-cols-1(class="md:grid-cols-2 gap-4")
-              .form-group
-                label.block.text-sm.font-medium.text-gray-700.mb-2 Full Name
-                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                  type="text",
-                  name="billingName",
-                  placeholder="Full name"
-                )
-              
-              .form-group
-                label.block.text-sm.font-medium.text-gray-700.mb-2 Phone Number
-                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                  type="tel",
-                  name="billingPhone",
-                  placeholder="Phone number"
-                )
-            
-            .form-group
-              label.block.text-sm.font-medium.text-gray-700.mb-2 Street Address
-              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                type="text",
-                name="billingStreet",
-                placeholder="Street address"
-              )
-
-        // Step 3: Shipping Method
-        .bg-white.rounded-lg.shadow-md.p-6.mb-6
-          .flex.items-center.gap-3.mb-6
-            .w-8.h-8.rounded-full.bg-blue-600.text-white.flex.items-center.justify-center.font-bold 3
-            h2.text-xl.font-semibold.text-gray-900 Shipping Method
-
-          .space-y-3
-            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
-              input.w-4.h-4.rounded.border-gray-300(
-                type="radio",
-                name="shippingMethod",
-                value="standard",
-                checked
-              )
-              .ml-4.flex-1
-                p.font-medium.text-gray-900 Standard Shipping (3-5 days)
-                p.text-sm.text-gray-600 $5.99 or free on orders over $50
-              span.text-lg.font-bold.text-gray-900 $5.99
-            
-            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
-              input.w-4.h-4.rounded.border-gray-300(
-                type="radio",
-                name="shippingMethod",
-                value="express"
-              )
-              .ml-4.flex-1
-                p.font-medium.text-gray-900 Express Shipping (1-2 days)
-                p.text-sm.text-gray-600 Fast delivery to your doorstep
-              span.text-lg.font-bold.text-gray-900 $12.99
-            
-            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
-              input.w-4.h-4.rounded.border-gray-300(
-                type="radio",
-                name="shippingMethod",
-                value="overnight"
-              )
-              .ml-4.flex-1
-                p.font-medium.text-gray-900 Overnight Shipping (Next day)
-                p.text-sm.text-gray-600 Premium next-day delivery
-              span.text-lg.font-bold.text-gray-900 $24.99
-
-        // Step 4: Payment Method
-        .bg-white.rounded-lg.shadow-md.p-6
-          .flex.items-center.gap-3.mb-6
-            .w-8.h-8.rounded-full.bg-blue-600.text-white.flex.items-center.justify-center.font-bold 4
-            h2.text-xl.font-semibold.text-gray-900 Payment Method
-
-          .space-y-3
-            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
-              input.w-4.h-4.rounded.border-gray-300(
-                type="radio",
-                name="paymentMethod",
-                value="card",
-                checked
-              )
-              .ml-4.flex-1
-                p.font-medium.text-gray-900 Credit / Debit Card
-              i.fas.fa-credit-card.text-gray-400.text-xl
-            
-            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
-              input.w-4.h-4.rounded.border-gray-300(
-                type="radio",
-                name="paymentMethod",
-                value="paypal"
-              )
-              .ml-4.flex-1
-                p.font-medium.text-gray-900 PayPal
-              i.fab.fa-paypal.text-gray-400.text-xl
-            
-            label.flex.items-center.p-4.border.border-gray-200.rounded-lg.cursor-pointer.hover:bg-gray-50.transition-colors
-              input.w-4.h-4.rounded.border-gray-300(
-                type="radio",
-                name="paymentMethod",
-                value="bank"
-              )
-              .ml-4.flex-1
-                p.font-medium.text-gray-900 Bank Transfer
-              i.fas.fa-university.text-gray-400.text-xl
-
-      // Right Column - Order Summary
-      .col-span-1
-        .bg-white.rounded-lg.shadow-md.p-6.sticky.top-4
-          h3.text-lg.font-semibold.text-gray-900.mb-6 Order Summary
-
-          // Order Items Preview
-          .space-y-3.mb-6.pb-6.border-b.border-gray-200
-            each item in orderItems
-              .flex.justify-between.text-sm.text-gray-600
-                span
-                  = `${item.name} x ${item.quantity}`
-                span.font-medium
-                  = `$${(item.price * item.quantity).toFixed(2)}`
-
-          // Totals
-          .space-y-3.mb-6.pb-6.border-b.border-gray-200
-            .flex.justify-between.text-gray-700
-              span Subtotal
-              span= `$${subtotal.toFixed(2)}`
-            
-            .flex.justify-between.text-gray-700
-              span Shipping
-              span(id="shipping-cost") $5.99
-            
-            .flex.justify-between.text-gray-700
-              span Tax
-              span= `$${tax.toFixed(2)}`
-
-            .flex.justify-between.text-lg.font-bold.text-gray-900.pt-3.border-t
-              span Total
-              span(id="total-amount")
-                = `$${(subtotal + 5.99 + tax).toFixed(2)}`
-
-          // Promo Code
-          .mb-6
-            label.block.text-sm.font-medium.text-gray-700.mb-2 Promo / Discount Code
-            .flex.gap-2
-              input.flex-1.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500.text-sm(
-                type="text",
-                id="promo-code",
-                placeholder="Enter code"
-              )
-              button.px-4.py-2.bg-gray-200.hover:bg-gray-300.rounded-lg.font-medium.transition-colors(
-                type="button",
-                onclick="applyPromoCode()"
-              )
-                i.fas.fa-check
-
-          // Terms & Conditions
-          .mb-6
-            label.flex.items-start.gap-3
-              input.w-4.h-4.rounded.border-gray-300.mt-1(
-                type="checkbox",
-                name="agreeTerms",
-                required
-              )
-              span.text-sm.text-gray-600
-                | I agree to the 
-                a.text-blue-600.hover:text-blue-700(href="/terms") Terms & Conditions
-                |  and 
-                a.text-blue-600.hover:text-blue-700(href="/privacy") Privacy Policy
-
-          // Submit Button
-          button.w-full.px-6.py-3.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-semibold.transition-colors(
-            type="submit"
+        .border.bg-white.p-6(class="border-[#dee1e6] lg:col-span-5")
+          h2.text-lg.font-bold(class="text-[#0d0d0d]") Đơn hàng
+          #checkout-lines.mt-4.space-y-3.text-sm(class="text-[#323842]")
+          .mt-6.border-t.pt-4(class="border-[#eef0f3]")
+            .flex.justify-between.text-sm
+              span Tạm tính
+              span#sum-sub.font-semibold(class="text-[#0d0d0d]") 0₫
+            .mt-2.flex.justify-between.text-sm
+              span Phí ship
+              span#sum-ship.font-semibold(class="text-[#0d0d0d]") 0₫
+            .mt-3.flex.justify-between.text-lg.font-bold
+              span Tổng
+              span#sum-total(class="text-[#f48525]") 0₫
+          button#btn-place-order.mt-6.inline-flex.h-12.w-full.items-center.justify-center.text-sm.font-semibold.text-white(
+            type="button"
+            class="bg-[#0d0d0d] hover:bg-[#323842]"
           )
-            i.fas.fa-lock.mr-2
-            | Complete Purchase
-
-          // Back to Cart
-          a.block.w-full.mt-3.px-6.py-3.border.border-gray-300.text-gray-700.hover:bg-gray-50.rounded-lg.font-medium.text-center.transition-colors(
-            href="/cart"
-          )
-            i.fas.fa-arrow-left.mr-2
-            | Back to Cart
-
-          // Security Badge
-          .mt-6.p-4.bg-green-50.rounded-lg.border.border-green-100
-            p.text-xs.text-green-900
-              i.fas.fa-shield-alt.mr-2
-              | Secure SSL connection - Your payment data is encrypted
+            span#btn-place-text Đặt hàng
+            span#btn-place-loading.hidden.items-center.gap-2
+              i.fa-solid.fa-circle-notch.fa-spin
+              | Đang xử lý…
 
 block scripts
   script.
-    function toggleBillingForm() {
-      const billingForm = document.getElementById('billing-form');
-      const checkbox = document.getElementById('same-as-shipping');
-      if (checkbox.checked) {
-        billingForm.classList.add('hidden');
-      } else {
-        billingForm.classList.remove('hidden');
+    (function () {
+      var API_ADDR = '/api/v1/users/addresses';
+      var API_CHECKOUT = '/api/v1/orders/checkout';
+      var token = localStorage.getItem('accessToken');
+      var SHIP_FEE = 30000;
+
+      var emptyEl = document.getElementById('checkout-empty');
+      var mainEl = document.getElementById('checkout-main');
+      var linesEl = document.getElementById('checkout-lines');
+      var subEl = document.getElementById('sum-sub');
+      var shipEl = document.getElementById('sum-ship');
+      var totalEl = document.getElementById('sum-total');
+      var form = document.getElementById('checkout-form');
+      var savedSel = document.getElementById('saved-address');
+      var btn = document.getElementById('btn-place-order');
+      var btnText = document.getElementById('btn-place-text');
+      var btnLoad = document.getElementById('btn-place-loading');
+
+      function showAlert(type, message) {
+        if (!window.AppNotify) return;
+        if (type === 'error') return window.AppNotify.error(message);
+        if (type === 'warn') return window.AppNotify.warning(message);
+        return window.AppNotify.success(message);
       }
-    }
 
-    function applyPromoCode() {
-      const code = document.getElementById('promo-code').value;
-      if (!code) {
-        alert('Please enter a promo code');
-        return;
+      function authHeaders() {
+        var h = { 'Content-Type': 'application/json' };
+        if (token) h.Authorization = 'Bearer ' + token;
+        return h;
       }
-      // TODO: Apply promo code and update total
-      alert('Promo code applied!');
-      updateTotal();
-    }
 
-    function updateTotal() {
-      // TODO: Recalculate and update total amount
-      console.log('Update total');
-    }
+      function parseErr(data) {
+        if (data && data.errors && data.errors.length) {
+          return data.errors.map(function (e) { return e.message; }).join(' ');
+        }
+        return (data && data.message) || 'Có lỗi xảy ra.';
+      }
 
-    document.getElementById('checkout-form')?.addEventListener('submit', function(e) {
-      e.preventDefault();
-      // TODO: Process checkout
-      alert('Processing your order...');
-    });
+      function vnd(n) {
+        return new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + '₫';
+      }
+
+      function selectedPayment() {
+        return document.getElementById('pay-payos').checked ? 'payos' : 'cod';
+      }
+
+      function fillShip(a) {
+        document.getElementById('ship-name').value = a.fullName || '';
+        document.getElementById('ship-phone').value = a.phone || '';
+        document.getElementById('ship-address').value = a.address || '';
+        document.getElementById('ship-ward').value = a.ward || '';
+        document.getElementById('ship-district').value = a.district || '';
+        document.getElementById('ship-city').value = a.city || '';
+        document.getElementById('ship-note').value = a.note || '';
+      }
+
+      async function loadAddresses() {
+        if (!token) return;
+        try {
+          var res = await fetch(API_ADDR, { headers: { Authorization: 'Bearer ' + token } });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) return;
+          var list = (data.data && data.data.addresses) || [];
+          savedSel.innerHTML = '<option value="">— Nhập thủ công —</option>';
+          list.forEach(function (a) {
+            var opt = document.createElement('option');
+            opt.value = JSON.stringify({
+              fullName: a.fullName,
+              phone: a.phone,
+              address: a.address,
+              ward: a.ward,
+              district: a.district,
+              city: a.city,
+              note: a.note || '',
+            });
+            opt.textContent = (a.fullName || '') + ' — ' + (a.city || '');
+            savedSel.appendChild(opt);
+          });
+        } catch (e) {}
+      }
+
+      savedSel.addEventListener('change', function () {
+        var v = savedSel.value;
+        if (!v) return;
+        try {
+          fillShip(JSON.parse(v));
+        } catch (e) {}
+      });
+
+      function renderSummary() {
+        var items = window.ProToolsStore.cartGet();
+        if (!items.length) {
+          emptyEl.classList.remove('hidden');
+          mainEl.classList.add('hidden');
+          return;
+        }
+        emptyEl.classList.add('hidden');
+        mainEl.classList.remove('hidden');
+        linesEl.innerHTML = '';
+        var sub = 0;
+        items.forEach(function (it) {
+          var row = document.createElement('div');
+          row.className = 'flex justify-between gap-2 border-b border-[#f0f1f3] pb-2';
+          var left = document.createElement('span');
+          left.textContent = (it.name || 'SP') + ' × ' + (it.quantity || 0);
+          var right = document.createElement('span');
+          right.className = 'shrink-0 font-medium text-[#0d0d0d]';
+          var line = (Number(it.price) || 0) * (Number(it.quantity) || 0);
+          sub += line;
+          right.textContent = vnd(line);
+          row.appendChild(left);
+          row.appendChild(right);
+          linesEl.appendChild(row);
+        });
+        subEl.textContent = vnd(sub);
+        shipEl.textContent = vnd(SHIP_FEE);
+        totalEl.textContent = vnd(sub + SHIP_FEE);
+      }
+
+      function setLoading(loading) {
+        btn.disabled = loading;
+        if (loading) {
+          btnText.classList.add('hidden');
+          btnLoad.classList.remove('hidden');
+          btnLoad.classList.add('inline-flex');
+        } else {
+          btnText.classList.remove('hidden');
+          btnLoad.classList.add('hidden');
+          btnLoad.classList.remove('inline-flex');
+        }
+      }
+
+      btn.addEventListener('click', async function () {
+        if (!token) {
+          showAlert('warn', 'Vui lòng đăng nhập để đặt hàng.');
+          return;
+        }
+        var items = window.ProToolsStore.cartGet();
+        if (!items.length) {
+          showAlert('error', 'Giỏ hàng trống.');
+          return;
+        }
+        if (!form.reportValidity()) return;
+
+        var shippingAddress = {
+          fullName: document.getElementById('ship-name').value.trim(),
+          phone: document.getElementById('ship-phone').value.trim(),
+          address: document.getElementById('ship-address').value.trim(),
+          ward: document.getElementById('ship-ward').value.trim(),
+          district: document.getElementById('ship-district').value.trim(),
+          city: document.getElementById('ship-city').value.trim(),
+          note: document.getElementById('ship-note').value.trim(),
+        };
+
+        var payload = {
+          items: items.map(function (it) {
+            return {
+              productId: it.productId,
+              quantity: Number(it.quantity) || 1,
+              variantId: it.variantId || undefined,
+            };
+          }),
+          shippingAddress: shippingAddress,
+          shippingFee: SHIP_FEE,
+          tax: 0,
+          discount: 0,
+          paymentMethod: selectedPayment(),
+          shippingMethod: 'standard',
+          notes: '',
+        };
+
+        setLoading(true);
+        try {
+          var res = await fetch(API_CHECKOUT, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify(payload),
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(parseErr(data));
+
+          if (payload.paymentMethod === 'payos' && data.data && data.data.payosCheckoutUrl) {
+            // Giữ giỏ cho đến khi thanh toán thành công (trang return sẽ cartClear khi paid).
+            // Nếu user hủy trên PayOS, vẫn còn hàng trong giỏ để đặt lại.
+            window.location.href = data.data.payosCheckoutUrl;
+            return;
+          }
+
+          window.ProToolsStore.cartClear();
+          showAlert('success', data.message || 'Đặt hàng thành công.');
+          window.location.href = '/profile/orders';
+        } catch (err) {
+          showAlert('error', err.message || 'Đặt hàng thất bại.');
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      window.addEventListener('protools-cart-updated', renderSummary);
+      loadAddresses();
+      renderSummary();
+    })();

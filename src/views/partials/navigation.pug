@@ -52,15 +52,15 @@ nav#site-header.sticky.top-0.z-50(
               class="h-[39px] border-[#bdc2cb] text-[#323842] placeholder:text-[#323842]/80 focus:border-[#f48525] focus:ring-2 focus:ring-[#f48525]/25"
             )
 
-        a.relative.inline-flex.transition-colors(
-          href="#"
+        a#nav-cart-link.relative.inline-flex.transition-colors(
+          href="/cart"
           class="text-[#181b20] hover:text-[#f48525]"
-          aria-label="Giỏ hàng, 3 sản phẩm"
+          aria-label="Giỏ hàng"
         )
           i.fa-solid.fa-bag-shopping.text-2xl(aria-hidden="true")
-          span.absolute.-top-1.min-h-5.min-w-5.rounded-full.px-1.text-center.text-xs.font-semibold.leading-5.text-white(
+          span#nav-cart-badge.absolute.-top-1.min-h-5.min-w-5.rounded-full.px-1.text-center.text-xs.font-semibold.leading-5.text-white(
             class="left-[14px] bg-[#f48525]"
-          ) 3
+          ) 0
 
         .relative
           button#account-menu-button.relative.inline-flex.shrink-0.items-center.justify-center.overflow-hidden.rounded-full(
@@ -123,11 +123,13 @@ nav#site-header.sticky.top-0.z-50(
         a.block.py-2.text-sm.font-medium(href="#" class="text-[#181b20]") Blog
       li
         a.block.py-2.text-sm.font-medium(href="#" class="text-[#181b20]") Liên hệ
+      li
+        a.block.py-2.text-sm.font-medium(href="/order-tracking" class="text-[#181b20]") Tra cứu đơn
     .mt-4.flex.items-center.justify-between.border-t.pt-4(class="border-[#dee1e6]")
-      a.flex.items-center.gap-2.text-sm.font-medium(href="#" class="text-[#181b20]")
+      a.flex.items-center.gap-2.text-sm.font-medium(href="/cart" class="text-[#181b20]")
         span.relative.inline-flex
           i.fa-solid.fa-bag-shopping.text-xl
-          span.absolute.-top-1.left-4.min-h-5.min-w-5.rounded-full.px-1.text-center.text-xs.font-semibold.leading-5.text-white(class="bg-[#f48525]") 3
+          span#nav-mobile-cart-badge.absolute.-top-1.left-4.min-h-5.min-w-5.rounded-full.px-1.text-center.text-xs.font-semibold.leading-5.text-white(class="bg-[#f48525]") 0
         | Giỏ hàng
       button#mobile-account-toggle.flex.items-center.justify-center.rounded-full(
         type="button"
@@ -200,6 +202,7 @@ script.
         ? [
             { href: '/profile', icon: 'fa-regular fa-user', label: 'Trang cá nhân' },
             { href: '/profile/orders', icon: 'fa-solid fa-bag-shopping', label: 'Đơn hàng của tôi' },
+            { href: '/wishlist', icon: 'fa-regular fa-heart', label: 'Yêu thích' },
             { href: '/profile/addresses', icon: 'fa-solid fa-location-dot', label: 'Sổ địa chỉ' },
             { href: '/auth/logout', icon: 'fa-solid fa-right-from-bracket', label: 'Đăng xuất', action: 'logout' }
           ]
@@ -270,5 +273,16 @@ script.
     if (accountList) accountList.addEventListener('click', handleMenuClick);
     if (mobileAccountList) mobileAccountList.addEventListener('click', handleMenuClick);
 
+    function updateCartBadges() {
+      var n = window.ProToolsStore ? window.ProToolsStore.cartCount() : 0;
+      var t = n > 99 ? '99+' : String(n);
+      var b = document.getElementById('nav-cart-badge');
+      var m = document.getElementById('nav-mobile-cart-badge');
+      if (b) b.textContent = t;
+      if (m) m.textContent = t;
+    }
+
+    window.addEventListener('protools-cart-updated', updateCartBadges);
     renderAccountMenus();
+    updateCartBadges();
   })();

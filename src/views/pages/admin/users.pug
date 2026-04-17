@@ -1,52 +1,66 @@
 extends ../../layouts/admin
 
 block content
+  -
+    var filt = filters || {};
+    var pag = pagination || {};
+    var curPage = (pag.current != null ? pag.current : pag.page) || 1;
+    var q = '';
+    if (filt.search && String(filt.search).trim()) {
+      q += '&search=' + encodeURIComponent(String(filt.search).trim());
+    }
+    if (filt.role) {
+      q += '&role=' + encodeURIComponent(String(filt.role));
+    }
+    if (filt.status) {
+      q += '&status=' + encodeURIComponent(String(filt.status));
+    }
+
   // Page Header
   .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
-    .flex.items-center.justify-between
-      .flex.flex-col
-        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Accounts
-        h1.text-3xl.font-bold(class="text-[#0d0d0d]") Users Management
-        p.text-gray-600.mt-2 Total: 
-          span.font-semibold #{totalUsers || 0}
-          |  users
-      
-      a.text-white.font-medium.py-2.px-6.transition-colors.flex.items-center.gap-2(class="bg-[#f48525] hover:bg-[#e07820]"
-        href="/admin/users/new"
-      )
-        i.fas.fa-plus.mr-2
-        | Add New User
+    .flex.flex-col
+      p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Accounts
+      h1.text-3xl.font-bold(class="text-[#0d0d0d]") Quản lý người dùng
+      p.text-gray-600.mt-2
+        | Tổng: 
+        span.font-semibold #{totalUsers || 0}
+        |  tài khoản
 
   // Filters & Search
   .bg-white.p-6.mb-6
     .grid.grid-cols-1(class="md:grid-cols-4 gap-4")
       .form-group
-        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-          type="text",
-          placeholder="Search by username or email...",
+        input.form-input(
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          type="text"
+          placeholder="Tìm username hoặc email..."
           id="search-input"
+          value=filt.search || ''
         )
-      
-      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+
+      select.form-input(
+        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
         id="role-filter"
       )
-        option(value="") All Roles
-        option(value="user") User
-        option(value="admin") Admin
-      
-      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        option(value="" selected=!filt.role) Mọi vai trò
+        option(value="user" selected=filt.role==='user') User
+        option(value="admin" selected=filt.role==='admin') Admin
+
+      select.form-input(
+        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
         id="status-filter"
       )
-        option(value="") All Status
-        option(value="active") Active
-        option(value="inactive") Inactive
-      
-      button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
-        type="button",
+        option(value="" selected=!filt.status) Mọi trạng thái
+        option(value="active" selected=filt.status==='active') Active
+        option(value="inactive" selected=filt.status==='inactive') Inactive
+
+      button(
+        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+        type="button"
         onclick="applyFilters()"
       )
         i.fas.fa-filter.mr-2
-        | Apply Filters
+        | Lọc
 
   // Users Table
   if users && users.length > 0
@@ -59,159 +73,188 @@ block content
               th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Email
               th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Role
               th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Status
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Orders
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Joined
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Last Activity
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Actions
-          
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Đơn hàng
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Tham gia
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Cập nhật
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Thao tác
+
           tbody.divide-y.divide-gray-200
             each user in users
-              tr.hover:bg-gray-50.transition-colors
-                // User Info
+              tr(class="hover:bg-gray-50 transition-colors")
                 td.px-6.py-4
                   .flex.items-center.gap-3
                     img.w-10.h-10.rounded-full.object-cover.bg-gray-200(
-                      src=user.avatar || `https://ui-avatars.com/api/?name=${user.username}`,
+                      src=user.avatar || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(user.username || ''))
                       alt=user.username
                     )
                     .flex.flex-col
-                      p.font-medium.text-gray-900
-                        = user.username
-                      p.text-xs.text-gray-500
-                        = user.fullName || 'No name'
-                
-                // Email
-                td.px-6.py-4.text-sm.text-gray-600
-                  = user.email
-                
-                // Role
+                      p.font-medium.text-gray-900= user.username
+                      if user.phone
+                        p.text-xs.text-gray-500= user.phone
+                      else
+                        p.text-xs.text-gray-400= '—'
+
+                td.px-6.py-4.text-sm.text-gray-600= user.email
+
                 td.px-6.py-4
                   span.px-2.py-1.rounded-full.text-xs.font-semibold(class={
                     'bg-red-100 text-red-800': user.role === 'admin',
                     'bg-blue-100 text-blue-800': user.role === 'user'
-                  })
-                    = user.role || 'User'
-                
-                // Status
+                  })= user.role || 'user'
+
                 td.px-6.py-4
                   span.px-2.py-1.rounded-full.text-xs.font-semibold.flex.items-center.gap-1.w-fit(class={
-                    'bg-green-100 text-green-800': true,
-                    'bg-gray-100 text-gray-800': false
+                    'bg-green-100 text-green-800': user.status === 'active',
+                    'bg-gray-100 text-gray-800': user.status !== 'active'
                   })
-                    i.fas.fa-circle.text-green-600.text-xs
-                    | Active
-                
-                // Orders Count
-                td.px-6.py-4.text-sm.text-gray-600.text-center
-                  = user.orderCount || 0
-                
-                // Joined Date
+                    if user.status === 'active'
+                      i.fas.fa-circle.text-green-600.text-xs
+                      | Active
+                    else
+                      i.fas.fa-circle.text-gray-400.text-xs
+                      | Inactive
+
+                td.px-6.py-4.text-sm.text-gray-600.text-center= user.orderCount || 0
+
                 td.px-6.py-4.text-sm.text-gray-600
-                  = new Date(user.createdAt).toLocaleDateString()
-                
-                // Last Activity
+                  = user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : '—'
+
                 td.px-6.py-4.text-sm.text-gray-600
-                  if user.lastLogin
-                    = new Date(user.lastLogin).toLocaleDateString()
-                  else
-                    span.text-gray-400 Never
-                
-                // Actions
+                  = user.updatedAt ? new Date(user.updatedAt).toLocaleDateString('vi-VN') : '—'
+
                 td.px-6.py-4.text-sm.flex.gap-2
-                  a.text-blue-600.hover:text-blue-700.transition-colors.px-2.py-1(
-                    href=`/admin/users/${user._id}`,
-                    title="Edit"
+                  a(
+                    class="text-blue-600 hover:text-blue-700 transition-colors px-2 py-1"
+                    href=`/admin/users/${user._id}`
+                    title="Chi tiết / Sửa"
                   )
                     i.fas.fa-edit
-                  
-                  button.text-orange-600.hover:text-orange-700.transition-colors.px-2.py-1(
-                    type="button",
-                    onclick=`changeUserRole('${user._id}', '${user.role}')`,
-                    title="Change role"
+
+                  button(
+                    type="button"
+                    class="text-orange-600 hover:text-orange-700 transition-colors px-2 py-1"
+                    onclick=`changeUserRole('${user._id}', '${user.role}')`
+                    title="Đổi role"
                   )
                     i.fas.fa-user-lock
-                  
-                  button.text-red-600.hover:text-red-700.transition-colors.px-2.py-1(
-                    type="button",
-                    onclick=`deleteUser('${user._id}')`,
-                    title="Delete"
+
+                  button(
+                    type="button"
+                    class="text-red-600 hover:text-red-700 transition-colors px-2 py-1"
+                    onclick=`deactivateUser('${user._id}')`
+                    title="Vô hiệu hóa (soft delete)"
                   )
-                    i.fas.fa-trash
+                    i.fas.fa-user-slash
 
       // Pagination
-      if pagination && pagination.pages > 1
+      if pag.pages > 1
         .bg-gray-50.px-6.py-4.flex.justify-between.items-center
           p.text-sm.text-gray-600
-            | Showing 
-            span.font-semibold= (pagination.page - 1) * pagination.limit + 1
-            |  to 
-            span.font-semibold= Math.min(pagination.page * pagination.limit, pagination.total)
-            |  of 
-            span.font-semibold= pagination.total
-          
+            | Hiển thị 
+            span.font-semibold= (curPage - 1) * pag.limit + 1
+            |  – 
+            span.font-semibold= Math.min(curPage * pag.limit, pag.total)
+            |  / 
+            span.font-semibold= pag.total
+
           .flex.gap-2
-            if pagination.page > 1
-              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
-                href=`/admin/users?page=${pagination.page - 1}`
+            if curPage > 1
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700(
+                class="hover:bg-gray-100"
+                href=`/admin/users?page=${curPage - 1}${q}`
               )
                 i.fas.fa-chevron-left
-            
-            each i in [...Array(Math.min(pagination.pages, 5)).keys()].map(x => Math.max(1, pagination.page - 2) + x)
-              if i <= pagination.pages
-                if i === pagination.page
-                  .px-3.py-2.bg-blue-600.text-white.rounded
-                    = i
-                else
-                  a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
-                    href=`/admin/users?page=${i}`
-                  )
-                    = i
-            
-            if pagination.page < pagination.pages
-              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
-                href=`/admin/users?page=${pagination.page + 1}`
+
+            - var pageNumsList = pag.pageNums || []
+            each i in pageNumsList
+              if i === curPage
+                .px-3.py-2.bg-blue-600.text-white.rounded= i
+              else
+                a.px-3.py-2.border.border-gray-300.rounded.text-gray-700(
+                  class="hover:bg-gray-100"
+                  href=`/admin/users?page=${i}${q}`
+                )= i
+
+            if curPage < pag.pages
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700(
+                class="hover:bg-gray-100"
+                href=`/admin/users?page=${curPage + 1}${q}`
               )
                 i.fas.fa-chevron-right
   else
-    // No Users
     .bg-white.p-12.text-center
       i.fas.fa-users.text-gray-400.text-5xl.mb-4
-      h3.text-xl.font-semibold.text-gray-900.mb-2 No Users Found
-      p.text-gray-600.mb-6 Start by inviting users to your platform
-      a.inline-block.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
-        href="/admin/users/new"
-      )
-        i.fas.fa-plus.mr-2
-        | Add User
+      h3.text-xl.font-semibold.text-gray-900.mb-2 Không có người dùng
+      p.text-gray-600 Thử đổi bộ lọc hoặc từ khóa tìm kiếm.
 
 block scripts
   script.
-    function deleteUser(userId) {
-      if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-        // TODO: Call API to delete user
-        alert('User deleted!');
+    function getToken() {
+      return localStorage.getItem('accessToken') || '';
+    }
+
+    async function deactivateUser(userId) {
+      if (!confirm('Vô hiệu hóa tài khoản này? (Đặt trạng thái inactive — dữ liệu vẫn giữ trong hệ thống.)')) return;
+      var token = getToken();
+      if (!token) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+        return;
+      }
+      try {
+        var res = await fetch('/api/v1/users/' + encodeURIComponent(userId), {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        var data = await res.json().catch(function () {
+          return {};
+        });
+        if (!res.ok) {
+          throw new Error(data.message || 'Thao tác thất bại.');
+        }
+        if (window.AppNotify) window.AppNotify.success(data.message || 'Đã vô hiệu hóa.');
         location.reload();
+      } catch (e) {
+        if (window.AppNotify) window.AppNotify.error(e.message || 'Lỗi.');
       }
     }
 
-    function changeUserRole(userId, currentRole) {
-      const newRole = currentRole === 'admin' ? 'user' : 'admin';
-      if (confirm(`Change role to ${newRole}?`)) {
-        // TODO: Call API to change user role
-        alert('User role updated!');
+    async function changeUserRole(userId, currentRole) {
+      var newRole = currentRole === 'admin' ? 'user' : 'admin';
+      if (!confirm('Đổi vai trò sang "' + newRole + '"? (Không thể tự đổi role chính mình; phải còn ít nhất một admin active.)')) return;
+      var token = getToken();
+      if (!token) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+        return;
+      }
+      try {
+        var res = await fetch('/api/v1/users/' + encodeURIComponent(userId), {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token,
+          },
+          body: JSON.stringify({ role: newRole }),
+        });
+        var data = await res.json().catch(function () {
+          return {};
+        });
+        if (!res.ok) {
+          throw new Error(data.message || 'Cập nhật thất bại.');
+        }
+        if (window.AppNotify) window.AppNotify.success(data.message || 'Đã cập nhật role.');
         location.reload();
+      } catch (e) {
+        if (window.AppNotify) window.AppNotify.error(e.message || 'Lỗi.');
       }
     }
 
     function applyFilters() {
-      const search = document.getElementById('search-input')?.value || '';
-      const role = document.getElementById('role-filter')?.value || '';
-      const status = document.getElementById('status-filter')?.value || '';
-      
-      let url = '/admin/users?';
-      if (search) url += `search=${encodeURIComponent(search)}&`;
-      if (role) url += `role=${role}&`;
-      if (status) url += `status=${status}`;
-      
+      var search = document.getElementById('search-input') && document.getElementById('search-input').value || '';
+      var role = document.getElementById('role-filter') && document.getElementById('role-filter').value || '';
+      var status = document.getElementById('status-filter') && document.getElementById('status-filter').value || '';
+      var url = '/admin/users?page=1';
+      if (search.trim()) url += '&search=' + encodeURIComponent(search.trim());
+      if (role) url += '&role=' + encodeURIComponent(role);
+      if (status) url += '&status=' + encodeURIComponent(status);
       window.location.href = url;
     }

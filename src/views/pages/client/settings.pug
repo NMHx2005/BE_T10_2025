@@ -1,0 +1,200 @@
+extends ../../layouts/main
+
+block content
+  section(class="bg-[#0d0d0d]")
+    div(class="mx-auto max-w-[1440px] px-4 py-12 sm:px-8 lg:px-[128px] lg:py-16")
+      p(class="mb-3 text-xs font-semibold uppercase tracking-wider text-[#f48525]") Tài khoản
+      h1(class="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-[2.5rem] lg:leading-tight") Cài đặt
+      p(class="mt-4 max-w-2xl text-base leading-relaxed text-[#cbd6e2] sm:text-lg")
+        | Bảo mật tài khoản và các tùy chọn liên quan.
+
+  div(class="bg-[#f4f5f7] pb-16 pt-10 lg:pb-20 lg:pt-12")
+    div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+      .grid.grid-cols-1.gap-8(class="lg:grid-cols-12")
+        aside(class="lg:col-span-3")
+          nav(class="overflow-hidden border border-[#dee1e6] bg-white shadow-[0_2px_4px_rgba(34,37,42,0.06)]")
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#f9fafb] hover:text-[#181b20]"
+            )
+              i.fa-regular.fa-user(aria-hidden="true")
+              span Hồ sơ
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile/addresses"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#f9fafb] hover:text-[#181b20]"
+            )
+              i.fa-solid.fa-location-dot(aria-hidden="true")
+              span Địa chỉ
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile/orders"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#f9fafb] hover:text-[#181b20]"
+            )
+              i.fa-solid.fa-bag-shopping(aria-hidden="true")
+              span Đơn hàng
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile/settings"
+              class="border-l-[#f48525] bg-[#fff7ef] text-[#181b20]"
+            )
+              i.fa-solid.fa-gear(aria-hidden="true")
+              span Cài đặt
+            a#logout-link.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/auth/logout"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#fff5f5] hover:text-red-700"
+            )
+              i.fa-solid.fa-right-from-bracket(aria-hidden="true")
+              span Đăng xuất
+
+        section(class="space-y-6 lg:col-span-9")
+          #mat-khau.overflow-hidden.border.bg-white(class="border-[#dee1e6] shadow-[0_2px_4px_rgba(34,37,42,0.08)]")
+            .border-b.p-6(class="border-[#eef0f3]")
+              h2.text-lg.font-bold(class="text-[#0d0d0d]") Đổi mật khẩu
+              p.mt-1.text-sm(class="text-[#323842]")
+                | Nhập mật khẩu hiện tại và mật khẩu mới (tối thiểu 6 ký tự, giống lúc đăng ký).
+
+            form#form-change-password.p-6.space-y-5
+              div
+                label.block.text-sm.font-semibold.mb-2(for="pw-current" class="text-[#181b20]") Mật khẩu hiện tại
+                input#pw-current.w-full.border.px-4.text-sm(
+                  type="password"
+                  name="currentPassword"
+                  autocomplete="current-password"
+                  required
+                  class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                )
+              div
+                label.block.text-sm.font-semibold.mb-2(for="pw-new" class="text-[#181b20]") Mật khẩu mới
+                input#pw-new.w-full.border.px-4.text-sm(
+                  type="password"
+                  name="newPassword"
+                  autocomplete="new-password"
+                  required
+                  minlength="6"
+                  class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                )
+              div
+                label.block.text-sm.font-semibold.mb-2(for="pw-confirm" class="text-[#181b20]") Xác nhận mật khẩu mới
+                input#pw-confirm.w-full.border.px-4.text-sm(
+                  type="password"
+                  name="newPasswordComfirm"
+                  autocomplete="new-password"
+                  required
+                  minlength="6"
+                  class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                )
+              .flex.flex-col.gap-3(class="sm:flex-row sm:items-center")
+                button#btn-change-password.inline-flex.h-11.items-center.justify-center.gap-2.px-6.text-sm.font-semibold.text-white(
+                  type="submit"
+                  class="bg-[#f48525] hover:bg-[#e07820]"
+                )
+                  span#btn-pw-text Cập nhật mật khẩu
+                  span#btn-pw-loading.hidden.items-center.gap-2
+                    i.fa-solid.fa-circle-notch.fa-spin(aria-hidden="true")
+                    | Đang xử lý…
+
+          .overflow-hidden.border.bg-white.p-6(class="border-[#dee1e6]")
+            h2.text-lg.font-bold(class="text-[#0d0d0d]") Hỗ trợ
+            p.mt-2.text-sm(class="text-[#323842]")
+              | Quên mật khẩu? Dùng luồng đặt lại qua email.
+            a.mt-4.inline-flex.items-center.text-sm.font-semibold(
+              href="/auth/forgot-password"
+              class="text-[#f48525] hover:text-[#c45a0f]"
+            )
+              i.fa-solid.fa-envelope.mr-2(aria-hidden="true")
+              | Quên mật khẩu
+
+block scripts
+  script.
+    (function () {
+      var API_CHANGE_PW = '/api/v1/auth/change-password';
+      var token = localStorage.getItem('accessToken');
+      var form = document.getElementById('form-change-password');
+      var btn = document.getElementById('btn-change-password');
+      var btnText = document.getElementById('btn-pw-text');
+      var btnLoading = document.getElementById('btn-pw-loading');
+      var logoutLink = document.getElementById('logout-link');
+
+      function showAlert(type, message) {
+        if (!window.AppNotify) return;
+        if (type === 'error') return window.AppNotify.error(message);
+        if (type === 'warn') return window.AppNotify.warning(message);
+        return window.AppNotify.success(message);
+      }
+
+      function jsonAuthHeaders() {
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = 'Bearer ' + token;
+        return headers;
+      }
+
+      function parseErr(data) {
+        if (data && data.errors && data.errors.length) {
+          return data.errors.map(function (e) { return e.message; }).join(' ');
+        }
+        return (data && data.message) || 'Có lỗi xảy ra.';
+      }
+
+      function setLoading(loading) {
+        btn.disabled = loading;
+        if (loading) {
+          btnText.classList.add('hidden');
+          btnLoading.classList.remove('hidden');
+          btnLoading.classList.add('inline-flex');
+        } else {
+          btnText.classList.remove('hidden');
+          btnLoading.classList.add('hidden');
+          btnLoading.classList.remove('inline-flex');
+        }
+      }
+
+      if (window.location.hash === '#mat-khau') {
+        var el = document.getElementById('mat-khau');
+        if (el) setTimeout(function () { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        if (!token) {
+          showAlert('warn', 'Bạn cần đăng nhập để đổi mật khẩu.');
+          return;
+        }
+        var currentPassword = document.getElementById('pw-current').value;
+        var newPassword = document.getElementById('pw-new').value;
+        var newPasswordComfirm = document.getElementById('pw-confirm').value;
+        if (newPassword.length < 6) {
+          showAlert('error', 'Mật khẩu mới cần ít nhất 6 ký tự.');
+          return;
+        }
+        if (newPassword !== newPasswordComfirm) {
+          showAlert('error', 'Xác nhận mật khẩu không khớp.');
+          return;
+        }
+        setLoading(true);
+        try {
+          var res = await fetch(API_CHANGE_PW, {
+            method: 'POST',
+            headers: jsonAuthHeaders(),
+            body: JSON.stringify({
+              currentPassword: currentPassword,
+              newPassword: newPassword,
+              newPasswordComfirm: newPasswordComfirm
+            })
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(parseErr(data));
+          showAlert('success', data.message || 'Đổi mật khẩu thành công.');
+          form.reset();
+        } catch (err) {
+          showAlert('error', err.message || 'Đổi mật khẩu thất bại.');
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      if (logoutLink) {
+        logoutLink.addEventListener('click', function () {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+        });
+      }
+    })();

@@ -1,7 +1,6 @@
-import dotenv from 'dotenv';
+// Phải chạy trước mọi import khác để ESM nạp biến môi trường trước khi connect DB.
+import 'dotenv/config';
 import app from './src/app.js';
-
-dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 

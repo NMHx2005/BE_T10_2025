@@ -1,6 +1,8 @@
 extends ../../layouts/admin
 
 block content
+  - const v0 = isEdit && product.variants && product.variants.length ? product.variants[0] : null
+  - const primaryImage = isEdit && product.images && product.images.length ? product.images[0] : null
   // Page Header
   .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.gap-4
@@ -39,16 +41,17 @@ block content
           )
         
         .form-group
-          label.block.text-sm.font-medium.text-gray-700.mb-2(for="sku") SKU
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="variantSku") Variant SKU
           input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
             class="focus:ring-2 focus:ring-blue-500"
             type="text",
-            id="sku",
-            name="sku",
-            placeholder="Auto-generated if left blank",
-            value=isEdit ? product.sku : '',
-            readonly
+            id="variantSku",
+            name="variantSku",
+            placeholder="Để trống để hệ thống tự tạo",
+            value=isEdit && v0 ? v0.sku : '',
+            readonly=isEdit
           )
+          p.text-xs.text-gray-500.mt-1 Theo model: SKU thuộc từng biến thể (variant), không lưu ở cấp sản phẩm.
         
         .form-group
           label.block.text-sm.font-medium.text-gray-700.mb-2(for="category") Category
@@ -61,7 +64,7 @@ block content
             option(value="") Select a category
             if categories && categories.length > 0
               each cat in categories
-                option(value=cat._id, selected=isEdit && product.category && product.category._id === cat._id)
+                option(value=cat._id, selected=isEdit && product.category && String(product.category._id || product.category) === String(cat._id))
                   = cat.name
         
         .form-group
@@ -75,13 +78,15 @@ block content
             value=isEdit ? product.brand : ''
           )
 
-    // Pricing & Stock
+    // Default variant (schema: giá & tồn kho trên variants[])
     .bg-white.p-6
-      h2.text-xl.font-semibold.text-gray-900.mb-6 Pricing & Stock
+      h2.text-xl.font-semibold.text-gray-900.mb-6 Biến thể mặc định (bắt buộc)
+      p.text-sm.text-gray-600.mb-4
+        | Model yêu cầu ít nhất một variant. Form quản trị hiện chỉnh sửa một variant mặc định (attributes có thể để trống).
 
       .grid.grid-cols-1(class="md:grid-cols-3 gap-6")
         .form-group
-          label.block.text-sm.font-medium.text-gray-700.mb-2(for="price") Price ($)
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="price") Giá variant ($)
           input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
             class="focus:ring-2 focus:ring-blue-500"
             type="number",
@@ -90,25 +95,25 @@ block content
             placeholder="0.00",
             step="0.01",
             min="0",
-            value=isEdit ? product.price : '',
+            value=isEdit && v0 ? v0.price : '',
             required
           )
         
         .form-group
-          label.block.text-sm.font-medium.text-gray-700.mb-2(for="compareAtPrice") Compare At Price ($)
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="compareAtPrice") Giá so sánh ($)
           input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
             class="focus:ring-2 focus:ring-blue-500"
             type="number",
             id="compareAtPrice",
             name="compareAtPrice",
-            placeholder="0.00",
+            placeholder="Tuỳ chọn, phải &gt; giá bán",
             step="0.01",
             min="0",
-            value=isEdit ? product.compareAtPrice : ''
+            value=isEdit && v0 && v0.compareAtPrice != null ? v0.compareAtPrice : ''
           )
         
         .form-group
-          label.block.text-sm.font-medium.text-gray-700.mb-2(for="stock") Stock Quantity
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="stock") Tồn kho variant
           input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
             class="focus:ring-2 focus:ring-blue-500"
             type="number",
@@ -116,7 +121,8 @@ block content
             name="stock",
             placeholder="0",
             min="0",
-            value=isEdit ? product.stock : '',
+            step="1",
+            value=isEdit && v0 ? v0.stock : '',
             required
           )
 
@@ -138,15 +144,38 @@ block content
         
         p.text-xs.text-gray-500.mt-2 Supports Markdown formatting
 
+      .grid.grid-cols-1(class="md:grid-cols-2 gap-6 mt-6")
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="shortDescription") Mô tả ngắn (tối đa 200 ký tự)
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
+            type="text",
+            id="shortDescription",
+            name="shortDescription",
+            maxlength="200",
+            placeholder="Hiển thị preview, card...",
+            value=isEdit ? (product.shortDescription || '') : ''
+          )
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="tags") Tags
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
+            type="text",
+            id="tags",
+            name="tags",
+            placeholder="vd: summer, sale (phân tách bằng dấu phẩy)",
+            value=isEdit && product.tags && product.tags.length ? product.tags.join(', ') : ''
+          )
+
     // Images
     .bg-white.p-6
       h2.text-xl.font-semibold.text-gray-900.mb-6 Images
 
       .form-group
-        label.block.text-sm.font-medium.text-gray-700.mb-2(for="thumbnail") Thumbnail Image
+        label.block.text-sm.font-medium.text-gray-700.mb-2(for="thumbnail") Ảnh chính (lưu vào mảng images của sản phẩm)
         .flex.items-center.gap-4
-          if isEdit && product.thumbnail
-            img.w-20.h-20.rounded.object-cover(src=product.thumbnail, alt="Thumbnail")
+          if isEdit && primaryImage
+            img.w-20.h-20.rounded.object-cover(src=primaryImage, alt="Primary")
           else
             .w-20.h-20.rounded.bg-gray-200.flex.items-center.justify-center
               i.fas.fa-image.text-gray-400.text-2xl
@@ -172,9 +201,10 @@ block content
             id="status",
             name="status"
           )
-            option(value="draft") Draft
+            option(value="draft", selected=isEdit ? product.status === 'draft' : true) Draft
             option(value="active", selected=isEdit && product.status === 'active') Active
-            option(value="archived") Archived
+            option(value="inactive", selected=isEdit && product.status === 'inactive') Inactive
+            option(value="archived", selected=isEdit && product.status === 'archived') Archived
         
         .form-group
           .flex.items-center.gap-3
@@ -214,13 +244,26 @@ block scripts
         return localStorage.getItem('accessToken') || '';
       }
 
-      function readFileAsDataUrl(file) {
-        return new Promise(function (resolve, reject) {
-          var reader = new FileReader();
-          reader.onload = function () { resolve(reader.result || ''); };
-          reader.onerror = function () { reject(new Error('Không đọc được file ảnh.')); };
-          reader.readAsDataURL(file);
+      async function uploadProductImageToCloudinary(file) {
+        var formData = new FormData();
+        formData.append('image', file);
+        var res = await fetch('/api/v1/upload/product-image', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + getToken(),
+          },
+          body: formData,
         });
+        var data = await res.json().catch(function () {
+          return {};
+        });
+        if (!res.ok) {
+          throw new Error(data.message || 'Upload ảnh lên Cloudinary thất bại.');
+        }
+        if (!data.data || !data.data.url) {
+          throw new Error('Phản hồi upload không hợp lệ.');
+        }
+        return data.data.url;
       }
 
       form.addEventListener('submit', async function (e) {
@@ -239,28 +282,57 @@ block scripts
         var category = (document.getElementById('category')?.value || '').trim();
         var brand = (document.getElementById('brand')?.value || '').trim();
         var description = (document.getElementById('description')?.value || '').trim();
+        var shortDescription = (document.getElementById('shortDescription')?.value || '').trim();
+        var tagsStr = (document.getElementById('tags')?.value || '').trim();
         var price = Number(document.getElementById('price')?.value || 0);
         var stock = Number(document.getElementById('stock')?.value || 0);
+        var capRaw = document.getElementById('compareAtPrice')?.value;
+        var compareAtPriceNum = capRaw === '' || capRaw == null ? NaN : Number(capRaw);
         var status = (document.getElementById('status')?.value || 'draft').trim();
         var featured = !!document.getElementById('featured')?.checked;
+        var variantSku = (document.getElementById('variantSku')?.value || '').trim();
+        var existingVariantSku = !{JSON.stringify(isEdit && v0 && v0.sku ? String(v0.sku) : '')};
+        var existingImages = !{JSON.stringify(isEdit && product && product.images ? product.images : [])};
         var thumbInput = document.getElementById('thumbnail');
         var thumbFile = thumbInput && thumbInput.files && thumbInput.files[0] ? thumbInput.files[0] : null;
-        var thumbnail = '';
+        var primaryImageUrl = '';
 
         if (!name || !category || !description || !Number.isFinite(price) || price < 0 || !Number.isFinite(stock) || stock < 0) {
           if (window.AppNotify) window.AppNotify.error('Vui lòng nhập đầy đủ thông tin hợp lệ.');
           return;
         }
+        if (Number.isFinite(compareAtPriceNum) && compareAtPriceNum > 0 && compareAtPriceNum <= price) {
+          if (window.AppNotify) window.AppNotify.error('Giá so sánh phải lớn hơn giá bán (theo validate schema).');
+          return;
+        }
 
         if (thumbFile) {
           try {
-            thumbnail = await readFileAsDataUrl(thumbFile);
+            primaryImageUrl = await uploadProductImageToCloudinary(thumbFile);
           } catch (err) {
             if (window.AppNotify) window.AppNotify.error(err.message || 'Ảnh không hợp lệ.');
             return;
           }
+        }
+
+        var imagesPayload;
+        if (primaryImageUrl) {
+          imagesPayload = [primaryImageUrl].concat(existingImages.slice(1));
         } else if (isEdit) {
-          thumbnail = !{JSON.stringify(product && product.thumbnail ? product.thumbnail : '')};
+          imagesPayload = existingImages;
+        } else {
+          imagesPayload = [];
+        }
+
+        var variantLine = {
+          price: price,
+          stock: Math.max(0, Math.floor(stock)),
+          attributes: {}
+        };
+        var skuToSend = variantSku || existingVariantSku;
+        if (skuToSend) variantLine.sku = skuToSend;
+        if (Number.isFinite(compareAtPriceNum) && compareAtPriceNum > 0) {
+          variantLine.compareAtPrice = compareAtPriceNum;
         }
 
         var payload = {
@@ -268,12 +340,15 @@ block scripts
           category: category,
           brand: brand || undefined,
           description: description,
+          shortDescription: shortDescription || undefined,
+          tags: tagsStr,
           price: price,
-          stock: stock,
-          thumbnail: thumbnail || undefined,
+          stock: Math.max(0, Math.floor(stock)),
+          variants: [variantLine],
           status: status,
           featured: featured
         };
+        if (imagesPayload.length) payload.images = imagesPayload;
 
         var endpoint = isEdit && productId ? '/api/v1/products/' + encodeURIComponent(productId) : '/api/v1/products';
         var method = isEdit ? 'PUT' : 'POST';

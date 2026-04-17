@@ -1,6 +1,264 @@
 import Order from "../../models/Order.js";
 import Product from "../../models/Product.js";
 import { NotFoundError, ValidationError } from "../../utils/errors.js";
+import { getPayOS, buildPayosReturnUrl, buildPayosCancelUrl } from "../../config/payos.js";
+
+function buildAdminOrderExportFilter(query) {
+    const { status = '', search = '', payment = '', date = '' } = query;
+    const filter = {};
+    if (status && typeof status === 'string') {
+        filter.status = status;
+    }
+    if (payment && typeof payment === 'string') {
+        filter['payment.status'] = payment;
+    }
+    if (search && String(search).trim()) {
+        filter.orderNumber = { $regex: String(search).trim(), $options: 'i' };
+    }
+    if (date && String(date).trim()) {
+        const d = new Date(String(date));
+        if (!Number.isNaN(d.getTime())) {
+            const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const end = new Date(start);
+            end.setDate(end.getDate() + 1);
+            filter.createdAt = { $gte: start, $lt: end };
+        }
+    }
+    return filter;
+}
+
+function csvEscape(val) {
+    const s = val == null ? '' : String(val);
+    if (/[",\n\r]/.test(s)) {
+        return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
+}
+
+function variantAttrsPlain(attrs) {
+    if (!attrs) return undefined;
+    if (attrs instanceof Map) return Object.fromEntries(attrs);
+    if (typeof attrs === 'object') return { ...attrs };
+    return undefined;
+}
+
+function variantLabel(v) {
+    if (!v) return '';
+    const sku = v.sku ? String(v.sku) : '';
+    const plain = variantAttrsPlain(v.attributes);
+    if (!plain || !Object.keys(plain).length) return sku;
+    const parts = Object.entries(plain).map(([k, val]) => `${k}: ${val}`);
+    return sku ? `${sku} — ${parts.join(', ')}` : parts.join(', ');
+}
+
+async function restoreLineStock(line) {
+    const vid = line.variant?.variantId;
+    if (vid) {
+        await Product.updateOne(
+            { _id: line.product, 'variants._id': vid },
+            { $inc: { 'variants.$.stock': line.quantity } }
+        );
+    } else {
+        await Product.findByIdAndUpdate(line.product, { $inc: { stock: line.quantity } });
+    }
+}
+
+async function decrementLineStock(line) {
+    const vid = line.variant?.variantId;
+    if (vid) {
+        await Product.updateOne(
+            { _id: line.product, 'variants._id': vid },
+            { $inc: { 'variants.$.stock': -line.quantity } }
+        );
+    } else {
+        await Product.findByIdAndUpdate(line.product, { $inc: { stock: -line.quantity } });
+    }
+}
+
+async function allocatePayosOrderCode() {
+    for (let i = 0; i < 12; i++) {
+        const code = Math.floor(100_000_000 + Math.random() * 899_999_999);
+        const exists = await Order.exists({ payosOrderCode: code });
+        if (!exists) return code;
+    }
+    throw new ValidationError('Không tạo được mã thanh toán PayOS, vui lòng thử lại.');
+}
+
+function normalizePhone(s) {
+    let x = String(s || '').replace(/\s/g, '');
+    if (x.startsWith('+84')) x = `0${x.slice(3)}`;
+    return x;
+}
+
+/**
+ * Lõi tạo đơn: validate biến thể, trừ kho, lưu Order. Trả về document đã populate.
+ */
+async function persistNewOrder(userId, body) {
+    const {
+        items,
+        shippingAddress,
+        billingAddress,
+        shippingFee = 0,
+        tax = 0,
+        discount = 0,
+        paymentMethod = 'cod',
+        shippingMethod = 'standard',
+        notes = ''
+    } = body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+        throw new ValidationError('Đơn hàng phải có ít nhất một sản phẩm');
+    }
+
+    if (!shippingAddress) {
+        throw new ValidationError('Địa chỉ giao hàng là bắt buộc');
+    }
+
+    const allowedPay = ['cod', 'payos', 'bank_transfer', 'credit_card', 'momo', 'zalopay'];
+    const payMethod = allowedPay.includes(paymentMethod) ? paymentMethod : 'cod';
+
+    const orderItems = [];
+    let subtotal = 0;
+
+    for (const item of items) {
+        const { productId, quantity, variantId } = item;
+
+        if (!productId || !quantity || quantity < 1) {
+            throw new ValidationError('Dữ liệu sản phẩm không hợp lệ');
+        }
+
+        const product = await Product.findById(productId);
+        if (!product) {
+            throw new NotFoundError(`Sản phẩm không tồn tại`);
+        }
+
+        if (!product.variants?.length) {
+            throw new ValidationError(`Sản phẩm "${product.name}" chưa có biến thể để bán`);
+        }
+
+        if (!variantId) {
+            throw new ValidationError(`Vui lòng chọn biến thể cho "${product.name}"`);
+        }
+
+        const v = product.variants.id(variantId);
+        if (!v || v.isActive === false) {
+            throw new ValidationError(`Biến thể không hợp lệ cho "${product.name}"`);
+        }
+
+        if (v.stock < quantity) {
+            throw new ValidationError(`"${product.name}" không đủ số lượng trong kho`);
+        }
+
+        const unitPrice = v.price;
+        const itemSubtotal = unitPrice * quantity;
+        subtotal += itemSubtotal;
+
+        orderItems.push({
+            product: productId,
+            productName: product.name,
+            price: unitPrice,
+            quantity,
+            variant: {
+                name: variantLabel(v),
+                variantId: v._id,
+                attributes: variantAttrsPlain(v.attributes),
+            },
+            subtotal: itemSubtotal
+        });
+    }
+
+    const total = subtotal + Number(shippingFee || 0) + Number(tax || 0) - Math.max(0, Number(discount || 0));
+
+    const orderNumber = await generateOrderNumber();
+
+    const newOrder = await Order.create({
+        orderNumber,
+        customer: userId,
+        items: orderItems,
+        shippingAddress,
+        billingAddress: billingAddress || shippingAddress,
+        subtotal,
+        shippingFee: Number(shippingFee || 0),
+        tax: Number(tax || 0),
+        discount: Math.max(0, Number(discount || 0)),
+        total,
+        payment: {
+            method: payMethod,
+            status: 'pending'
+        },
+        shipping: {
+            method: shippingMethod
+        },
+        notes,
+        status: 'pending'
+    });
+
+    for (const line of orderItems) {
+        await decrementLineStock(line);
+    }
+
+    return Order.findById(newOrder._id)
+        .populate('customer', 'email username avatar')
+        .populate('items.product', 'name slug price thumbnail');
+}
+
+/**
+ * GET /api/v1/orders/export/csv — Admin: xuất CSV (khớp bộ lọc trang đơn)
+ */
+export const exportOrdersCsv = async (req, res, next) => {
+    try {
+        const filter = buildAdminOrderExportFilter(req.query);
+        const cap = Math.min(10000, Math.max(1, parseInt(req.query.limit, 10) || 8000));
+        const orders = await Order.find(filter)
+            .populate('customer', 'username email')
+            .sort({ createdAt: -1 })
+            .limit(cap)
+            .lean();
+
+        const headers = [
+            'orderNumber',
+            'createdAt',
+            'status',
+            'customerUsername',
+            'customerEmail',
+            'total',
+            'paymentMethod',
+            'paymentStatus',
+            'itemsCount',
+            'shippingCity',
+            'shippingPhone',
+        ];
+
+        const lines = [headers.join(',')];
+        for (const o of orders) {
+            const c = o.customer || {};
+            const addr = o.shippingAddress || {};
+            const row = [
+                o.orderNumber,
+                o.createdAt ? new Date(o.createdAt).toISOString() : '',
+                o.status,
+                c.username || '',
+                c.email || '',
+                o.total,
+                o.payment?.method ?? '',
+                o.payment?.status ?? '',
+                Array.isArray(o.items) ? o.items.length : 0,
+                addr.city || '',
+                addr.phone || '',
+            ].map(csvEscape);
+            lines.push(row.join(','));
+        }
+
+        const bom = '\uFEFF';
+        const csv = bom + lines.join('\r\n');
+        const fname = `orders-export-${new Date().toISOString().slice(0, 10)}.csv`;
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${fname}"`);
+        res.send(csv);
+    } catch (error) {
+        next(error);
+    }
+};
 
 /**
  * GENERATE ORDER NUMBER
@@ -22,17 +280,20 @@ const generateOrderNumber = async () => {
 
 /**
  * GET /api/orders
- * Lấy danh sách đơn hàng của user (hoặc tất cả nếu admin)
  */
 export const getOrders = async (req, res, next) => {
     try {
         const userId = req.user._id;
-        const { status, page = 1, limit = 10 } = req.query;
+        const { status, page = 1, limit = 10, search = '' } = req.query;
 
-        // Build filter
         const filter = { customer: userId };
         if (status && ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'].includes(status)) {
             filter.status = status;
+        }
+        const searchTrim = search && String(search).trim();
+        if (searchTrim) {
+            const escaped = searchTrim.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            filter.orderNumber = { $regex: escaped, $options: 'i' };
         }
 
         const skip = (Number(page) - 1) * Number(limit);
@@ -64,7 +325,6 @@ export const getOrders = async (req, res, next) => {
 
 /**
  * GET /api/orders/:id
- * Lấy chi tiết một đơn hàng
  */
 export const getOrderDetail = async (req, res, next) => {
     try {
@@ -79,7 +339,6 @@ export const getOrderDetail = async (req, res, next) => {
             throw new NotFoundError('Đơn hàng không tồn tại');
         }
 
-        // Kiểm tra quyền: user chỉ xem được đơn hàng của mình (ngoại trừ admin)
         if (req.user.role !== 'admin' && order.customer._id.toString() !== userId.toString()) {
             throw new NotFoundError('Bạn không có quyền xem đơn hàng này');
         }
@@ -94,106 +353,12 @@ export const getOrderDetail = async (req, res, next) => {
 };
 
 /**
- * POST /api/orders
- * Tạo đơn hàng mới
+ * POST /api/orders — tạo đơn (COD / tương thích cũ)
  */
 export const createOrder = async (req, res, next) => {
     try {
         const userId = req.user._id;
-        const {
-            items,
-            shippingAddress,
-            billingAddress,
-            shippingFee = 0,
-            tax = 0,
-            discount = 0,
-            paymentMethod = 'cod',
-            shippingMethod = 'standard',
-            notes = ''
-        } = req.body;
-
-        // Validation
-        if (!items || !Array.isArray(items) || items.length === 0) {
-            throw new ValidationError('Đơn hàng phải có ít nhất một sản phẩm');
-        }
-
-        if (!shippingAddress) {
-            throw new ValidationError('Địa chỉ giao hàng là bắt buộc');
-        }
-
-        // Validate items và tính subtotal
-        const orderItems = [];
-        let subtotal = 0;
-
-        for (const item of items) {
-            const { productId, quantity, variantName } = item;
-
-            if (!productId || !quantity || quantity < 1) {
-                throw new ValidationError('Dữ liệu sản phẩm không hợp lệ');
-            }
-
-            const product = await Product.findById(productId).select('name price stock thumbnail');
-            if (!product) {
-                throw new NotFoundError(`Sản phẩm ${productId} không tồn tại`);
-            }
-
-            if (product.stock < quantity) {
-                throw new ValidationError(`Sản phẩm "${product.name}" không đủ số lượng`);
-            }
-
-            const itemSubtotal = product.price * quantity;
-            subtotal += itemSubtotal;
-
-            orderItems.push({
-                product: productId,
-                productName: product.name,
-                price: product.price,
-                quantity,
-                variant: variantName ? { name: variantName } : undefined,
-                subtotal: itemSubtotal
-            });
-        }
-
-        // Tính tổng
-        const total = subtotal + shippingFee + tax - Math.max(0, discount);
-
-        // Tạo đơn hàng
-        const orderNumber = await generateOrderNumber();
-
-        const newOrder = await Order.create({
-            orderNumber,
-            customer: userId,
-            items: orderItems,
-            shippingAddress,
-            billingAddress: billingAddress || shippingAddress,
-            subtotal,
-            shippingFee,
-            tax,
-            discount: Math.max(0, discount),
-            total,
-            payment: {
-                method: paymentMethod,
-                status: 'pending'
-            },
-            shipping: {
-                method: shippingMethod
-            },
-            notes,
-            status: 'pending'
-        });
-
-        // Reduce stock cho mỗi sản phẩm
-        for (const item of orderItems) {
-            await Product.findByIdAndUpdate(
-                item.product,
-                { $inc: { stock: -item.quantity } }
-            );
-        }
-
-        const populatedOrder = await Order.findById(newOrder._id)
-            .populate('customer', 'email username avatar')
-            .populate('items.product', 'name slug price thumbnail');
-
+        const populatedOrder = await persistNewOrder(userId, req.body);
         res.status(201).json({
             success: true,
             message: 'Tạo đơn hàng thành công',
@@ -205,8 +370,148 @@ export const createOrder = async (req, res, next) => {
 };
 
 /**
+ * POST /api/v1/orders/checkout — tạo đơn + link PayOS nếu chọn payos
+ */
+export const createCheckout = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const paymentMethod = req.body.paymentMethod === 'payos' ? 'payos' : 'cod';
+        const body = { ...req.body, paymentMethod };
+        const populatedOrder = await persistNewOrder(userId, body);
+
+        if (paymentMethod !== 'payos') {
+            return res.status(201).json({
+                success: true,
+                message: 'Tạo đơn hàng thành công',
+                data: { order: populatedOrder }
+            });
+        }
+
+        const payos = getPayOS();
+        if (!payos) {
+            throw new ValidationError(
+                'Thanh toán PayOS chưa cấu hình. Thêm PAYOS_CLIENT_ID, PAYOS_API_KEY, PAYOS_CHECKSUM_KEY vào .env.'
+            );
+        }
+
+        const order = await Order.findById(populatedOrder._id);
+        const payosOrderCode = await allocatePayosOrderCode();
+        order.payosOrderCode = payosOrderCode;
+        await order.save();
+
+        const returnUrl = buildPayosReturnUrl(order._id);
+        const cancelUrl = buildPayosCancelUrl(order._id);
+
+        const amount = Math.round(Number(order.total));
+        if (!Number.isFinite(amount) || amount < 1000) {
+            throw new ValidationError('Số tiền thanh toán không hợp lệ (tối thiểu 1000₫).');
+        }
+
+        const desc = `TT ${order.orderNumber}`.slice(0, 24);
+        const paymentLink = await payos.paymentRequests.create({
+            orderCode: payosOrderCode,
+            amount,
+            description: desc,
+            returnUrl,
+            cancelUrl,
+        });
+
+        order.payment.transactionId = paymentLink.paymentLinkId;
+        await order.save();
+
+        const refreshed = await Order.findById(order._id)
+            .populate('customer', 'email username avatar')
+            .populate('items.product', 'name slug price thumbnail');
+
+        return res.status(201).json({
+            success: true,
+            message: 'Đã tạo đơn hàng. Chuyển tới trang thanh toán PayOS.',
+            data: {
+                order: refreshed,
+                payosCheckoutUrl: paymentLink.checkoutUrl,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * POST /api/v1/webhooks/payos — PayOS gọi (không JWT)
+ */
+export const payosWebhookHandler = async (req, res) => {
+    try {
+        const payos = getPayOS();
+        if (!payos) {
+            return res.status(503).json({ success: false, message: 'PayOS not configured' });
+        }
+        let verified;
+        try {
+            verified = await payos.webhooks.verify(req.body);
+        } catch (verErr) {
+            console.error('PayOS webhook verify:', verErr.message);
+            return res.status(400).json({ success: false, message: 'Invalid webhook' });
+        }
+        const data = verified?.data;
+        const orderCode = data?.orderCode;
+        if (orderCode == null) {
+            return res.status(400).json({ success: false });
+        }
+
+        const order = await Order.findOne({ payosOrderCode: orderCode });
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        if (order.payment.status !== 'paid') {
+            order.payment.status = 'paid';
+            order.payment.paidAt = new Date();
+            if (order.payment.method === 'payos' && order.status === 'pending') {
+                order.status = 'confirmed';
+            }
+            await order.save();
+        }
+
+        return res.json({ success: true });
+    } catch (err) {
+        console.error('payosWebhookHandler:', err);
+        return res.status(500).json({ success: false });
+    }
+};
+
+/**
+ * POST /api/v1/orders/lookup — tra cứu đơn (mã đơn + SĐT nhận hàng), không cần đăng nhập
+ */
+export const lookupOrder = async (req, res, next) => {
+    try {
+        const { orderNumber, phone } = req.body;
+        if (!orderNumber || !phone) {
+            throw new ValidationError('Vui lòng nhập mã đơn hàng và số điện thoại người nhận.');
+        }
+        const onum = String(orderNumber).trim();
+        const p = normalizePhone(phone);
+
+        const order = await Order.findOne({ orderNumber: onum })
+            .populate('items.product', 'name slug thumbnail')
+            .lean();
+
+        if (!order) {
+            throw new NotFoundError('Không tìm thấy đơn hàng.');
+        }
+
+        const shipPhone = normalizePhone(order.shippingAddress?.phone || '');
+        if (!shipPhone || shipPhone !== p) {
+            throw new NotFoundError('Không tìm thấy đơn hàng.');
+        }
+
+        res.status(200).json({ success: true, data: order });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * PUT /api/orders/:id
- * Cập nhật đơn hàng (admin)
  */
 export const updateOrder = async (req, res, next) => {
     try {
@@ -218,10 +523,12 @@ export const updateOrder = async (req, res, next) => {
             throw new NotFoundError('Đơn hàng không tồn tại');
         }
 
-        // Cập nhật fields
         if (status && ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'].includes(status)) {
-            // Kiểm tra transition hợp lệ
-            if (status === 'shipped' && !order.shipping.trackingNumber && !trackingNumber) {
+            if (
+                status === 'shipped' &&
+                !order.shipping?.trackingNumber &&
+                !trackingNumber
+            ) {
                 throw new ValidationError('Mã tracking là bắt buộc khi gửi hàng');
             }
             order.status = status;
@@ -243,6 +550,7 @@ export const updateOrder = async (req, res, next) => {
         }
 
         if (trackingNumber) {
+            if (!order.shipping) order.shipping = {};
             order.shipping.trackingNumber = trackingNumber;
         }
 
@@ -265,7 +573,6 @@ export const updateOrder = async (req, res, next) => {
 
 /**
  * PATCH /api/orders/:id/cancel
- * Hủy đơn hàng
  */
 export const cancelOrder = async (req, res, next) => {
     try {
@@ -278,27 +585,20 @@ export const cancelOrder = async (req, res, next) => {
             throw new NotFoundError('Đơn hàng không tồn tại');
         }
 
-        // Kiểm tra quyền
         if (req.user.role !== 'admin' && order.customer.toString() !== userId.toString()) {
             throw new NotFoundError('Bạn không có quyền hủy đơn hàng này');
         }
 
-        // Kiểm tra trạng thái có thể hủy không
         if (!['pending', 'confirmed'].includes(order.status)) {
             throw new ValidationError('Chỉ có thể hủy đơn hàng ở trạng thái chờ xác nhận hoặc đã xác nhận');
         }
 
-        // Hủy đơn hàng
         order.status = 'cancelled';
         order.cancelledAt = new Date();
         order.notes = (order.notes ? order.notes + '\n' : '') + `Hủy: ${reason}`;
 
-        // Restore stock
         for (const item of order.items) {
-            await Product.findByIdAndUpdate(
-                item.product,
-                { $inc: { stock: item.quantity } }
-            );
+            await restoreLineStock(item);
         }
 
         await order.save();
@@ -315,7 +615,6 @@ export const cancelOrder = async (req, res, next) => {
 
 /**
  * DELETE /api/orders/:id
- * Xóa đơn hàng (admin, chỉ xóa draft)
  */
 export const deleteOrder = async (req, res, next) => {
     try {
@@ -326,17 +625,12 @@ export const deleteOrder = async (req, res, next) => {
             throw new NotFoundError('Đơn hàng không tồn tại');
         }
 
-        // Chỉ cho xóa đơn hàng pending
         if (order.status !== 'pending') {
             throw new ValidationError('Chỉ có thể xóa đơn hàng ở trạng thái chờ xác nhận');
         }
 
-        // Restore stock trước khi xóa
         for (const item of order.items) {
-            await Product.findByIdAndUpdate(
-                item.product,
-                { $inc: { stock: item.quantity } }
-            );
+            await restoreLineStock(item);
         }
 
         await Order.findByIdAndDelete(id);

@@ -23,6 +23,7 @@ const orderItemSchema = new mongoose.Schema({
     },
     variant: {
         name: String,
+        variantId: mongoose.Schema.Types.ObjectId,
         attributes: mongoose.Schema.Types.Mixed
     },
     subtotal: {
@@ -117,12 +118,22 @@ const orderSchema = new mongoose.Schema({
     },
 
     /**
+     * PayOS: mã số nguyên duy nhất gửi sang PayOS (paymentRequests.orderCode)
+     */
+    payosOrderCode: {
+        type: Number,
+        sparse: true,
+        unique: true,
+        index: true
+    },
+
+    /**
      * PAYMENT
      */
     payment: {
         method: {
             type: String,
-            enum: ['cod', 'bank_transfer', 'credit_card', 'momo', 'zalopay'],
+            enum: ['cod', 'bank_transfer', 'credit_card', 'momo', 'zalopay', 'payos'],
             default: 'cod'
         },
         status: {

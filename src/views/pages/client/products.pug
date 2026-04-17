@@ -43,14 +43,41 @@ block content
       if (p.stock != null) return Number(p.stock)
       return 0
     }
+    function __normImg(u) {
+      if (u == null) return null
+      if (typeof u === 'string') {
+        var t = u.trim()
+        return t || null
+      }
+      if (typeof u === 'object' && u.url) {
+        var s = String(u.url).trim()
+        return s || null
+      }
+      if (typeof u === 'object' && u.secure_url) {
+        var z = String(u.secure_url).trim()
+        return z || null
+      }
+      return null
+    }
     function __productImg(p) {
-      if (p.thumbnail) return p.thumbnail
-      if (p.images && p.images.length) return p.images[0]
+      if (!p) return null
+      var i
+      if (p.thumbnail) {
+        i = __normImg(p.thumbnail)
+        if (i) return i
+      }
+      if (p.images && p.images.length) {
+        i = __normImg(p.images[0])
+        if (i) return i
+      }
       if (p.variants && p.variants.length) {
         var withImg = p.variants.find(function (v) {
           return v && v.images && v.images.length
         })
-        if (withImg) return withImg.images[0]
+        if (withImg) {
+          i = __normImg(withImg.images[0])
+          if (i) return i
+        }
       }
       return null
     }

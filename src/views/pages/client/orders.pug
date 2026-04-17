@@ -1,246 +1,411 @@
-extends ../../../layouts/main
+extends ../../layouts/main
 
 block content
-  .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 py-12")
-    .grid.grid-cols-1(class="lg:grid-cols-4 gap-8")
-      // Sidebar Navigation
-      aside.bg-white.rounded-lg.shadow-md.h-fit
-        nav.flex.flex-col
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile")
-            i.fas.fa-user.mr-3
-            | Profile
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile/addresses")
-            i.fas.fa-map-marker.mr-3
-            | Addresses
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-blue-600.font-medium(href="/profile/orders")
-            i.fas.fa-shopping-bag.mr-3
-            | My Orders
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile/settings")
-            i.fas.fa-cog.mr-3
-            | Settings
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/logout")
-            i.fas.fa-sign-out-alt.mr-3
-            | Logout
+  section(class="bg-[#0d0d0d]")
+    div(class="mx-auto max-w-[1440px] px-4 py-12 sm:px-8 lg:px-[128px] lg:py-16")
+      p(class="mb-3 text-xs font-semibold uppercase tracking-wider text-[#f48525]") Tài khoản
+      h1(class="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-[2.5rem] lg:leading-tight") Đơn hàng của tôi
+      p(class="mt-4 max-w-2xl text-base leading-relaxed text-[#cbd6e2] sm:text-lg")
+        | Xem trạng thái, chi tiết và hủy đơn khi còn trong thời gian cho phép.
 
-      // Main Content
-      .col-span-1(class="lg:col-span-3")
-        // Header
-        .mb-8
-          h1.text-3xl.font-bold.text-gray-900 My Orders
-          p.text-gray-600.mt-2 View and manage your orders
-
-        // Filters
-        .bg-white.rounded-lg.shadow-md.p-4.mb-6
-          .flex.flex-col(class="md:flex-row gap-4")
-            .flex-1
-              input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                type="text",
-                placeholder="Search by order number...",
-                id="search-input"
-              )
-            
-            select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-              id="status-filter"
+  div(class="bg-[#f4f5f7] pb-16 pt-10 lg:pb-20 lg:pt-12")
+    div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+      .grid.grid-cols-1.gap-8(class="lg:grid-cols-12")
+        aside(class="lg:col-span-3")
+          nav(class="overflow-hidden border border-[#dee1e6] bg-white shadow-[0_2px_4px_rgba(34,37,42,0.06)]")
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#f9fafb] hover:text-[#181b20]"
             )
-              option(value="") All Orders
-              option(value="pending") Pending
-              option(value="confirmed") Confirmed
-              option(value="processing") Processing
-              option(value="shipped") Shipped
-              option(value="delivered") Delivered
-              option(value="cancelled") Cancelled
+              i.fa-regular.fa-user(aria-hidden="true")
+              span Hồ sơ
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile/addresses"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#f9fafb] hover:text-[#181b20]"
+            )
+              i.fa-solid.fa-location-dot(aria-hidden="true")
+              span Địa chỉ
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile/orders"
+              class="border-l-[#f48525] bg-[#fff7ef] text-[#181b20]"
+            )
+              i.fa-solid.fa-bag-shopping(aria-hidden="true")
+              span Đơn hàng
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile/settings"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#f9fafb] hover:text-[#181b20]"
+            )
+              i.fa-solid.fa-gear(aria-hidden="true")
+              span Cài đặt
+            a#logout-link.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/auth/logout"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#fff5f5] hover:text-red-700"
+            )
+              i.fa-solid.fa-right-from-bracket(aria-hidden="true")
+              span Đăng xuất
 
-        if orders && orders.length > 0
-          // Orders List
-          .space-y-4
-            each order in orders
-              .bg-white.rounded-lg.shadow-md.border.border-gray-200.overflow-hidden.hover:shadow-lg.transition-shadow
+        section(class="space-y-6 lg:col-span-9")
+          .overflow-hidden.border.bg-white.p-5(class="border-[#dee1e6]")
+            .flex.flex-col.gap-4(class="lg:flex-row lg:items-end")
+              div(class="flex-1")
+                label.block.text-xs.font-semibold.mb-1(for="order-search" class="text-[#323842]") Tìm theo mã đơn
+                input#order-search.w-full.border.px-4.text-sm(
+                  type="search"
+                  placeholder="VD: ORD-20250417-001"
+                  autocomplete="off"
+                  class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                )
+              div(class="w-full lg:w-48")
+                label.block.text-xs.font-semibold.mb-1(for="order-status" class="text-[#323842]") Trạng thái
+                select#order-status.w-full.border.px-4.text-sm(
+                  class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                )
+                  option(value="") Tất cả
+                  option(value="pending") Chờ xác nhận
+                  option(value="confirmed") Đã xác nhận
+                  option(value="processing") Đang xử lý
+                  option(value="shipped") Đang giao
+                  option(value="delivered") Đã giao
+                  option(value="cancelled") Đã hủy
+                  option(value="refunded") Hoàn tiền
+              .flex.gap-2(class="lg:pb-0")
+                button#order-refresh.inline-flex.items-center.justify-center.border.px-4.text-sm.font-semibold(
+                  type="button"
+                  class="h-[42px] border-[#0d0d0d] text-[#0d0d0d] hover:bg-[#0d0d0d] hover:text-white"
+                )
+                  i.fa-solid.fa-rotate.mr-2(aria-hidden="true")
+                  | Tải lại
 
-                // Order Header
-                .bg-gray-50.px-6.py-4.border-b.border-gray-200
-                  .flex.items-center.justify-between(class="md:flex-row flex-col gap-4")
-                    .flex-1
-                      p.text-sm.text-gray-600 Order #
-                        span.font-bold.text-gray-900
-                          = order.orderNumber
-                      p.text-xs.text-gray-500.mt-1
-                        = new Date(order.createdAt).toLocaleDateString()
-                    
-                    .flex.items-center.gap-4(class="md:flex-row flex-col")
-                      .text-right
-                        p.text-sm.text-gray-600 Total
-                        p.text-lg.font-bold.text-gray-900
-                          = '$' + order.total.toFixed(2)
-                      
-                      // Status Badge
-                      span(class={
-                        'pending': 'bg-yellow-100 text-yellow-800',
-                        'confirmed': 'bg-blue-100 text-blue-800',
-                        'processing': 'bg-purple-100 text-purple-800',
-                        'shipped': 'bg-indigo-100 text-indigo-800',
-                        'delivered': 'bg-green-100 text-green-800',
-                        'cancelled': 'bg-red-100 text-red-800'
-                      }[order.status]}.px-3.py-1.rounded-full.text-xs.font-semibold)
-                        if order.status === 'pending'
-                          i.fas.fa-clock.mr-1
-                          | Pending
-                        else if order.status === 'confirmed'
-                          i.fas.fa-check.mr-1
-                          | Confirmed
-                        else if order.status === 'processing'
-                          i.fas.fa-spinner.mr-1
-                          | Processing
-                        else if order.status === 'shipped'
-                          i.fas.fa-truck.mr-1
-                          | Shipped
-                        else if order.status === 'delivered'
-                          i.fas.fa-check-circle.mr-1
-                          | Delivered
-                        else if order.status === 'cancelled'
-                          i.fas.fa-times-circle.mr-1
-                          | Cancelled
-
-                // Order Items
-                .px-6.py-4.border-b.border-gray-200
-                  if order.items && order.items.length > 0
-                    .space-y-2
-                      each item in order.items.slice(0, 2)
-                        .flex.items-center.justify-between.text-sm
-                          .flex-1
-                            p.text-gray-900
-                              = item.productName + ' × ' + item.quantity
-                            if item.variant && item.variant.name
-                              p.text-xs.text-gray-500
-                                = 'Variant: ' + item.variant.name
-                          p.font-medium.text-gray-900
-                            = '$' + item.subtotal.toFixed(2)
-                      
-                      if order.items.length > 2
-                        p.text-xs.text-gray-500.text-center.pt-2
-                          = '+ ' + (order.items.length - 2) + ' more item(s)'
-
-                // Order Details
-                .px-6.py-4.bg-gray-50.text-sm.text-gray-600.grid.grid-cols-2(class="md:grid-cols-4 gap-4")
-                  .flex.items-center.gap-2
-                    i.fas.fa-map-marker.text-gray-400
-                    .flex.flex-col
-                      p.font-medium.text-gray-700 Shipping
-                      p
-                        = order.shippingAddress?.city || 'N/A'
-                  
-                  .flex.items-center.gap-2
-                    i.fas.fa-truck.text-gray-400
-                    .flex.flex-col
-                      p.font-medium.text-gray-700 Method
-                      p
-                        = order.shipping?.method || 'Standard'
-                  
-                  .flex.items-center.gap-2
-                    i.fas.fa-credit-card.text-gray-400
-                    .flex.flex-col
-                      p.font-medium.text-gray-700 Payment
-                      p(class={
-                        'paid': 'text-green-600',
-                        'pending': 'text-yellow-600',
-                        'failed': 'text-red-600'
-                      }[order.payment?.status])
-                        if order.payment?.status === 'paid'
-                          i.fas.fa-check-circle.mr-1
-                        else if order.payment?.status === 'pending'
-                          i.fas.fa-clock.mr-1
-                        else
-                          i.fas.fa-times-circle.mr-1
-                        = order.payment?.status || 'Pending'
-                  
-                  .flex.items-center.gap-2
-                    i.fas.fa-barcode.text-gray-400
-                    .flex.flex-col
-                      p.font-medium.text-gray-700 Tracking
-                      p
-                        = order.shipping?.trackingNumber || 'N/A'
-
-                // Order Actions
-                .px-6.py-4.flex.gap-2.justify-between(class="md:justify-end")
-                  a.px-4.py-2.border.border-gray-300.rounded-lg.text-gray-700.hover:bg-gray-50.transition-colors.flex.items-center.gap-2.text-sm(
-                    href=`/profile/orders/${order._id}`
-                  )
-                    i.fas.fa-eye
-                    | View Details
-                  
-                  if order.status === 'pending' || order.status === 'confirmed'
-                    button.px-4.py-2.border.border-red-300.text-red-600.rounded-lg.hover:bg-red-50.transition-colors.flex.items-center.gap-2.text-sm(
-                      type="button",
-                      onclick=`cancelOrder('${order._id}')`
-                    )
-                      i.fas.fa-times
-                      | Cancel Order
-                  
-                  if order.status === 'delivered'
-                    a.px-4.py-2.bg-blue-600.text-white.rounded-lg.hover:bg-blue-700.transition-colors.flex.items-center.gap-2.text-sm(
-                      href=`/products?reorder=${order._id}`
-                    )
-                      i.fas.fa-redo
-                      | Reorder
-
-        else
-          // No Orders
-          .bg-white.rounded-lg.shadow-md.p-12.text-center
-            i.fas.fa-shopping-bag.text-gray-400.text-5xl.mb-4
-            h3.text-xl.font-semibold.text-gray-900.mb-2 No Orders Yet
-            p.text-gray-600.mb-6 Start shopping to see your orders here
-            a.inline-block.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
+          #order-list.flex.flex-col.gap-4
+          #order-empty.hidden.overflow-hidden.border.bg-white.p-10.text-center(class="border-[#dee1e6]")
+            i.fa-solid.fa-bag-shopping.mb-4.text-4xl(class="text-[#cbd6e2]")
+            p.font-semibold(class="text-[#181b20]") Chưa có đơn hàng
+            p.mt-2.text-sm(class="text-[#323842]") Khám phá sản phẩm và đặt hàng ngay.
+            a.mt-6.inline-flex.items-center.justify-center.border.px-5.text-sm.font-semibold.text-white(
               href="/products"
-            )
-              i.fas.fa-shopping-cart.mr-2
-              | Continue Shopping
+              class="py-2.5 border-[#f48525] bg-[#f48525] hover:bg-[#e07720]"
+            ) Xem sản phẩm
 
-        // Pagination (if needed)
-        if pagination && pagination.pages > 1
-          .flex.justify-center.items-center.gap-2.mt-8
-            if pagination.page > 1
-              a.px-3.py-2.border.border-gray-300.rounded-md.text-gray-700.hover:bg-gray-50.transition-colors(
-                href=`/profile/orders?page=${pagination.page - 1}`
-              )
-                i.fas.fa-chevron-left.mr-1
-                | Previous
-            
-            .flex.gap-1
-              - for (let i = 1; i <= pagination.pages; i++) {
-                if i === pagination.page
-                  .px-3.py-2.bg-blue-600.text-white.rounded-md.font-medium
-                    = i
-                else if i === 1 || i === pagination.pages || (i >= pagination.page - 1 && i <= pagination.page + 1)
-                  a.px-3.py-2.border.border-gray-300.rounded-md.text-gray-700.hover:bg-gray-50.transition-colors(
-                    href=`/profile/orders?page=${i}`
-                  )
-                    = i
-                else if i === pagination.page - 2 || i === pagination.page + 2
-                  .px-3.py-2.text-gray-400
-                    | ...
-              - }
-            
-            if pagination.page < pagination.pages
-              a.px-3.py-2.border.border-gray-300.rounded-md.text-gray-700.hover:bg-gray-50.transition-colors(
-                href=`/profile/orders?page=${pagination.page + 1}`
-              )
-                | Next
-                i.fas.fa-chevron-right.ml-1
+          nav#order-pagination.hidden.mt-4.flex.flex-wrap.items-center.justify-center.gap-2(aria-label="Phân trang")
 
 block scripts
   script.
-    function cancelOrder(orderId) {
-      if (confirm('Are you sure you want to cancel this order?')) {
-        // TODO: Call API to cancel order
-        alert('Order cancelled successfully!');
-        location.reload();
+    (function () {
+      var API = '/api/v1/orders';
+      var token = localStorage.getItem('accessToken');
+      var listEl = document.getElementById('order-list');
+      var emptyEl = document.getElementById('order-empty');
+      var paginationEl = document.getElementById('order-pagination');
+      var searchInput = document.getElementById('order-search');
+      var statusSelect = document.getElementById('order-status');
+      var refreshBtn = document.getElementById('order-refresh');
+      var logoutLink = document.getElementById('logout-link');
+      var state = { page: 1, limit: 8, search: '', status: '', pages: 1 };
+
+      function showAlert(type, message) {
+        if (!window.AppNotify) return;
+        if (type === 'error') return window.AppNotify.error(message);
+        if (type === 'warn') return window.AppNotify.warning(message);
+        return window.AppNotify.success(message);
       }
-    }
 
-    // Search functionality
-    document.getElementById('search-input')?.addEventListener('input', function(e) {
-      // TODO: Implement client-side filtering or redirect to filtered results
-    });
+      function authHeaders(extra) {
+        var headers = Object.assign({}, extra || {});
+        if (token) headers.Authorization = 'Bearer ' + token;
+        return headers;
+      }
 
-    document.getElementById('status-filter')?.addEventListener('change', function(e) {
-      // TODO: Implement status filtering
-    });
+      function jsonAuthHeaders() {
+        return authHeaders({ 'Content-Type': 'application/json' });
+      }
+
+      function parseErr(data) {
+        if (data && data.errors && data.errors.length) {
+          return data.errors.map(function (e) { return e.message; }).join(' ');
+        }
+        return (data && data.message) || 'Có lỗi xảy ra.';
+      }
+
+      function formatMoney(n) {
+        return new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + '₫';
+      }
+
+      function statusLabel(s) {
+        var m = {
+          pending: 'Chờ xác nhận',
+          confirmed: 'Đã xác nhận',
+          processing: 'Đang xử lý',
+          shipped: 'Đang giao',
+          delivered: 'Đã giao',
+          cancelled: 'Đã hủy',
+          refunded: 'Hoàn tiền'
+        };
+        return m[s] || s || '—';
+      }
+
+      function statusBadgeClass(s) {
+        var m = {
+          pending: 'bg-amber-50 text-amber-900',
+          confirmed: 'bg-sky-50 text-sky-900',
+          processing: 'bg-violet-50 text-violet-900',
+          shipped: 'bg-indigo-50 text-indigo-900',
+          delivered: 'bg-emerald-50 text-emerald-900',
+          cancelled: 'bg-red-50 text-red-800',
+          refunded: 'bg-zinc-100 text-zinc-800'
+        };
+        return m[s] || 'bg-[#f4f5f7] text-[#181b20]';
+      }
+
+      function paymentLabel(st) {
+        var m = { pending: 'Chưa thanh toán', paid: 'Đã thanh toán', failed: 'Thất bại', refunded: 'Hoàn tiền' };
+        return m[st] || st || '—';
+      }
+
+      function cardEl(o) {
+        var id = String(o._id || o.id);
+        var wrap = document.createElement('article');
+        wrap.className = 'overflow-hidden border bg-white ' + (o.status === 'delivered'
+          ? 'border-[#dee1e6]'
+          : 'border-[#dee1e6]');
+        wrap.setAttribute('data-order-id', id);
+
+        var head = document.createElement('div');
+        head.className = 'flex flex-col gap-3 border-b border-[#eef0f3] bg-[#fafbfc] px-5 py-4 sm:flex-row sm:items-center sm:justify-between';
+
+        var left = document.createElement('div');
+        var num = document.createElement('p');
+        num.className = 'text-sm text-[#323842]';
+        num.appendChild(document.createTextNode('Mã: '));
+        var strong = document.createElement('span');
+        strong.className = 'font-bold text-[#0d0d0d]';
+        strong.textContent = o.orderNumber || id;
+        num.appendChild(strong);
+        left.appendChild(num);
+        var date = document.createElement('p');
+        date.className = 'mt-1 text-xs text-[#8c8f95]';
+        date.textContent = o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '';
+        left.appendChild(date);
+
+        var right = document.createElement('div');
+        right.className = 'flex flex-wrap items-center gap-3';
+        var badge = document.createElement('span');
+        badge.className = 'rounded-full px-3 py-1 text-xs font-semibold ' + statusBadgeClass(o.status);
+        badge.textContent = statusLabel(o.status);
+        right.appendChild(badge);
+        var total = document.createElement('span');
+        total.className = 'text-lg font-bold text-[#0d0d0d]';
+        total.textContent = formatMoney(o.total);
+        right.appendChild(total);
+        head.appendChild(left);
+        head.appendChild(right);
+        wrap.appendChild(head);
+
+        var body = document.createElement('div');
+        body.className = 'px-5 py-4';
+        var items = o.items || [];
+        var maxShow = 3;
+        for (var i = 0; i < Math.min(items.length, maxShow); i++) {
+          var it = items[i];
+          var row = document.createElement('div');
+          row.className = 'flex justify-between gap-4 border-b py-2 text-sm last:border-0 border-[#f0f1f3]';
+          var name = (it.product && it.product.name) || it.productName || 'Sản phẩm';
+          var line = document.createElement('div');
+          line.className = 'text-[#181b20]';
+          line.textContent = name + ' × ' + (it.quantity || 0);
+          var price = document.createElement('div');
+          price.className = 'shrink-0 font-medium text-[#181b20]';
+          price.textContent = formatMoney(it.subtotal);
+          row.appendChild(line);
+          row.appendChild(price);
+          body.appendChild(row);
+        }
+        if (items.length > maxShow) {
+          var more = document.createElement('p');
+          more.className = 'pt-2 text-center text-xs text-[#8c8f95]';
+          more.textContent = '+ ' + (items.length - maxShow) + ' sản phẩm khác';
+          body.appendChild(more);
+        }
+        if (!items.length) {
+          var empty = document.createElement('p');
+          empty.className = 'text-sm text-[#8c8f95]';
+          empty.textContent = 'Không có dòng sản phẩm.';
+          body.appendChild(empty);
+        }
+        wrap.appendChild(body);
+
+        var foot = document.createElement('div');
+        foot.className = 'flex flex-col gap-2 border-t border-[#eef0f3] bg-white px-5 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end';
+        var ship = (o.shippingAddress && o.shippingAddress.city) ? o.shippingAddress.city : '—';
+        var meta = document.createElement('p');
+        meta.className = 'mr-auto text-xs text-[#323842] self-center';
+        meta.textContent = 'Giao đến: ' + ship + ' • TT: ' + paymentLabel(o.payment && o.payment.status);
+        foot.appendChild(meta);
+
+        var btnDetail = document.createElement('a');
+        btnDetail.href = '/profile/orders/' + encodeURIComponent(id);
+        btnDetail.className = 'inline-flex h-9 items-center justify-center border border-[#dee1e6] px-4 text-xs font-semibold text-[#181b20] hover:bg-[#f9fafb]';
+        btnDetail.textContent = 'Chi tiết';
+        foot.appendChild(btnDetail);
+
+        if (o.status === 'pending' || o.status === 'confirmed') {
+          var btnCancel = document.createElement('button');
+          btnCancel.type = 'button';
+          btnCancel.className = 'inline-flex h-9 items-center justify-center border border-red-200 px-4 text-xs font-semibold text-red-700 hover:bg-red-50';
+          btnCancel.textContent = 'Hủy đơn';
+          btnCancel.addEventListener('click', function () { onCancel(id); });
+          foot.appendChild(btnCancel);
+        }
+
+        wrap.appendChild(foot);
+        return wrap;
+      }
+
+      function renderList(orders) {
+        listEl.innerHTML = '';
+        if (!orders || !orders.length) {
+          emptyEl.classList.remove('hidden');
+          return;
+        }
+        emptyEl.classList.add('hidden');
+        orders.forEach(function (o) {
+          listEl.appendChild(cardEl(o));
+        });
+      }
+
+      function renderPagination(p) {
+        paginationEl.innerHTML = '';
+        if (!p || p.pages <= 1) {
+          paginationEl.classList.add('hidden');
+          return;
+        }
+        paginationEl.classList.remove('hidden');
+
+        function pageBtn(pageNum, isActive) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = String(pageNum);
+          b.className = 'min-w-[2.25rem] px-3 py-2 text-sm font-medium border ' + (isActive
+            ? 'border-[#f48525] bg-[#fff7ef] text-[#c45a0f]'
+            : 'border-[#dee1e6] text-[#181b20] hover:bg-[#f9fafb]');
+          if (!isActive) {
+            b.addEventListener('click', function () {
+              state.page = pageNum;
+              loadOrders();
+            });
+          }
+          return b;
+        }
+
+        var prev = document.createElement('button');
+        prev.type = 'button';
+        prev.textContent = 'Trước';
+        prev.className = 'px-3 py-2 text-sm font-medium border border-[#dee1e6] text-[#181b20] hover:bg-[#f9fafb]';
+        if (state.page <= 1) prev.classList.add('opacity-50', 'cursor-not-allowed');
+        prev.addEventListener('click', function () {
+          if (state.page > 1) {
+            state.page -= 1;
+            loadOrders();
+          }
+        });
+        paginationEl.appendChild(prev);
+
+        var start = Math.max(1, state.page - 2);
+        var end = Math.min(p.pages, state.page + 2);
+        for (var i = start; i <= end; i++) {
+          paginationEl.appendChild(pageBtn(i, i === state.page));
+        }
+
+        var next = document.createElement('button');
+        next.type = 'button';
+        next.textContent = 'Sau';
+        next.className = 'px-3 py-2 text-sm font-medium border border-[#dee1e6] text-[#181b20] hover:bg-[#f9fafb]';
+        if (state.page >= p.pages) next.classList.add('opacity-50', 'cursor-not-allowed');
+        next.addEventListener('click', function () {
+          if (state.page < p.pages) {
+            state.page += 1;
+            loadOrders();
+          }
+        });
+        paginationEl.appendChild(next);
+      }
+
+      async function loadOrders() {
+        if (!token) {
+          showAlert('warn', 'Bạn chưa đăng nhập. Vui lòng đăng nhập để xem đơn hàng.');
+          renderList([]);
+          paginationEl.classList.add('hidden');
+          return;
+        }
+        var params = new URLSearchParams();
+        params.set('page', String(state.page));
+        params.set('limit', String(state.limit));
+        if (state.status) params.set('status', state.status);
+        if (state.search) params.set('search', state.search);
+        try {
+          var res = await fetch(API + '?' + params.toString(), { headers: authHeaders() });
+          var data = await res.json().catch(function () { return {}; });
+          if (res.status === 401) throw new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+          if (!res.ok) throw new Error(parseErr(data));
+          var orders = Array.isArray(data.data) ? data.data : [];
+          var p = data.pagination || { page: 1, pages: 1, total: 0 };
+          state.pages = p.pages || 1;
+          renderList(orders);
+          renderPagination(p);
+        } catch (err) {
+          showAlert('error', err.message || 'Không tải được đơn hàng.');
+          renderList([]);
+          paginationEl.classList.add('hidden');
+        }
+      }
+
+      async function onCancel(id) {
+        if (!token) {
+          showAlert('warn', 'Bạn cần đăng nhập.');
+          return;
+        }
+        if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
+        try {
+          var res = await fetch(API + '/' + encodeURIComponent(id) + '/cancel', {
+            method: 'PATCH',
+            headers: jsonAuthHeaders(),
+            body: JSON.stringify({ reason: 'Khách hàng hủy từ trang đơn hàng' })
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(parseErr(data));
+          showAlert('success', data.message || 'Đã hủy đơn hàng.');
+          await loadOrders();
+        } catch (err) {
+          showAlert('error', err.message || 'Không hủy được đơn.');
+        }
+      }
+
+      var searchTimer;
+      searchInput.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+          state.search = searchInput.value.trim();
+          state.page = 1;
+          loadOrders();
+        }, 400);
+      });
+
+      statusSelect.addEventListener('change', function () {
+        state.status = statusSelect.value;
+        state.page = 1;
+        loadOrders();
+      });
+
+      refreshBtn.addEventListener('click', function () {
+        loadOrders();
+      });
+
+      if (logoutLink) {
+        logoutLink.addEventListener('click', function () {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+        });
+      }
+
+      loadOrders();
+    })();

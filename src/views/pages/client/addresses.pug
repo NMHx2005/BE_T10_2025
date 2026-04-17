@@ -1,259 +1,470 @@
-extends ../../../layouts/main
+extends ../../layouts/main
 
 block content
-  .max-w-7xl.mx-auto.px-4(class="sm:px-6 lg:px-8 py-12")
-    .grid.grid-cols-1(class="lg:grid-cols-4 gap-8")
-      // Sidebar Navigation
-      aside.bg-white.rounded-lg.shadow-md.h-fit
-        nav.flex.flex-col
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile")
-            i.fas.fa-user.mr-3
-            | Profile
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-blue-600.font-medium(href="/profile/addresses")
-            i.fas.fa-map-marker.mr-3
-            | Addresses
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile/orders")
-            i.fas.fa-shopping-bag.mr-3
-            | My Orders
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/profile/settings")
-            i.fas.fa-cog.mr-3
-            | Settings
-          a.px-6.py-4.text-gray-700.hover:bg-gray-50.border-l-4.border-l-transparent(href="/logout")
-            i.fas.fa-sign-out-alt.mr-3
-            | Logout
+  section(class="bg-[#0d0d0d]")
+    div(class="mx-auto max-w-[1440px] px-4 py-12 sm:px-8 lg:px-[128px] lg:py-16")
+      p(class="mb-3 text-xs font-semibold uppercase tracking-wider text-[#f48525]") Tài khoản
+      h1(class="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-[2.5rem] lg:leading-tight") Địa chỉ giao hàng
+      p(class="mt-4 max-w-2xl text-base leading-relaxed text-[#cbd6e2] sm:text-lg")
+        | Thêm, sửa hoặc chọn địa chỉ mặc định cho đơn hàng.
 
-      // Main Content
-      .col-span-1(class="lg:col-span-3")
-        // Header
-        .flex.items-center.justify-between.mb-8
-          .flex.flex-col
-            h1.text-3xl.font-bold.text-gray-900 My Addresses
-            p.text-gray-600.mt-2 Manage your delivery addresses
-          a.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
-            href="/profile/addresses/new"
-          )
-            i.fas.fa-plus.mr-2
-            | Add New Address
-
-        if addresses && addresses.length > 0
-          // Addresses Grid
-          .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
-            each address in addresses
-              .border-2.rounded-lg.p-6.transition-all(
-                class=address.isDefault ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-              )
-                // Header
-                .flex.items-start.justify-between.mb-4
-                  .flex.items-center.gap-3
-                    h3.text-lg.font-semibold.text-gray-900
-                      = address.fullName
-                    if address.isDefault
-                      span.bg-blue-600.text-white.text-xs.font-bold.px-2.py-1.rounded-full Default
-                  
-                  // Actions
-                  .flex.gap-2
-                    a.text-gray-600.hover:text-blue-600.transition-colors(
-                      href=`/profile/addresses/${address._id}/edit`,
-                      title="Edit address"
-                    )
-                      i.fas.fa-edit.text-lg
-                    button.text-gray-600.hover:text-red-600.transition-colors(
-                      type="button",
-                      onclick=`if(confirm('Are you sure?')) { deleteAddress('${address._id}'); }`,
-                      title="Delete address"
-                    )
-                      i.fas.fa-trash.text-lg
-
-                // Address Details
-                .space-y-2.text-gray-700.mb-4
-                  p
-                    span.font-medium Phone:
-                    |  #{address.phone}
-                  p
-                    span.font-medium Address:
-                    |  #{address.address}
-                  if address.addressNew
-                    p
-                      span.font-medium Apartment/Suite:
-                      |  #{address.addressNew}
-                  p
-                    span.font-medium Ward:
-                    |  #{address.ward}
-                  p
-                    span.font-medium District:
-                    |  #{address.district}
-                  p
-                    span.font-medium City:
-                    |  #{address.city}
-                  if address.note
-                    p.text-sm.text-gray-600.bg-gray-100.p-2.rounded
-                      i.fas.fa-sticky-note.mr-2
-                      = address.note
-
-                // Actions Buttons
-                .flex.gap-2.pt-4.border-t.border-gray-200
-                  if !address.isDefault
-                    button.flex-1.bg-gray-100.hover:bg-gray-200.text-gray-800.font-medium.py-2.px-3.rounded.transition-colors.text-sm(
-                      type="button",
-                      onclick=`setDefaultAddress('${address._id}')`
-                    )
-                      i.fas.fa-check.mr-1
-                      | Set as Default
-        else
-          // No Addresses
-          .bg-white.rounded-lg.shadow-md.p-12.text-center
-            i.fas.fa-map.text-gray-400.text-5xl.mb-4
-            h3.text-xl.font-semibold.text-gray-900.mb-2 No Addresses Yet
-            p.text-gray-600.mb-6 Add your first delivery address to get started
-            a.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-6.rounded-lg.transition-colors(
-              href="/profile/addresses/new"
+  div(class="bg-[#f4f5f7] pb-16 pt-10 lg:pb-20 lg:pt-12")
+    div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+      .grid.grid-cols-1.gap-8(class="lg:grid-cols-12")
+        aside(class="lg:col-span-3")
+          nav(class="overflow-hidden border border-[#dee1e6] bg-white shadow-[0_2px_4px_rgba(34,37,42,0.06)]")
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#f9fafb] hover:text-[#181b20]"
             )
-              i.fas.fa-plus.mr-2
-              | Add Address
+              i.fa-regular.fa-user(aria-hidden="true")
+              span Hồ sơ
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile/addresses"
+              class="border-l-[#f48525] bg-[#fff7ef] text-[#181b20]"
+            )
+              i.fa-solid.fa-location-dot(aria-hidden="true")
+              span Địa chỉ
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile/orders"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#f9fafb] hover:text-[#181b20]"
+            )
+              i.fa-solid.fa-bag-shopping(aria-hidden="true")
+              span Đơn hàng
+            a.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/profile/settings"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#f9fafb] hover:text-[#181b20]"
+            )
+              i.fa-solid.fa-gear(aria-hidden="true")
+              span Cài đặt
+            a#logout-link.flex.items-center.gap-3.border-l-4.px-5.py-4.text-sm.font-medium(
+              href="/auth/logout"
+              class="border-l-transparent text-[#323842] transition-colors hover:bg-[#fff5f5] hover:text-red-700"
+            )
+              i.fa-solid.fa-right-from-bracket(aria-hidden="true")
+              span Đăng xuất
 
-      // Add Address Modal (if on new page)
-      if showForm
-        .fixed.inset-0.bg-black.bg-opacity-50.z-40.flex.items-center.justify-center.p-4(id="address-modal")
-          .bg-white.rounded-lg.shadow-2xl.w-full.max-w-2xl
+        section(class="space-y-6 lg:col-span-9")
+          .flex.flex-col.gap-4(class="sm:flex-row sm:items-center sm:justify-between")
+            div
+              h2.text-xl.font-bold(class="text-[#0d0d0d]") Danh sách địa chỉ
+              p.text-sm(class="text-[#323842]") Tối đa theo chính sách hệ thống; địa chỉ mặc định được ưu tiên khi đặt hàng.
+            button#btn-add-address.inline-flex.h-10.items-center.justify-center.border.px-4.text-sm.font-semibold.text-white.transition-colors(
+              type="button"
+              class="border-[#f48525] bg-[#f48525] hover:bg-[#e07720]"
+            )
+              i.fa-solid.fa-plus.mr-2(aria-hidden="true")
+              | Thêm địa chỉ
 
-            // Modal Header
-            .flex.items-center.justify-between.p-6.border-b.border-gray-200
-              h2.text-2xl.font-bold.text-gray-900
-                if addressId
-                  | Edit Address
-                else
-                  | Add New Address
-              button.text-gray-500.hover:text-gray-700.text-2xl(
-                type="button",
-                onclick="document.getElementById('address-modal').remove()"
+          #address-list.flex.flex-col.gap-4
+          #address-empty.hidden.overflow-hidden.border.bg-white.p-10.text-center(class="border-[#dee1e6]")
+            i.fa-solid.fa-map-location-dot.mb-4.text-4xl(class="text-[#cbd6e2]")
+            p.font-semibold(class="text-[#181b20]") Chưa có địa chỉ
+            p.mt-2.text-sm(class="text-[#323842]") Thêm địa chỉ để giao hàng thuận tiện hơn.
+
+  #address-modal.fixed.inset-0.z-50.hidden
+    #address-modal-backdrop.absolute.inset-0.bg-black(class="bg-opacity-40")
+    .absolute.inset-0.flex.items-center.justify-center.p-4
+      .relative.w-full.max-w-2xl.overflow-y-auto.border.bg-white(class="max-h-[90vh] border-[#dee1e6] shadow-[0_8px_24px_rgba(0,0,0,0.12)]")
+        .flex.items-center.justify-between.border-b.p-5(class="border-[#eef0f3]")
+          h3#address-modal-title.text-lg.font-bold(class="text-[#0d0d0d]") Thêm địa chỉ
+          button#address-modal-close.text-2xl.leading-none(class="text-[#8c8f95] hover:text-[#181b20]", type="button", aria-label="Đóng")
+            i.fa-solid.fa-xmark(aria-hidden="true")
+        form#address-form.p-5.space-y-5
+          input#address-edit-id(type="hidden")
+          .grid.grid-cols-1.gap-5(class="md:grid-cols-2")
+            div
+              label.block.text-sm.font-semibold.mb-2(for="addr-fullName" class="text-[#181b20]") Họ tên người nhận
+              input#addr-fullName.w-full.border.px-4.text-sm(
+                type="text"
+                name="fullName"
+                required
+                class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
               )
-                i.fas.fa-times
-
-            // Modal Content
-            form.p-6.space-y-6#address-form(method="POST", action=addressId ? `/profile/addresses/${addressId}` : `/profile/addresses`)
-              .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
-                .form-group
-                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="fullName") Full Name
-                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                    type="text",
-                    id="fullName",
-                    name="fullName",
-                    placeholder="John Doe",
-                    value=currentAddress?.fullName || '',
-                    required
-                  )
-                
-                .form-group
-                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="phone") Phone Number
-                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                    type="tel",
-                    id="phone",
-                    name="phone",
-                    placeholder="+1 (555) 123-4567",
-                    value=currentAddress?.phone || '',
-                    required
-                  )
-
-              .form-group
-                label.block.text-sm.font-medium.text-gray-700.mb-2(for="address") Street Address
-                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                  type="text",
-                  id="address",
-                  name="address",
-                  placeholder="123 Main Street",
-                  value=currentAddress?.address || '',
-                  required
-                )
-
-              .form-group
-                label.block.text-sm.font-medium.text-gray-700.mb-2(for="addressNew") Apartment, Suite, etc. (Optional)
-                input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                  type="text",
-                  id="addressNew",
-                  name="addressNew",
-                  placeholder="Apartment 4B",
-                  value=currentAddress?.addressNew || ''
-                )
-
-              .grid.grid-cols-1(class="md:grid-cols-3 gap-6")
-                .form-group
-                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="city") City/Province
-                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                    type="text",
-                    id="city",
-                    name="city",
-                    placeholder="New York",
-                    value=currentAddress?.city || '',
-                    required
-                  )
-                
-                .form-group
-                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="district") District
-                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                    type="text",
-                    id="district",
-                    name="district",
-                    placeholder="Manhattan",
-                    value=currentAddress?.district || '',
-                    required
-                  )
-                
-                .form-group
-                  label.block.text-sm.font-medium.text-gray-700.mb-2(for="ward") Ward/Neighborhood
-                  input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                    type="text",
-                    id="ward",
-                    name="ward",
-                    placeholder="Ward 1",
-                    value=currentAddress?.ward || ''
-                  )
-
-              .form-group
-                label.block.text-sm.font-medium.text-gray-700.mb-2(for="note") Notes (Optional)
-                textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-                  id="note",
-                  name="note",
-                  rows="3",
-                  placeholder="e.g., Gate code: 1234"
-                )
-                  = currentAddress?.note || ''
-
-              .flex.items-center.gap-3
-                input.w-4.h-4.rounded.border-gray-300.cursor-pointer(
-                  type="checkbox",
-                  id="isDefault",
-                  name="isDefault",
-                  checked=currentAddress?.isDefault
-                )
-                label.text-sm.text-gray-700.cursor-pointer(for="isDefault") Set as default address
-
-            // Modal Footer
-            .flex.gap-3.p-6.border-t.border-gray-200.bg-gray-50.rounded-b-lg
-              button.flex-1.bg-gray-200.hover:bg-gray-300.text-gray-800.font-medium.py-2.px-4.rounded-lg.transition-colors(
-                type="button",
-                onclick="document.getElementById('address-modal').remove()"
+            div
+              label.block.text-sm.font-semibold.mb-2(for="addr-phone" class="text-[#181b20]") Số điện thoại
+              input#addr-phone.w-full.border.px-4.text-sm(
+                type="tel"
+                name="phone"
+                required
+                placeholder="0xxxxxxxxx"
+                class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
               )
-                | Cancel
-              button.flex-1.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
-                type="submit",
-                form="address-form"
+          div
+            label.block.text-sm.font-semibold.mb-2(for="addr-address" class="text-[#181b20]") Địa chỉ (số nhà, đường)
+            input#addr-address.w-full.border.px-4.text-sm(
+              type="text"
+              name="address"
+              required
+              class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+            )
+          div
+            label.block.text-sm.font-semibold.mb-2(for="addr-addressNew" class="text-[#181b20]") Tòa nhà, căn hộ (tuỳ chọn)
+            input#addr-addressNew.w-full.border.px-4.text-sm(
+              type="text"
+              name="addressNew"
+              class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+            )
+          .grid.grid-cols-1.gap-5(class="md:grid-cols-3")
+            div
+              label.block.text-sm.font-semibold.mb-2(for="addr-ward" class="text-[#181b20]") Phường / Xã
+              input#addr-ward.w-full.border.px-4.text-sm(
+                type="text"
+                name="ward"
+                required
+                class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
               )
-                i.fas.fa-check.mr-2
-                if addressId
-                  | Update Address
-                else
-                  | Add Address
+            div
+              label.block.text-sm.font-semibold.mb-2(for="addr-district" class="text-[#181b20]") Quận / Huyện
+              input#addr-district.w-full.border.px-4.text-sm(
+                type="text"
+                name="district"
+                required
+                class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+              )
+            div
+              label.block.text-sm.font-semibold.mb-2(for="addr-city" class="text-[#181b20]") Tỉnh / Thành phố
+              input#addr-city.w-full.border.px-4.text-sm(
+                type="text"
+                name="city"
+                required
+                class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+              )
+          div
+            label.block.text-sm.font-semibold.mb-2(for="addr-note" class="text-[#181b20]") Ghi chú (tuỳ chọn)
+            textarea#addr-note.w-full.border.px-4.text-sm(
+              name="note"
+              rows="2"
+              maxlength="200"
+              class="py-2.5 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+            )
+          label.flex.cursor-pointer.items-center.gap-2.text-sm(class="text-[#181b20]")
+            input#addr-isDefault.h-4.w-4.rounded.border(class="border-[#dee1e6] text-[#f48525]", type="checkbox", name="isDefault")
+            span Đặt làm địa chỉ mặc định
+        .flex.flex-col-reverse.gap-3.border-t.p-5(class="border-[#eef0f3] sm:flex-row sm:justify-end")
+          button#address-form-cancel.inline-flex.h-10.items-center.justify-center.border.px-4.text-sm.font-semibold(
+            type="button"
+            class="border-[#dee1e6] text-[#181b20] hover:bg-[#f9fafb]"
+          ) Hủy
+          button#address-form-submit.inline-flex.h-10.items-center.justify-center.border.px-4.text-sm.font-semibold.text-white(
+            type="submit"
+            form="address-form"
+            class="border-[#0d0d0d] bg-[#0d0d0d] hover:bg-[#323842]"
+          )
+            span#address-form-submit-text Lưu
+            span#address-form-submit-loading.hidden.items-center.gap-2
+              i.fa-solid.fa-spinner.fa-spin(aria-hidden="true")
+              | Đang lưu…
 
 block scripts
   script.
-    function setDefaultAddress(addressId) {
-      // TODO: Call API to set as default
-      if (confirm('Set this as your default address?')) {
-        alert('Default address updated!');
-      }
-    }
+    (function () {
+      var API = '/api/v1/users/addresses';
+      var token = localStorage.getItem('accessToken');
+      var listEl = document.getElementById('address-list');
+      var emptyEl = document.getElementById('address-empty');
+      var modal = document.getElementById('address-modal');
+      var modalTitle = document.getElementById('address-modal-title');
+      var form = document.getElementById('address-form');
+      var editIdInput = document.getElementById('address-edit-id');
+      var btnAdd = document.getElementById('btn-add-address');
+      var btnClose = document.getElementById('address-modal-close');
+      var btnCancel = document.getElementById('address-form-cancel');
+      var backdrop = document.getElementById('address-modal-backdrop');
+      var submitBtn = document.getElementById('address-form-submit');
+      var submitText = document.getElementById('address-form-submit-text');
+      var submitLoading = document.getElementById('address-form-submit-loading');
+      var logoutLink = document.getElementById('logout-link');
 
-    function deleteAddress(addressId) {
-      // TODO: Call API to delete address
-      alert('Address deleted!');
-    }
+      function showAlert(type, message) {
+        if (!window.AppNotify) return;
+        if (type === 'error') return window.AppNotify.error(message);
+        if (type === 'warn') return window.AppNotify.warning(message);
+        return window.AppNotify.success(message);
+      }
+
+      function authHeaders(extra) {
+        var headers = Object.assign({}, extra || {});
+        if (token) headers.Authorization = 'Bearer ' + token;
+        return headers;
+      }
+
+      function jsonAuthHeaders() {
+        return authHeaders({ 'Content-Type': 'application/json' });
+      }
+
+      function parseErr(data) {
+        if (data && data.errors && data.errors.length) {
+          return data.errors.map(function (e) { return e.message; }).join(' ');
+        }
+        return (data && data.message) || 'Có lỗi xảy ra.';
+      }
+
+      function openModal() {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+
+      function setSubmitLoading(loading) {
+        submitBtn.disabled = loading;
+        if (loading) {
+          submitText.classList.add('hidden');
+          submitLoading.classList.remove('hidden');
+          submitLoading.classList.add('inline-flex');
+        } else {
+          submitText.classList.remove('hidden');
+          submitLoading.classList.add('hidden');
+          submitLoading.classList.remove('inline-flex');
+        }
+      }
+
+      function resetForm() {
+        form.reset();
+        editIdInput.value = '';
+        modalTitle.textContent = 'Thêm địa chỉ';
+      }
+
+      function fillForm(a) {
+        document.getElementById('addr-fullName').value = a.fullName || '';
+        document.getElementById('addr-phone').value = a.phone || '';
+        document.getElementById('addr-address').value = a.address || '';
+        document.getElementById('addr-addressNew').value = a.addressNew || '';
+        document.getElementById('addr-ward').value = a.ward || '';
+        document.getElementById('addr-district').value = a.district || '';
+        document.getElementById('addr-city').value = a.city || '';
+        document.getElementById('addr-note').value = a.note || '';
+        document.getElementById('addr-isDefault').checked = !!a.isDefault;
+      }
+
+      function buildPayload() {
+        return {
+          fullName: document.getElementById('addr-fullName').value.trim(),
+          phone: document.getElementById('addr-phone').value.trim(),
+          address: document.getElementById('addr-address').value.trim(),
+          addressNew: document.getElementById('addr-addressNew').value.trim(),
+          ward: document.getElementById('addr-ward').value.trim(),
+          district: document.getElementById('addr-district').value.trim(),
+          city: document.getElementById('addr-city').value.trim(),
+          note: document.getElementById('addr-note').value.trim(),
+          isDefault: document.getElementById('addr-isDefault').checked
+        };
+      }
+
+      function cardEl(a) {
+        var id = String(a._id || a.id);
+        var wrap = document.createElement('div');
+        wrap.className = 'overflow-hidden border bg-white p-5 ' + (a.isDefault
+          ? 'border-[#f48525] shadow-[0_0_0_1px_rgba(244,133,37,0.2)]'
+          : 'border-[#dee1e6]');
+        wrap.setAttribute('data-address-id', id);
+
+        var head = document.createElement('div');
+        head.className = 'mb-3 flex flex-wrap items-start justify-between gap-3';
+        var left = document.createElement('div');
+        left.className = 'flex flex-wrap items-center gap-2';
+        var name = document.createElement('span');
+        name.className = 'text-lg font-bold text-[#0d0d0d]';
+        name.textContent = a.fullName || '';
+        left.appendChild(name);
+        if (a.isDefault) {
+          var badge = document.createElement('span');
+          badge.className = 'rounded-full bg-[#fff7ef] px-2 py-0.5 text-xs font-semibold text-[#c45a0f]';
+          badge.textContent = 'Mặc định';
+          left.appendChild(badge);
+        }
+        head.appendChild(left);
+
+        var actions = document.createElement('div');
+        actions.className = 'flex flex-wrap gap-2';
+        if (!a.isDefault) {
+          var bDef = document.createElement('button');
+          bDef.type = 'button';
+          bDef.className = 'inline-flex h-9 items-center border border-[#dee1e6] px-3 text-xs font-semibold text-[#181b20] hover:bg-[#f9fafb]';
+          bDef.textContent = 'Mặc định';
+          bDef.addEventListener('click', function () { onSetDefault(id); });
+          actions.appendChild(bDef);
+        }
+        var bEdit = document.createElement('button');
+        bEdit.type = 'button';
+        bEdit.className = 'inline-flex h-9 items-center border border-[#dee1e6] px-3 text-xs font-semibold text-[#181b20] hover:bg-[#f9fafb]';
+        bEdit.textContent = 'Sửa';
+        bEdit.addEventListener('click', function () { onEdit(a); });
+        var bDel = document.createElement('button');
+        bDel.type = 'button';
+        bDel.className = 'inline-flex h-9 items-center border border-red-200 px-3 text-xs font-semibold text-red-700 hover:bg-red-50';
+        bDel.textContent = 'Xóa';
+        bDel.addEventListener('click', function () { onDelete(id); });
+        actions.appendChild(bEdit);
+        actions.appendChild(bDel);
+        head.appendChild(actions);
+        wrap.appendChild(head);
+
+        function line(label, val) {
+          if (val == null || val === '') return null;
+          var p = document.createElement('p');
+          p.className = 'text-sm text-[#323842]';
+          var s = document.createElement('span');
+          s.className = 'font-semibold text-[#181b20]';
+          s.textContent = label + ': ';
+          p.appendChild(s);
+          p.appendChild(document.createTextNode(String(val)));
+          return p;
+        }
+
+        var body = document.createElement('div');
+        body.className = 'space-y-1 border-t pt-3 text-[#323842]';
+        body.classList.add('border-[#eef0f3]');
+        var parts = [
+          line('Điện thoại', a.phone),
+          line('Địa chỉ', a.address),
+          line('Bổ sung', a.addressNew),
+          line('Phường/Xã', a.ward),
+          line('Quận/Huyện', a.district),
+          line('Tỉnh/TP', a.city),
+          line('Ghi chú', a.note)
+        ];
+        parts.forEach(function (p) { if (p) body.appendChild(p); });
+        wrap.appendChild(body);
+        return wrap;
+      }
+
+      function renderList(addresses) {
+        listEl.innerHTML = '';
+        if (!addresses || !addresses.length) {
+          emptyEl.classList.remove('hidden');
+          return;
+        }
+        emptyEl.classList.add('hidden');
+        addresses.forEach(function (a) {
+          listEl.appendChild(cardEl(a));
+        });
+      }
+
+      async function loadAddresses() {
+        if (!token) {
+          showAlert('warn', 'Bạn chưa đăng nhập. Vui lòng đăng nhập để quản lý địa chỉ.');
+          renderList([]);
+          return;
+        }
+        try {
+          var res = await fetch(API, { headers: authHeaders() });
+          var data = await res.json().catch(function () { return {}; });
+          if (res.status === 401) throw new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+          if (!res.ok) throw new Error(parseErr(data));
+          var list = (data.data && data.data.addresses) || data.addresses || [];
+          renderList(list);
+        } catch (err) {
+          showAlert('error', err.message || 'Không tải được danh sách địa chỉ.');
+          renderList([]);
+        }
+      }
+
+      function onEdit(a) {
+        editIdInput.value = String(a._id || a.id);
+        modalTitle.textContent = 'Sửa địa chỉ';
+        fillForm(a);
+        openModal();
+      }
+
+      async function onSetDefault(id) {
+        if (!token) {
+          showAlert('warn', 'Bạn cần đăng nhập.');
+          return;
+        }
+        if (!confirm('Đặt địa chỉ này làm mặc định?')) return;
+        try {
+          var res = await fetch(API + '/' + encodeURIComponent(id) + '/set-default', {
+            method: 'PUT',
+            headers: authHeaders()
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(parseErr(data));
+          showAlert('success', data.message || 'Đã cập nhật địa chỉ mặc định.');
+          await loadAddresses();
+        } catch (err) {
+          showAlert('error', err.message || 'Thao tác thất bại.');
+        }
+      }
+
+      async function onDelete(id) {
+        if (!token) {
+          showAlert('warn', 'Bạn cần đăng nhập.');
+          return;
+        }
+        if (!confirm('Xóa địa chỉ này? Hành động không thể hoàn tác.')) return;
+        try {
+          var res = await fetch(API + '/' + encodeURIComponent(id), {
+            method: 'DELETE',
+            headers: authHeaders()
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(parseErr(data));
+          showAlert('success', data.message || 'Đã xóa địa chỉ.');
+          await loadAddresses();
+        } catch (err) {
+          showAlert('error', err.message || 'Xóa thất bại.');
+        }
+      }
+
+      btnAdd.addEventListener('click', function () {
+        if (!token) {
+          showAlert('warn', 'Bạn cần đăng nhập để thêm địa chỉ.');
+          return;
+        }
+        resetForm();
+        openModal();
+      });
+
+      btnClose.addEventListener('click', closeModal);
+      btnCancel.addEventListener('click', closeModal);
+      backdrop.addEventListener('click', closeModal);
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        if (!token) {
+          showAlert('warn', 'Bạn cần đăng nhập.');
+          return;
+        }
+        var payload = buildPayload();
+        var editId = editIdInput.value.trim();
+        setSubmitLoading(true);
+        try {
+          var url = API;
+          var method = 'POST';
+          if (editId) {
+            url = API + '/' + encodeURIComponent(editId);
+            method = 'PUT';
+          }
+          var res = await fetch(url, {
+            method: method,
+            headers: jsonAuthHeaders(),
+            body: JSON.stringify(payload)
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(parseErr(data));
+          showAlert('success', data.message || (editId ? 'Cập nhật thành công.' : 'Thêm địa chỉ thành công.'));
+          closeModal();
+          resetForm();
+          await loadAddresses();
+        } catch (err) {
+          showAlert('error', err.message || 'Lưu thất bại.');
+        } finally {
+          setSubmitLoading(false);
+        }
+      });
+
+      if (logoutLink) {
+        logoutLink.addEventListener('click', function () {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+        });
+      }
+
+      loadAddresses();
+    })();

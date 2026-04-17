@@ -86,21 +86,31 @@ const handleMongooseError = (err) => {
 
     // Lỗi duplicate key (ví dụ: email đã tồn tại)
     if (err.code === 11000) {
-        // Lấy field bị duplicate
-        const field = Object.keys(err.keyValue)[0];
-        const value = err.keyValue[field];
-
-        const message = `${field} "${value}" đã tồn tại. Vui lòng sử dụng giá trị khác.`;
-        error = new AppError(message, 409); // 409 Conflict
+        const kv = err.keyValue && typeof err.keyValue === 'object' ? err.keyValue : null;
+        if (kv) {
+            const field = Object.keys(kv)[0];
+            const value = kv[field];
+            const message = `${field} "${value}" đã tồn tại. Vui lòng sử dụng giá trị khác.`;
+            error = new AppError(message, 409); // 409 Conflict
+        } else {
+            error = new AppError(
+                'Giá trị đã tồn tại. Vui lòng sử dụng giá trị khác.',
+                409,
+            );
+        }
     }
 
-    // Lỗi validation của Mongoose
+    // Lỗi validation của Mongoose (err.errors là object; có thể thiếu nếu không phải Mongoose)
     if (err.name === 'ValidationError') {
-        const errors = Object.values(err.errors).map(e => ({
+        const raw = err.errors && typeof err.errors === 'object' ? err.errors : {};
+        const fieldErrors = Object.values(raw).map((e) => ({
             field: e.path,
-            message: e.message
+            message: e.message,
         }));
-        error = new ValidationError('Dữ liệu không hợp lệ', errors);
+        error =
+            fieldErrors.length > 0
+                ? new ValidationError('Dữ liệu không hợp lệ', fieldErrors)
+                : new AppError(err.message || 'Dữ liệu không hợp lệ', 400);
     }
 
     // Lỗi Cast Error (ví dụ: ID không hợp lệ)
@@ -187,11 +197,14 @@ const errorHandler = (err, req, res, next) => {
 
 
 
-    // Kiểm tra môi trường (dev || prod) 
+    if (error.statusCode == null) error.statusCode = err.statusCode;
+    if (error.status == null) error.status = err.status;
+
+    // Kiểm tra môi trường (dev || prod)
     if (process.env.NODE_ENV === "development") {
-        sendErrorDev(err, req, res);
+        sendErrorDev(error, req, res);
     } else {
-        sendErrorProd(err, req, res);
+        sendErrorProd(error, req, res);
     }
 }
 

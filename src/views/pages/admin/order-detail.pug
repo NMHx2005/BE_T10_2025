@@ -1,253 +1,244 @@
 extends ../../layouts/admin
 
 block content
+  -
+    function vnd(n) {
+      if (n == null || Number.isNaN(Number(n))) return '—'
+      return new Intl.NumberFormat('vi-VN').format(Math.round(Number(n))) + '₫'
+    }
+    function lineImg(prod) {
+      if (!prod || !prod.images || !prod.images.length) return null
+      var x = prod.images[0]
+      if (typeof x === 'string') return x.trim() || null
+      if (x && typeof x.url === 'string') return x.url.trim() || null
+      return null
+    }
+
   // Page Header
   .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.gap-4
-      a.text-blue-600.hover:text-blue-700(href="/admin/orders")
+      a.text-blue-600(class="hover:text-blue-700" href="/admin/orders")
         i.fas.fa-arrow-left.text-xl
       .flex.flex-col
-        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Order Detail
+        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Chi tiết đơn
         h1.text-3xl.font-bold(class="text-[#0d0d0d]")
-          = 'Order: ' + order.orderNumber
+          = 'Đơn ' + order.orderNumber
         p.text-gray-600.mt-2
-          = 'Placed on ' + new Date(order.createdAt).toLocaleDateString() + ' at ' + new Date(order.createdAt).toLocaleTimeString()
+          = 'Đặt lúc ' + new Date(order.createdAt).toLocaleString('vi-VN')
 
   .grid.grid-cols-1(class="lg:grid-cols-3 gap-6")
-    // Left Column - Order Details
     .col-span-1(class="lg:col-span-2")
-      // Order Items
       .bg-white.p-6.mb-6
-        h2.text-xl.font-semibold.text-gray-900.mb-4 Order Items
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Sản phẩm
 
         .space-y-4
           if order.items && order.items.length > 0
             each item in order.items
+              - var thumb = lineImg(item.product)
               .flex.items-center.justify-between.p-4.border.border-gray-200.rounded-lg
                 .flex.items-center.gap-4
-                  if item.product && item.product.thumbnail
-                    img.w-16.h-16.rounded.object-cover(src=item.product.thumbnail, alt=item.product.name)
+                  if thumb
+                    img.w-16.h-16.rounded.object-cover(src=thumb, alt=(item.product && item.product.name) || '')
                   else
                     .w-16.h-16.rounded.bg-gray-200.flex.items-center.justify-center
                       i.fas.fa-image.text-gray-400
-                  
                   .flex-1
-                    p.font-medium.text-gray-900= (item.product && item.product.name) || 'Product'
-                    if item.variant
-                      p.text-sm.text-gray-600= `Variant: ${item.variant}`
+                    p.font-medium.text-gray-900= (item.product && item.product.name) || (item.productName || 'Sản phẩm')
+                    if item.variant && item.variant.name
+                      p.text-sm.text-gray-600= 'Biến thể: ' + item.variant.name
                     p.text-sm.text-gray-500
-                      = `Quantity: ${item.quantity} x $${item.price != null ? item.price.toFixed(2) : '0.00'}`
-                
+                      = 'SL: ' + item.quantity + ' × ' + vnd(item.price)
                 .text-right
-                  p.font-bold.text-gray-900= '$' + (((item.quantity || 0) * (item.price || 0)).toFixed(2))
+                  p.font-bold.text-gray-900= vnd(item.subtotal != null ? item.subtotal : (item.quantity || 0) * (item.price || 0))
 
             .border-t.pt-4.mt-4
               .flex.justify-between.mb-2
-                span.text-gray-700 Subtotal
-                span.font-medium= '$' + ((order.subtotal || 0).toFixed(2))
-              
+                span.text-gray-700 Tạm tính
+                span.font-medium= vnd(order.subtotal)
               .flex.justify-between.mb-2
-                span.text-gray-700 Shipping
-                span.font-medium= '$' + ((order.shippingFee || 0).toFixed(2))
-              
+                span.text-gray-700 Phí giao hàng
+                span.font-medium= vnd(order.shippingFee)
               .flex.justify-between.mb-2
-                span.text-gray-700 Tax
-                span.font-medium= '$' + ((order.tax || 0).toFixed(2))
-              
+                span.text-gray-700 Thuế
+                span.font-medium= vnd(order.tax)
+              if order.discount > 0
+                .flex.justify-between.mb-2
+                  span.text-gray-700 Giảm giá
+                  span.font-medium.text-emerald-700= '− ' + vnd(order.discount)
               .flex.justify-between.text-lg.font-bold.text-gray-900.pt-2.border-t
-                span Total
-                span= '$' + ((order.totalAmount || 0).toFixed(2))
+                span Tổng cộng
+                span= vnd(order.total)
           else
-            p.text-gray-500.text-center.py-4 No items in this order
+            p.text-gray-500.text-center.py-4 Không có dòng sản phẩm
 
-      // Shipping Address
       .bg-white.p-6.mb-6
-        h2.text-xl.font-semibold.text-gray-900.mb-4 Shipping Address
-
-        .p-4.bg-gray-50.rounded-lg
-          p.font-medium.text-gray-900= (order.shippingAddress && order.shippingAddress.fullName) || ''
-          p.text-gray-700= `${order.shippingAddress && order.shippingAddress.street ? order.shippingAddress.street : ''}`
-          p.text-gray-700
-            = `${order.shippingAddress && order.shippingAddress.ward ? order.shippingAddress.ward : ''}, ${order.shippingAddress && order.shippingAddress.district ? order.shippingAddress.district : ''}, ${order.shippingAddress && order.shippingAddress.city ? order.shippingAddress.city : ''}`
-          p.text-gray-600.mt-2
-            = `Phone: ${order.shippingAddress && order.shippingAddress.phone ? order.shippingAddress.phone : ''}`
-          if order.shippingAddress && order.shippingAddress.notes
-            p.text-gray-600.mt-2
-              = `Notes: ${order.shippingAddress.notes}`
-
-      // Billing Address
-      .bg-white.p-6.mb-6
-        h2.text-xl.font-semibold.text-gray-900.mb-4 Billing Address
-
-        if order.billingAddress
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Địa chỉ giao hàng
+        if order.shippingAddress && (order.shippingAddress.fullName || order.shippingAddress.address)
           .p-4.bg-gray-50.rounded-lg
-            p.font-medium.text-gray-900= order.billingAddress.fullName
-            p.text-gray-700= `${order.billingAddress.street}`
+            p.font-medium.text-gray-900= order.shippingAddress.fullName || ''
+            if order.shippingAddress.address
+              p.text-gray-700= order.shippingAddress.address
             p.text-gray-700
-              = `${order.billingAddress.ward}, ${order.billingAddress.district}, ${order.billingAddress.city}`
+              = [order.shippingAddress.ward, order.shippingAddress.district, order.shippingAddress.city].filter(Boolean).join(', ')
             p.text-gray-600.mt-2
-              = `Phone: ${order.billingAddress.phone}`
+              = 'Điện thoại: ' + (order.shippingAddress.phone || '—')
+            if order.shippingAddress.note
+              p.text-gray-600.mt-2= 'Ghi chú: ' + order.shippingAddress.note
         else
-          p.text-gray-500 Same as shipping address
+          p.text-gray-500 Chưa có địa chỉ
 
-      // Order Timeline
-      .bg-white.p-6
-        h2.text-xl.font-semibold.text-gray-900.mb-4 Order Timeline
-
-        .space-y-4
-          - const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered']
-          - const statusColors = {
-          -   'pending': { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-800' },
-          -   'confirmed': { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800' },
-          -   'processing': { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800' },
-          -   'shipped': { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-800' },
-          -   'delivered': { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800' },
-          -   'cancelled': { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800' }
-          - }
-
-          each status in statuses
-            - const isActive = statuses.indexOf(status) === statuses.indexOf(order.status)
-            - const isCompleted = statuses.indexOf(status) < statuses.indexOf(order.status)
-            - const colors = statusColors[status] || statusColors['pending']
-            
-            .flex.items-start.gap-4
-              .flex.flex-col.items-center
-                .w-8.h-8.rounded-full.flex.items-center.justify-center(
-                  class=isCompleted ? 'bg-green-600' : isActive ? 'bg-blue-600' : 'bg-gray-300'
-                )
-                  i.fas(
-                    class=isCompleted ? 'fa-check text-white' : isActive ? 'fa-clock text-white' : 'fa-minus text-white'
-                  )
-                if status !== statuses[statuses.length - 1]
-                  .h-12.bg-gray-300.my-2(class="w-0.5")
-
-              .flex-1.py-2
-                p.font-medium.text-gray-900.capitalize= status
-                p.text-sm.text-gray-600= `Estimated ${status === 'pending' ? 'confirmation' : status === 'confirmed' ? 'processing' : status === 'processing' ? 'shipment' : 'delivery'} within 2-3 business days`
-
-    // Right Column - Status & Payment
-    .col-span-1
-      // Order Status Card
       .bg-white.p-6.mb-6
-        h2.text-xl.font-semibold.text-gray-900.mb-4 Order Status
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Địa chỉ thanh toán
+        if order.billingAddress && (order.billingAddress.fullName || order.billingAddress.address)
+          .p-4.bg-gray-50.rounded-lg
+            p.font-medium.text-gray-900= order.billingAddress.fullName || ''
+            if order.billingAddress.address
+              p.text-gray-700= order.billingAddress.address
+            p.text-gray-700
+              = [order.billingAddress.ward, order.billingAddress.district, order.billingAddress.city].filter(Boolean).join(', ')
+            p.text-gray-600.mt-2= 'Điện thoại: ' + (order.billingAddress.phone || '—')
+        else
+          p.text-gray-500 Giống địa chỉ giao hàng
 
-        .mb-6
-          form.space-y-3(method="POST", action=`/admin/orders/${order._id}/status`, id="status-form")
-            label.block.text-sm.font-medium.text-gray-700.mb-2 Update Status
-            select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
-              name="status"
-            )
-              optgroup(label="Available Actions")
-                option(value="pending", selected=order.status === 'pending') Pending
-                option(value="confirmed", selected=order.status === 'confirmed') Confirmed
-                option(value="processing", selected=order.status === 'processing') Processing
-                option(value="shipped", selected=order.status === 'shipped') Shipped
-                option(value="delivered", selected=order.status === 'delivered') Delivered
-                option(value="cancelled", selected=order.status === 'cancelled') Cancelled
-            
-            button.w-full.px-4.py-2.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-medium.transition-colors(
-              type="submit"
-            )
-              i.fas.fa-save.mr-2
-              | Update Status
+      .bg-white.p-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Trạng thái xử lý
+        if order.status === 'cancelled' || order.status === 'refunded'
+          p.text-sm.text-red-700.font-medium Đơn đã hủy / hoàn tiền — không hiển thị timeline.
+        else
+          - const flow = ['pending', 'confirmed', 'processing', 'shipped', 'delivered']
+          - const idxCur = flow.indexOf(order.status)
+          ul.space-y-3
+            each st, i in flow
+              li.flex.items-center.gap-3
+                span.w-8.h-8.rounded-full.flex.items-center.justify-center.text-xs.font-bold(
+                  class=(idxCur >= 0 && i < idxCur) ? 'bg-emerald-600 text-white' : (i === idxCur) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+                )= i + 1
+                span.text-sm.font-medium.text-gray-800.capitalize= st
 
-        .p-4.rounded-lg(
+    .col-span-1
+      .bg-white.p-6.mb-6
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Cập nhật trạng thái
+        form.space-y-3#status-form
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="detail-status") Trạng thái đơn
+          select#detail-status.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500",
+            name="status"
+          )
+            option(value="pending", selected=order.status === 'pending') Chờ xác nhận
+            option(value="confirmed", selected=order.status === 'confirmed') Đã xác nhận
+            option(value="processing", selected=order.status === 'processing') Đang xử lý
+            option(value="shipped", selected=order.status === 'shipped') Đang giao
+            option(value="delivered", selected=order.status === 'delivered') Đã giao
+            option(value="cancelled", selected=order.status === 'cancelled') Đã hủy
+            option(value="refunded", selected=order.status === 'refunded') Hoàn tiền
+          button.w-full.px-4.py-2.text-white.rounded-lg.font-medium.transition-colors(
+            class="bg-[#f48525] hover:bg-[#e07820]",
+            type="submit"
+          )
+            i.fas.fa-save.mr-2
+            | Lưu
+
+        .p-4.mt-4.rounded-lg(
           class={
             'pending': 'bg-yellow-50 border border-yellow-200',
             'confirmed': 'bg-blue-50 border border-blue-200',
             'processing': 'bg-purple-50 border border-purple-200',
             'shipped': 'bg-indigo-50 border border-indigo-200',
             'delivered': 'bg-green-50 border border-green-200',
-            'cancelled': 'bg-red-50 border border-red-200'
-          }[order.status]
+            'cancelled': 'bg-red-50 border border-red-200',
+            'refunded': 'bg-gray-50 border border-gray-200'
+          }[order.status] || 'bg-gray-50 border border-gray-200'
         )
-          p.text-sm.font-medium(
-            class={
-              'pending': 'text-yellow-800',
-              'confirmed': 'text-blue-800',
-              'processing': 'text-purple-800',
-              'shipped': 'text-indigo-800',
-              'delivered': 'text-green-800',
-              'cancelled': 'text-red-800'
-            }[order.status]
-          )
-            case order.status
-              when 'pending'
-                | Waiting for confirmation
-              when 'confirmed'
-                | Order confirmed, preparing for shipment
-              when 'processing'
-                | Items being processed and packed
-              when 'shipped'
-                | Package is on the way
-              when 'delivered'
-                | Order delivered successfully
-              when 'cancelled'
-                | Order has been cancelled
-              default
-                | Unknown status
+          p.text-sm.font-medium.text-gray-800
+            = 'Hiện tại: ' + (order.status || '—')
 
-      // Shipping Status Card
       .bg-white.p-6.mb-6
-        h2.text-xl.font-semibold.text-gray-900.mb-4 Shipping Information
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Vận chuyển
+        if order.shipping && (order.shipping.trackingNumber || order.shipping.carrier)
+          .space-y-3.text-sm
+            if order.shipping.trackingNumber
+              .flex.justify-between
+                span.text-gray-600 Mã vận đơn
+                span.font-mono.font-medium= order.shipping.trackingNumber
+            if order.shipping.carrier
+              .flex.justify-between
+                span.text-gray-600 Đơn vị
+                span= order.shipping.carrier
+            if order.shipping.estimatedDelivery
+              .flex.justify-between
+                span.text-gray-600 Dự kiến
+                span= new Date(order.shipping.estimatedDelivery).toLocaleDateString('vi-VN')
+        else
+          p.text-gray-500.text-sm Chưa có thông tin vận chuyển
 
-        .space-y-4
-          if order.tracking
-            .flex.items-center.justify-between.pb-4.border-b
-              span.text-sm.font-medium.text-gray-700 Tracking Number
-              span.text-sm.text-gray-900.font-mono= order.tracking.trackingNumber
-            
-            .flex.items-center.justify-between.pb-4.border-b
-              span.text-sm.font-medium.text-gray-700 Carrier
-              span.text-sm.text-gray-900.capitalize= order.tracking.carrier || 'N/A'
-            
-            .flex.items-center.justify-between
-              span.text-sm.font-medium.text-gray-700 Estimated Delivery
-              span.text-sm.text-gray-900
-                = order.tracking.estimatedDelivery ? new Date(order.tracking.estimatedDelivery).toLocaleDateString() : 'TBD'
-          else
-            p.text-gray-500.text-sm text-center Tracking information not yet available
-
-      // Payment Status Card
       .bg-white.p-6.mb-6
-        h2.text-xl.font-semibold.text-gray-900.mb-4 Payment Information
-
-        .space-y-3
-          .flex.items-center.justify-between.pb-3.border-b
-            span.text-sm.font-medium.text-gray-700 Amount
-            span.text-lg.font-bold.text-gray-900= '$' + ((order.totalAmount || 0).toFixed(2))
-
-          .flex.items-center.justify-between.pb-3.border-b
-            span.text-sm.font-medium.text-gray-700 Method
-            span.inline-block.px-3.py-1.text-sm.font-medium.rounded-full.bg-gray-100.text-gray-800
-              = order.paymentMethod || 'Not Specified'
-
-          .flex.items-center.justify-between
-            span.text-sm.font-medium.text-gray-700 Status
-            span.inline-block.px-3.py-1.text-sm.font-medium.rounded-full(
-              class=order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Thanh toán
+        .space-y-3.text-sm
+          .flex.justify-between
+            span.text-gray-600 Số tiền
+            span.font-bold.text-gray-900= vnd(order.total)
+          .flex.justify-between
+            span.text-gray-600 Phương thức
+            span.font-medium= order.payment && order.payment.method ? order.payment.method : '—'
+          .flex.justify-between.items-center
+            span.text-gray-600 Trạng thái TT
+            span.px-2.py-1.rounded-full.text-xs.font-semibold(
+              class=(order.payment && order.payment.status === 'paid') ? 'bg-green-100 text-green-800' : (order.payment && order.payment.status === 'failed') ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
             )
-              = order.paymentStatus === 'paid' ? 'Paid' : 'Pending'
+              = order.payment && order.payment.status ? order.payment.status : '—'
 
-      // Customer Info Card
       .bg-white.p-6
-        h2.text-xl.font-semibold.text-gray-900.mb-4 Customer Information
-
-        .space-y-3
-          a.block.p-3.bg-gray-50.hover:bg-gray-100.rounded-lg.transition-colors(
-            href=`/admin/users/${order.userId}`
-          )
-            p.font-medium.text-gray-900= (order.customer && order.customer.name) || 'Unknown'
-            p.text-sm.text-gray-600= (order.customer && order.customer.email) || 'N/A'
+        h2.text-xl.font-semibold.text-gray-900.mb-4 Khách hàng
+        if order.customer && order.customer._id
+          a.block.p-3.bg-gray-50(class="hover:bg-gray-100 rounded-lg transition-colors" href=`/admin/users/${order.customer._id}`)
+            p.font-medium.text-gray-900= order.customer.username || '—'
+            p.text-sm.text-gray-600= order.customer.email || '—'
             p.text-sm.text-gray-500.mt-1
               i.fas.fa-arrow-right.mr-1
-              | View Full Profile
+              | Xem hồ sơ
+        else
+          p.text-gray-500 Không gắn tài khoản
 
 block scripts
   script.
-    document.getElementById('status-form')?.addEventListener('submit', function(e) {
-      e.preventDefault();
-      // TODO: Status update logic
-      alert('Order status updated successfully!');
-      location.reload();
-    });
+    (function () {
+      var form = document.getElementById('status-form');
+      if (!form) return;
+      var orderId = !{JSON.stringify(order && order._id ? String(order._id) : '')};
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var token = localStorage.getItem('accessToken') || '';
+        if (!token) {
+          if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+          window.location.href = '/auth/login';
+          return;
+        }
+        var sel = document.getElementById('detail-status');
+        var newStatus = sel ? sel.value : '';
+        var body = { status: newStatus };
+        if (newStatus === 'shipped') {
+          var track = window.prompt('Mã vận đơn (bắt buộc):', '');
+          if (!track || !track.trim()) {
+            if (window.AppNotify) window.AppNotify.warning('Cần mã vận đơn.');
+            return;
+          }
+          body.trackingNumber = track.trim();
+        }
+        try {
+          var res = await fetch('/api/v1/orders/' + encodeURIComponent(orderId), {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token
+            },
+            body: JSON.stringify(body)
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.message || 'Cập nhật thất bại.');
+          if (window.AppNotify) window.AppNotify.success('Đã lưu trạng thái.');
+          window.location.reload();
+        } catch (err) {
+          if (window.AppNotify) window.AppNotify.error(err.message || 'Lỗi');
+        }
+      });
+    })();

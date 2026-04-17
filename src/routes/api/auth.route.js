@@ -1,6 +1,6 @@
 import express from 'express';
 import { register, login, logout, refreshToken } from '../../controllers/client/auth.controllers.js';
-import { changePassword, resetPassword } from '../../controllers/auth/password.controllers.js';
+import { changePassword, forgotPassword, resetPassword } from '../../controllers/auth/password.controllers.js';
 import { protect } from '../../middleware/auth.js';
 import { loginValidation, registerValidation } from '../../middleware/validators/auth.validator.js';
 
@@ -15,6 +15,9 @@ router.post('/login', loginValidation, login);
 
 // POST /api/v1/auth/refresh - Refresh Token
 router.post('/refresh', refreshToken);
+
+// POST /api/v1/auth/forgot-password - Gửi email đặt lại mật khẩu
+router.post('/forgot-password', forgotPassword);
 
 // POST /api/v1/auth/reset-password/:token - Đặt lại mật khẩu
 router.post('/reset-password/:token', resetPassword);

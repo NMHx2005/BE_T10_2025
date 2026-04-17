@@ -11,8 +11,32 @@ function formatVnd(n) {
     return `${new Intl.NumberFormat('vi-VN').format(Math.round(Number(n)))}₫`;
 }
 
+function normalizeImgRef(ref) {
+    if (ref == null) return null;
+    if (typeof ref === 'string') {
+        const s = ref.trim();
+        return s || null;
+    }
+    if (typeof ref === 'object') {
+        if (typeof ref.url === 'string' && ref.url.trim()) return ref.url.trim();
+        if (typeof ref.secure_url === 'string' && ref.secure_url.trim()) return ref.secure_url.trim();
+    }
+    return null;
+}
+
 function productCardImage(product) {
-    if (product.images && product.images.length > 0) return product.images[0];
+    if (product.images && product.images.length > 0) {
+        const u = normalizeImgRef(product.images[0]);
+        if (u) return u;
+    }
+    if (Array.isArray(product.variants)) {
+        for (const v of product.variants) {
+            if (v?.images?.length) {
+                const u = normalizeImgRef(v.images[0]);
+                if (u) return u;
+            }
+        }
+    }
     return PLACEHOLDER_PRODUCT_IMG;
 }
 

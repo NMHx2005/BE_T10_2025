@@ -55,6 +55,7 @@ block content
         option(value="draft") Draft
         option(value="inactive") Inactive
         option(value="archived") Archived
+        option(value="deleted") Đã xóa mềm
       
       button#apply-filter-btn.bg-blue-600.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
         class="hover:bg-blue-700"
@@ -73,7 +74,6 @@ block content
             tr
               th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Product Name
               th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Category
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Price
               th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Stock
               th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Status
               th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Views
@@ -82,12 +82,15 @@ block content
           
           tbody.divide-y.divide-gray-200
             each product in products
-              tr.transition-colors(class="hover:bg-gray-50")
+              -
+                var __isSoftDeleted = product.deleted === true || product.status === 'deleted'
+              tr.transition-colors(class=__isSoftDeleted ? "hover:bg-gray-50 bg-red-50/40 opacity-90" : "hover:bg-gray-50")
                 // Product Name
                 td.px-6.py-4
                   .flex.items-center.gap-3
-                    if product.thumbnail
-                      img.w-10.h-10.rounded.object-cover(src=product.thumbnail, alt=product.name)
+                    - const __thumb = (product.images && product.images[0]) || (product.variants && product.variants[0] && product.variants[0].images && product.variants[0].images[0])
+                    if __thumb
+                      img.w-10.h-10.rounded.object-cover(src=__thumb, alt=product.name)
                     else
                       .w-10.h-10.rounded.bg-gray-200.flex.items-center.justify-center
                         i.fas.fa-image.text-gray-400.text-xs
@@ -95,33 +98,31 @@ block content
                       p.font-medium.text-gray-900.truncate
                         = product.name
                       p.text-xs.text-gray-500
-                        = product.sku
+                        = (product.variants && product.variants[0] && product.variants[0].sku) || '—'
                 
                 // Category
                 td.px-6.py-4.text-sm.text-gray-600
                   = (product.category && product.category.name) || 'Uncategorized'
                 
-                // Price
-                td.px-6.py-4.text-sm.font-medium.text-gray-900
-                  = '$' + product.price
-                
-                // Stock
+                // Stock (tổng tồn theo variants — virtual totalStock)
+                - const __stock = typeof product.totalStock === 'number' ? product.totalStock : (product.variants || []).reduce((s, v) => s + (Number(v.stock) || 0), 0)
                 td.px-6.py-4.text-sm
                   span(class={
-                    'text-green-600': product.stock > 10,
-                    'text-yellow-600': product.stock <= 10 && product.stock > 0,
-                    'text-red-600': product.stock === 0
+                    'text-green-600': __stock > 10,
+                    'text-yellow-600': __stock <= 10 && __stock > 0,
+                    'text-red-600': __stock === 0
                   })
-                    = product.stock
+                    = __stock
                 
                 // Status
                 td.px-6.py-4
                   span.px-2.py-1.rounded-full.text-xs.font-semibold(class={
-                    'bg-green-100 text-green-800': product.status === 'active',
-                    'bg-yellow-100 text-yellow-800': product.status === 'draft',
-                    'bg-gray-100 text-gray-800': product.status === 'archived'
+                    'bg-red-100 text-red-800': __isSoftDeleted,
+                    'bg-green-100 text-green-800': product.status === 'active' && !__isSoftDeleted,
+                    'bg-yellow-100 text-yellow-800': product.status === 'draft' && !__isSoftDeleted,
+                    'bg-gray-100 text-gray-800': (product.status === 'archived' || product.status === 'inactive') && !__isSoftDeleted
                   })
-                    = product.status || 'Active'
+                    = __isSoftDeleted ? 'deleted' : (product.status || '—')
                 
                 // Views
                 td.px-6.py-4.text-sm.text-gray-600
@@ -133,25 +134,33 @@ block content
                 
                 // Actions
                 td.px-6.py-4.text-sm.flex.gap-2
-                  a.text-blue-600.transition-colors.px-2.py-1(class="hover:text-blue-700"
-                    href=`/admin/products/${product._id}`,
-                    title="Edit"
-                  )
-                    i.fas.fa-edit
-                  
-                  a.text-gray-600.transition-colors.px-2.py-1(class="hover:text-gray-700"
-                    href=`/products/${product._id}`,
-                    target="_blank",
-                    title="View on site"
-                  )
-                    i.fas.fa-external-link-alt
-                  
-                  button.text-red-600.transition-colors.px-2.py-1(class="hover:text-red-700"
-                    type="button",
-                    onclick=`deleteProduct('${product._id}')`,
-                    title="Delete"
-                  )
-                    i.fas.fa-trash
+                  if !__isSoftDeleted
+                    a.text-blue-600.transition-colors.px-2.py-1(class="hover:text-blue-700"
+                      href=`/admin/products/${product._id}`,
+                      title="Sửa"
+                    )
+                      i.fas.fa-edit
+                    
+                    a.text-gray-600.transition-colors.px-2.py-1(class="hover:text-gray-700"
+                      href=`/products/${product.slug || product._id}`,
+                      target="_blank",
+                      title="Xem trên site"
+                    )
+                      i.fas.fa-external-link-alt
+                    
+                    button.text-red-600.transition-colors.px-2.py-1(class="hover:text-red-700"
+                      type="button",
+                      onclick=`softDeleteProduct('${product._id}')`,
+                      title="Xóa mềm (ẩn khỏi kho)"
+                    )
+                      i.fas.fa-trash
+                  else
+                    button.text-emerald-700.transition-colors.px-2.py-1(class="hover:text-emerald-900"
+                      type="button",
+                      onclick=`restoreProduct('${product._id}')`,
+                      title="Khôi phục sản phẩm"
+                    )
+                      i.fas.fa-rotate-left
 
       // Pagination
       if pagination && pagination.pages > 1
@@ -207,8 +216,30 @@ block scripts
       return localStorage.getItem('accessToken') || '';
     }
 
-    async function handleDeleteProduct(productId) {
-      if (!confirm('Bạn chắc chắn muốn ẩn/xóa mềm sản phẩm này?')) return;
+    async function softDeleteProduct(productId) {
+      if (!confirm('Xóa mềm sản phẩm? (Ẩn khỏi catalog — có thể khôi phục sau.)')) return;
+      var token = getAdminToken();
+      if (!token) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+        window.location.href = '/auth/login';
+        return;
+      }
+      try {
+        var res = await fetch('/api/v1/products/' + encodeURIComponent(productId), {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.message || 'Không thể xóa mềm.');
+        if (window.AppNotify) window.AppNotify.success(data.message || 'Đã xóa mềm.');
+        setTimeout(function () { window.location.reload(); }, 400);
+      } catch (err) {
+        if (window.AppNotify) window.AppNotify.error(err.message || 'Có lỗi xảy ra.');
+      }
+    }
+
+    async function restoreProduct(productId) {
+      if (!confirm('Khôi phục sản phẩm này về trạng thái active?')) return;
       var token = getAdminToken();
       if (!token) {
         if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
@@ -218,21 +249,15 @@ block scripts
       try {
         var res = await fetch('/api/v1/products/' + encodeURIComponent(productId) + '/restore', {
           method: 'PATCH',
-          headers: {
-            Authorization: 'Bearer ' + token
-          }
+          headers: { Authorization: 'Bearer ' + token },
         });
         var data = await res.json().catch(function () { return {}; });
-        if (!res.ok) throw new Error(data.message || 'Không thể xóa sản phẩm.');
-        if (window.AppNotify) window.AppNotify.success(data.message || 'Đã xóa sản phẩm.');
-        setTimeout(function () { window.location.reload(); }, 500);
+        if (!res.ok) throw new Error(data.message || 'Không thể khôi phục.');
+        if (window.AppNotify) window.AppNotify.success(data.message || 'Đã khôi phục.');
+        setTimeout(function () { window.location.reload(); }, 400);
       } catch (err) {
         if (window.AppNotify) window.AppNotify.error(err.message || 'Có lỗi xảy ra.');
       }
-    }
-
-    function deleteProduct(productId) {
-      return handleDeleteProduct(productId);
     }
 
     function applyFilters() {

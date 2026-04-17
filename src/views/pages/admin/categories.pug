@@ -1,6 +1,7 @@
 extends ../../layouts/admin
 
 block content
+  - var cf = filters || {}
   // Page Header
   .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.justify-between
@@ -25,17 +26,18 @@ block content
         input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
           class="focus:ring-2 focus:ring-blue-500"
           type="text",
-          placeholder="Search categories...",
+          placeholder="Tìm tên hoặc slug...",
           id="search-input"
+          value=cf.search || ''
         )
       
       select.form-input.px-4.py-2.border.border-gray-300.rounded-lg(
         class="focus:ring-2 focus:ring-blue-500"
         id="status-filter"
       )
-        option(value="") All Status
-        option(value="active") Active
-        option(value="inactive") Inactive
+        option(value="" selected=!cf.status) Mọi trạng thái
+        option(value="active" selected=cf.status==='active') Active
+        option(value="inactive" selected=cf.status==='inactive') Inactive
       
       button.bg-blue-600.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
         class="hover:bg-blue-700"
@@ -122,19 +124,35 @@ block content
                   = category.description
 
               // Actions
-              .flex.gap-2.pt-4.border-t.border-gray-200
+              .flex.flex-wrap.gap-2.pt-4.border-t.border-gray-200
                 a.flex-1.px-3.py-2.bg-blue-100.text-blue-700.rounded.text-center.transition-colors.text-sm.font-medium(class="hover:bg-blue-200"
-                  href=`/admin/categories/${category._id}/edit`
+                  href=`/admin/categories/${category._id}`
                 )
                   i.fas.fa-edit.mr-1
                   | Edit
                 
+                button.flex-1.px-3.py-2.bg-slate-100.text-slate-700.rounded.transition-colors.text-sm.font-medium(class="hover:bg-slate-200"
+                  type="button",
+                  title="Tăng thứ tự (lên trên trong cùng nhóm)"
+                  onclick=`nudgeCategoryOrder('${category._id}', -1)`
+                )
+                  i.fas.fa-arrow-up.mr-1
+                  | Lên
+
+                button.flex-1.px-3.py-2.bg-slate-100.text-slate-700.rounded.transition-colors.text-sm.font-medium(class="hover:bg-slate-200"
+                  type="button",
+                  title="Giảm thứ tự (xuống dưới trong cùng nhóm)"
+                  onclick=`nudgeCategoryOrder('${category._id}', 1)`
+                )
+                  i.fas.fa-arrow-down.mr-1
+                  | Xuống
+
                 button.flex-1.px-3.py-2.bg-orange-100.text-orange-700.rounded.transition-colors.text-sm.font-medium(class="hover:bg-orange-200"
                   type="button",
-                  onclick=`moveCategory('${category._id}')`
+                  onclick=`openMoveCategoryModal('${category._id}')`
                 )
                   i.fas.fa-arrows-alt-v.mr-1
-                  | Move
+                  | Di chuyển
                 
                 button.flex-1.px-3.py-2.bg-red-100.text-red-700.rounded.transition-colors.text-sm.font-medium(class="hover:bg-red-200"
                   type="button",
@@ -155,141 +173,389 @@ block content
             i.fas.fa-plus.mr-2
             | Create Category
 
-  // Add/Edit Category Modal
+  // Add Category Modal (POST /api/v1/categories)
   .fixed.inset-0.bg-black.bg-opacity-50.z-40.hidden.flex.items-center.justify-center.p-4(id="category-modal")
     .bg-white.rounded-lg.shadow-2xl.w-full.max-w-2xl
 
-      // Modal Header
       .flex.items-center.justify-between.p-6.border-b.border-gray-200
-        h2.text-2xl.font-bold.text-gray-900 Add New Category
+        h2.text-2xl.font-bold.text-gray-900#category-modal-title Thêm danh mục
         button.text-gray-500.text-2xl(class="hover:text-gray-700"
           type="button",
-          onclick="closeModal()"
+          onclick="closeCategoryCreateModal()"
         )
           i.fas.fa-times
 
-      // Modal Content
-      form.p-6.space-y-6#category-form(method="POST", action="/admin/categories")
+      form.p-6.space-y-6#category-create-form
         .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
           .form-group
-            label.block.text-sm.font-medium.text-gray-700.mb-2(for="name") Category Name
+            label.block.text-sm.font-medium.text-gray-700.mb-2(for="create-name") Tên danh mục
             input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
               class="focus:ring-2 focus:ring-blue-500"
-              type="text",
-              id="name",
-              name="name",
-              placeholder="e.g., Electronics",
+              type="text"
+              id="create-name"
               required
+              placeholder="Ví dụ: Điện tử"
             )
-          
+
           .form-group
-            label.block.text-sm.font-medium.text-gray-700.mb-2(for="parent") Parent Category
+            label.block.text-sm.font-medium.text-gray-700.mb-2(for="create-parent") Danh mục cha
             select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
               class="focus:ring-2 focus:ring-blue-500"
-              id="parent",
-              name="parent"
+              id="create-parent"
             )
-              option(value="") None (Main Category)
-              if categories && categories.length > 0
-                each category in categories
-                  option(value=category._id)
-                    = category.name
+              option(value="") — Không (gốc) —
+              if allCategories && allCategories.length > 0
+                each cat in allCategories
+                  option(value=cat._id)= cat.name
 
         .form-group
-          label.block.text-sm.font-medium.text-gray-700.mb-2(for="description") Description
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="create-description") Mô tả
           textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
             class="focus:ring-2 focus:ring-blue-500"
-            id="description",
-            name="description",
-            rows="4",
-            placeholder="Category description..."
+            id="create-description"
+            rows="4"
+            placeholder="Mô tả ngắn..."
           )
 
         .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
           .form-group
-            label.block.text-sm.font-medium.text-gray-700.mb-2(for="icon") Icon Class (Font Awesome)
+            label.block.text-sm.font-medium.text-gray-700.mb-2(for="create-icon") Icon (Font Awesome)
             input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
               class="focus:ring-2 focus:ring-blue-500"
-              type="text",
-              id="icon",
-              name="icon",
-              placeholder="e.g., fas fa-laptop"
+              type="text"
+              id="create-icon"
+              placeholder="fas fa-folder"
             )
-          
+
           .form-group
-            label.block.text-sm.font-medium.text-gray-700.mb-2(for="order") Display Order
+            label.block.text-sm.font-medium.text-gray-700.mb-2(for="create-order") Thứ tự
             input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
               class="focus:ring-2 focus:ring-blue-500"
-              type="number",
-              id="order",
-              name="order",
-              value="0",
+              type="number"
+              id="create-order"
+              value="0"
               min="0"
             )
 
         .form-group
-          label.block.text-sm.font-medium.text-gray-700.mb-2(for="image") Category Image
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="create-image-url") Ảnh (URL, tùy chọn)
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
+            type="url"
+            id="create-image-url"
+            placeholder="https://..."
+          )
+
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="create-image-file") Hoặc upload ảnh (Cloudinary)
           input.block.w-full.text-sm.text-gray-500(
             class="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            type="file",
-            id="image",
-            name="image",
+            type="file"
+            id="create-image-file"
             accept="image/*"
           )
 
         .flex.items-center.gap-3
           input.w-4.h-4.rounded.border-gray-300(
-            type="checkbox",
-            id="status",
-            name="status",
+            type="checkbox"
+            id="create-status-active"
             checked
           )
-          label.text-sm.text-gray-700(for="status") Active
+          label.text-sm.text-gray-700(for="create-status-active") Trạng thái active
 
-      // Modal Footer
       .flex.gap-3.p-6.border-t.border-gray-200.bg-gray-50.rounded-b-lg
         button.flex-1.bg-gray-200.text-gray-800.font-medium.py-2.px-4.rounded-lg.transition-colors(class="hover:bg-gray-300"
           type="button",
-          onclick="closeModal()"
+          onclick="closeCategoryCreateModal()"
         )
-          | Cancel
+          | Hủy
         button.flex-1.bg-blue-600.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(class="hover:bg-blue-700"
-          type="submit",
-          form="category-form"
+          type="submit"
+          form="category-create-form"
         )
           i.fas.fa-check.mr-2
-          | Save Category
+          | Tạo danh mục
+
+  // Move / reorder modal (PUT parent + order)
+  .fixed.inset-0.bg-black.bg-opacity-50.z-40.hidden.flex.items-center.justify-center.p-4(id="move-category-modal")
+    .bg-white.rounded-lg.shadow-2xl.w-full.max-w-lg
+      .flex.items-center.justify-between.p-6.border-b.border-gray-200
+        h2.text-xl.font-bold.text-gray-900
+          | Di chuyển và thứ tự
+        button.text-gray-500.text-2xl(class="hover:text-gray-700" type="button" onclick="closeMoveCategoryModal()")
+          i.fas.fa-times
+      .p-6.space-y-4
+        input(type="hidden" id="move-category-id" value="")
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="move-parent") Danh mục cha
+          select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
+            id="move-parent"
+          )
+            option(value="") — Gốc —
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="move-order") Thứ tự (số nhỏ hiển thị trước)
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
+            type="number"
+            id="move-order"
+            min="0"
+            value="0"
+          )
+      .flex.gap-3.p-6.border-t.border-gray-200.bg-gray-50.rounded-b-lg
+        button.flex-1.bg-gray-200.text-gray-800.font-medium.py-2.px-4.rounded-lg.transition-colors(class="hover:bg-gray-300" type="button" onclick="closeMoveCategoryModal()") Hủy
+        button.flex-1.bg-blue-600.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(class="hover:bg-blue-700" type="button" onclick="submitMoveCategory()") Lưu
 
 block scripts
   script.
+    window.ADMIN_CATS = !{JSON.stringify(categoriesAdminJson || [])};
+
+    function getToken() {
+      return localStorage.getItem('accessToken') || '';
+    }
+
+    async function uploadProductImageToCloudinary(file) {
+      var formData = new FormData();
+      formData.append('image', file);
+      var res = await fetch('/api/v1/upload/product-image', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + getToken() },
+        body: formData,
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(data.message || 'Upload ảnh thất bại.');
+      if (!data.data || !data.data.url) throw new Error('Phản hồi upload không hợp lệ.');
+      return data.data.url;
+    }
+
+    function resetCategoryCreateForm() {
+      var f = document.getElementById('category-create-form');
+      if (f) f.reset();
+      var o = document.getElementById('create-order');
+      if (o) o.value = '0';
+      var c = document.getElementById('create-status-active');
+      if (c) c.checked = true;
+    }
+
     function openAddCategoryModal() {
+      resetCategoryCreateForm();
+      var t = document.getElementById('category-modal-title');
+      if (t) t.textContent = 'Thêm danh mục';
       document.getElementById('category-modal').classList.remove('hidden');
     }
 
-    function closeModal() {
+    function closeCategoryCreateModal() {
       document.getElementById('category-modal').classList.add('hidden');
     }
 
-    function deleteCategory(categoryId) {
-      if (confirm('Are you sure? This will not delete products in this category.')) {
-        // TODO: Call API to delete category
-        alert('Category deleted!');
+    function closeMoveCategoryModal() {
+      document.getElementById('move-category-modal').classList.add('hidden');
+    }
+
+    function descendantIdsOf(rootId, all) {
+      var ids = [];
+      function collect(pid) {
+        all.forEach(function (c) {
+          var p = c.parent ? String(c.parent) : '';
+          if (p !== String(pid)) return;
+          ids.push(String(c._id));
+          collect(c._id);
+        });
+      }
+      collect(rootId);
+      return ids;
+    }
+
+    function siblingsOf(catId, all) {
+      var cat = all.find(function (c) { return String(c._id) === String(catId); });
+      if (!cat) return [];
+      var p = cat.parent ? String(cat.parent) : '';
+      return all
+        .filter(function (c) {
+          var cp = c.parent ? String(c.parent) : '';
+          return cp === p;
+        })
+        .sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+    }
+
+    async function putCategoryFields(id, body) {
+      var token = getToken();
+      if (!token) throw new Error('Chưa đăng nhập.');
+      var res = await fetch('/api/v1/categories/' + encodeURIComponent(id), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+        body: JSON.stringify(body),
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(data.message || 'Cập nhật thất bại.');
+      return data;
+    }
+
+    async function nudgeCategoryOrder(catId, dir) {
+      var all = window.ADMIN_CATS || [];
+      var sibs = siblingsOf(catId, all);
+      var idx = sibs.findIndex(function (c) { return String(c._id) === String(catId); });
+      var j = idx + dir;
+      if (idx < 0 || j < 0 || j >= sibs.length) {
+        if (window.AppNotify) window.AppNotify.info('Không thể đổi thứ tự trong nhóm này.');
+        return;
+      }
+      var a = sibs[idx];
+      var b = sibs[j];
+      var oa = a.order || 0;
+      var ob = b.order || 0;
+      try {
+        await putCategoryFields(a._id, { order: ob });
+        await putCategoryFields(b._id, { order: oa });
+        if (window.AppNotify) window.AppNotify.success('Đã cập nhật thứ tự.');
         location.reload();
+      } catch (e) {
+        if (window.AppNotify) window.AppNotify.error(e.message || 'Lỗi.');
       }
     }
 
-    function moveCategory(categoryId) {
-      // TODO: Implement category move/reorder functionality
-      alert('Move functionality coming soon!');
+    function openMoveCategoryModal(catId) {
+      var all = window.ADMIN_CATS || [];
+      var cat = all.find(function (c) { return String(c._id) === String(catId); });
+      if (!cat) return;
+      var blocked = new Set(descendantIdsOf(catId, all).concat(String(catId)));
+      var sel = document.getElementById('move-parent');
+      sel.innerHTML = '<option value="">— Gốc —</option>';
+      all.forEach(function (c) {
+        if (blocked.has(String(c._id))) return;
+        var o = document.createElement('option');
+        o.value = c._id;
+        o.textContent = c.name;
+        sel.appendChild(o);
+      });
+      sel.value = cat.parent ? String(cat.parent) : '';
+      document.getElementById('move-category-id').value = String(catId);
+      document.getElementById('move-order').value = String(cat.order != null ? cat.order : 0);
+      document.getElementById('move-category-modal').classList.remove('hidden');
+    }
+
+    async function submitMoveCategory() {
+      var id = document.getElementById('move-category-id').value;
+      var parentVal = document.getElementById('move-parent').value;
+      var order = parseInt(document.getElementById('move-order').value, 10) || 0;
+      var token = getToken();
+      if (!token) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+        return;
+      }
+      try {
+        var res = await fetch('/api/v1/categories/' + encodeURIComponent(id), {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token,
+          },
+          body: JSON.stringify({
+            parent: parentVal ? parentVal : null,
+            order: order,
+          }),
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.message || 'Cập nhật thất bại.');
+        if (window.AppNotify) window.AppNotify.success(data.message || 'Đã lưu.');
+        location.reload();
+      } catch (e) {
+        if (window.AppNotify) window.AppNotify.error(e.message || 'Lỗi.');
+      }
+    }
+
+    (function bindCategoryCreate() {
+      var form = document.getElementById('category-create-form');
+      if (!form) return;
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var token = getToken();
+        if (!token) {
+          if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+          window.location.href = '/auth/login';
+          return;
+        }
+        var name = (document.getElementById('create-name') && document.getElementById('create-name').value || '').trim();
+        if (!name) {
+          if (window.AppNotify) window.AppNotify.error('Nhập tên danh mục.');
+          return;
+        }
+        var parentEl = document.getElementById('create-parent');
+        var parentVal = parentEl && parentEl.value ? parentEl.value : '';
+        var description = document.getElementById('create-description') && document.getElementById('create-description').value || '';
+        var icon = (document.getElementById('create-icon') && document.getElementById('create-icon').value || '').trim();
+        var order = parseInt(document.getElementById('create-order') && document.getElementById('create-order').value, 10) || 0;
+        var urlText = (document.getElementById('create-image-url') && document.getElementById('create-image-url').value || '').trim();
+        var fileInput = document.getElementById('create-image-file');
+        var file = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+        var active = document.getElementById('create-status-active') && document.getElementById('create-status-active').checked;
+        var image = urlText;
+        if (file) {
+          try {
+            image = await uploadProductImageToCloudinary(file);
+          } catch (err) {
+            if (window.AppNotify) window.AppNotify.error(err.message || 'Upload lỗi.');
+            return;
+          }
+        }
+        var body = {
+          name: name,
+          description: description,
+          parent: parentVal || null,
+          icon: icon || undefined,
+          order: order,
+          status: active ? 'active' : 'inactive',
+        };
+        if (image) body.image = image;
+        try {
+          var res = await fetch('/api/v1/categories', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token,
+            },
+            body: JSON.stringify(body),
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.message || 'Tạo danh mục thất bại.');
+          if (window.AppNotify) window.AppNotify.success(data.message || 'Đã tạo danh mục.');
+          closeCategoryCreateModal();
+          location.reload();
+        } catch (err) {
+          if (window.AppNotify) window.AppNotify.error(err.message || 'Lỗi.');
+        }
+      });
+    })();
+
+    async function deleteCategory(categoryId) {
+      if (!confirm('Xóa danh mục? Chỉ xóa được khi không còn danh mục con và không còn sản phẩm.')) return;
+      var token = localStorage.getItem('accessToken') || '';
+      if (!token) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+        return;
+      }
+      try {
+        var res = await fetch('/api/v1/categories/' + encodeURIComponent(categoryId), {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.message || 'Xóa thất bại.');
+        if (window.AppNotify) window.AppNotify.success(data.message || 'Đã xóa danh mục.');
+        location.reload();
+      } catch (e) {
+        if (window.AppNotify) window.AppNotify.error(e.message || 'Lỗi.');
+      }
     }
 
     function applyFilters() {
-      const search = document.getElementById('search-input')?.value || '';
-      const status = document.getElementById('status-filter')?.value || '';
-      
-      let url = '/admin/categories?';
-      if (search) url += `search=${encodeURIComponent(search)}&`;
-      if (status) url += `status=${status}`;
-      
+      var search = document.getElementById('search-input') && document.getElementById('search-input').value || '';
+      var status = document.getElementById('status-filter') && document.getElementById('status-filter').value || '';
+      var url = '/admin/categories?';
+      if (search.trim()) url += 'search=' + encodeURIComponent(search.trim()) + '&';
+      if (status) url += 'status=' + encodeURIComponent(status);
       window.location.href = url;
     }

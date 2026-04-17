@@ -1,6 +1,9 @@
+import mongoose from 'mongoose';
 import Product from '../../models/Product.js';
 import Category from '../../models/Category.js';
-import { getCategoryDescendants } from '../../services/category.service.js';
+import Order from '../../models/Order.js';
+import User from '../../models/User.js';
+import { getCategoryDescendants, getCategoryProductCount } from '../../services/category.service.js';
 
 // Get all products with filters and pagination
 export const getAllProducts = async (req, res) => {
@@ -8,21 +11,30 @@ export const getAllProducts = async (req, res) => {
         const { page = 1, limit = 10, search = '', category = '', status = '' } = req.query;
         const skip = (page - 1) * limit;
 
-        // Build filter
-        const filter = {};
+        const and = [];
         if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { sku: { $regex: search, $options: 'i' } },
-                { brand: { $regex: search, $options: 'i' } }
-            ];
+            and.push({
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { 'variants.sku': { $regex: search, $options: 'i' } },
+                    { brand: { $regex: search, $options: 'i' } },
+                ],
+            });
         }
         if (category) {
-            filter.category = category;
+            and.push({ category });
         }
-        if (status) {
-            filter.status = status;
+        if (status === 'deleted') {
+            and.push({ $or: [{ deleted: true }, { status: 'deleted' }] });
+        } else {
+            and.push({ deleted: { $ne: true } });
+            if (status) {
+                and.push({ status });
+            } else {
+                and.push({ status: { $ne: 'deleted' } });
+            }
         }
+        const filter = and.length ? { $and: and } : {};
 
         const [products, total] = await Promise.all([
             Product.find(filter)
@@ -61,7 +73,7 @@ export const getProductForm = async (req, res) => {
         const categories = await Category.find({ status: 'active' }).select('_id name parent').lean();
 
         if (id && id !== 'create') {
-            product = await Product.findById(id).populate('category');
+            product = await Product.findById(id).populate('category').lean();
             if (!product) {
                 return res.status(404).render('404', { title: 'Product Not Found' });
             }
@@ -83,13 +95,16 @@ export const getProductForm = async (req, res) => {
 export const getAllUsers = async (req, res) => {
     try {
         const { page = 1, limit = 10, search = '', role = '', status = '' } = req.query;
-        const skip = (page - 1) * limit;
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 10));
+        const skip = (pageNum - 1) * limitNum;
 
         const filter = {};
-        if (search) {
+        if (search && String(search).trim()) {
+            const q = String(search).trim();
             filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
+                { username: { $regex: q, $options: 'i' } },
+                { email: { $regex: q, $options: 'i' } },
             ];
         }
         if (role) {
@@ -99,25 +114,51 @@ export const getAllUsers = async (req, res) => {
             filter.status = status;
         }
 
-        const [users, total] = await Promise.all([
+        const [usersRaw, total] = await Promise.all([
             User.find(filter)
                 .select('-password')
                 .sort({ createdAt: -1 })
                 .skip(skip)
-                .limit(parseInt(limit)),
-            User.countDocuments(filter)
+                .limit(limitNum)
+                .lean(),
+            User.countDocuments(filter),
         ]);
 
+        const orderAgg = await Order.aggregate([
+            { $group: { _id: '$customer', orderCount: { $sum: 1 } } },
+        ]);
+        const countMap = Object.fromEntries(
+            orderAgg.map((o) => [String(o._id), o.orderCount]),
+        );
+        const users = usersRaw.map((u) => ({
+            ...u,
+            orderCount: countMap[String(u._id)] || 0,
+        }));
+
+        const pages = Math.max(1, Math.ceil(total / limitNum));
+        let pageStart = Math.max(1, pageNum - 2);
+        let pageEnd = Math.min(pages, pageStart + 4);
+        if (pageEnd - pageStart < 4) {
+            pageStart = Math.max(1, pageEnd - 4);
+        }
+        const pageNums = [];
+        for (let i = pageStart; i <= pageEnd; i += 1) {
+            pageNums.push(i);
+        }
+
         res.render('pages/admin/users', {
-            title: 'User Management',
+            title: 'Quản lý người dùng',
             users,
+            totalUsers: total,
             pagination: {
-                current: parseInt(page),
-                limit: parseInt(limit),
+                current: pageNum,
+                page: pageNum,
+                limit: limitNum,
                 total,
-                pages: Math.ceil(total / limit)
+                pages,
+                pageNums,
             },
-            filters: { search, role, status }
+            filters: { search, role, status },
         });
     } catch (error) {
         console.error('Error fetching users:', error);
@@ -129,27 +170,30 @@ export const getAllUsers = async (req, res) => {
 export const getUserDetail = async (req, res) => {
     try {
         const { id } = req.params;
-        const user = await User.findById(id).select('-password');
+        const user = await User.findById(id).select('-password').lean();
 
         if (!user) {
             return res.status(404).render('404', { title: 'User Not Found' });
         }
 
-        // Get user's recent orders
-        const Order = require('../../models/Order.js').default;
-        const recentOrders = await Order.find({ userId: id })
-            .sort({ createdAt: -1 })
-            .limit(5)
-            .lean();
+        const [recentOrders, totalOrders, spentAgg] = await Promise.all([
+            Order.find({ customer: id }).sort({ createdAt: -1 }).limit(5).lean(),
+            Order.countDocuments({ customer: id }),
+            Order.aggregate([
+                { $match: { customer: user._id } },
+                { $group: { _id: null, total: { $sum: '$total' } } },
+            ]),
+        ]);
+        const totalSpent = spentAgg[0]?.total || 0;
 
         res.render('pages/admin/user-detail', {
-            title: `User: ${user.name}`,
+            title: `Người dùng: ${user.username}`,
             user: {
-                ...user.toObject(),
+                ...user,
                 recentOrders,
-                totalOrders: recentOrders.length,
-                addressCount: user.addresses ? user.addresses.length : 0
-            }
+                totalOrders,
+                totalSpent,
+            },
         });
     } catch (error) {
         console.error('Error fetching user:', error);
@@ -160,18 +204,51 @@ export const getUserDetail = async (req, res) => {
 // Get all categories
 export const getAllCategories = async (req, res) => {
     try {
-        const categories = await Category.find().lean();
+        const { search = '', status = '' } = req.query;
+        const filter = {};
+        if (search && String(search).trim()) {
+            const q = String(search).trim();
+            filter.$or = [
+                { name: { $regex: q, $options: 'i' } },
+                { slug: { $regex: q, $options: 'i' } },
+            ];
+        }
+        if (status && ['active', 'inactive'].includes(status)) {
+            filter.status = status;
+        }
 
-        // Build category tree
-        const categoryTree = categories.filter(cat => !cat.parent).map(cat => ({
-            ...cat,
-            children: categories.filter(c => c.parent?.toString() === cat._id.toString())
+        const categories = await Category.find(filter).sort({ order: 1, name: 1 }).lean();
+
+        const withCounts = await Promise.all(
+            categories.map(async (cat) => ({
+                ...cat,
+                productCount: await getCategoryProductCount(cat._id),
+            })),
+        );
+
+        const categoryTree = withCounts
+            .filter((cat) => !cat.parent)
+            .map((cat) => ({
+                ...cat,
+                children: withCounts.filter(
+                    (c) => c.parent && c.parent.toString() === cat._id.toString(),
+                ),
+            }));
+
+        const categoriesAdminJson = withCounts.map((c) => ({
+            _id: String(c._id),
+            name: c.name,
+            parent: c.parent ? String(c.parent) : null,
+            order: Number(c.order) || 0,
         }));
 
         res.render('pages/admin/categories', {
-            title: 'Category Management',
+            title: 'Quản lý danh mục',
             categories: categoryTree,
-            allCategories: categories
+            allCategories: withCounts,
+            totalCategories: withCounts.length,
+            categoriesAdminJson,
+            filters: { search, status },
         });
     } catch (error) {
         console.error('Error fetching categories:', error);
@@ -179,40 +256,96 @@ export const getAllCategories = async (req, res) => {
     }
 };
 
+// Form chỉnh sửa danh mục (admin)
+export const getCategoryForm = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).render('404', { title: 'Category Not Found' });
+        }
+        const category = await Category.findById(id).lean();
+        if (!category) {
+            return res.status(404).render('404', { title: 'Category Not Found' });
+        }
+        const allCategories = await Category.find({ _id: { $ne: category._id } })
+            .sort({ order: 1, name: 1 })
+            .select('_id name parent')
+            .lean();
+        const productCount = await getCategoryProductCount(category._id);
+        res.render('pages/admin/category-form', {
+            title: `Sửa danh mục: ${category.name}`,
+            category: { ...category, productCount },
+            allCategories,
+            isEdit: true,
+            filters: {},
+        });
+    } catch (error) {
+        console.error('Error loading category form:', error);
+        res.status(500).render('404', { title: 'Error', error: error.message });
+    }
+};
+
 // Get all orders
 export const getAllOrders = async (req, res) => {
     try {
-        const { page = 1, limit = 10, status = '', search = '' } = req.query;
-        const skip = (page - 1) * limit;
+        const { page = 1, limit = 10, status = '', search = '', payment = '', date = '' } = req.query;
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 10));
+        const skip = (pageNum - 1) * limitNum;
 
         const filter = {};
-        if (status) {
+        if (status && typeof status === 'string') {
             filter.status = status;
         }
-        if (search) {
-            filter.orderNumber = { $regex: search, $options: 'i' };
+        if (payment && typeof payment === 'string') {
+            filter['payment.status'] = payment;
+        }
+        if (search && String(search).trim()) {
+            filter.orderNumber = { $regex: String(search).trim(), $options: 'i' };
+        }
+        if (date && String(date).trim()) {
+            const d = new Date(String(date));
+            if (!Number.isNaN(d.getTime())) {
+                const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                const end = new Date(start);
+                end.setDate(end.getDate() + 1);
+                filter.createdAt = { $gte: start, $lt: end };
+            }
         }
 
-        const Order = require('../../models/Order.js').default;
-        const [orders, total] = await Promise.all([
+        const [orders, total, statsAgg, totalAllOrders] = await Promise.all([
             Order.find(filter)
-                .populate('userId', 'name email')
+                .populate('customer', 'username email')
                 .sort({ createdAt: -1 })
                 .skip(skip)
-                .limit(parseInt(limit)),
-            Order.countDocuments(filter)
+                .limit(limitNum)
+                .lean(),
+            Order.countDocuments(filter),
+            Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+            Order.countDocuments({}),
         ]);
 
+        const orderStats = {};
+        statsAgg.forEach((s) => {
+            if (s._id) orderStats[s._id] = s.count;
+        });
+
+        const pages = Math.max(1, Math.ceil(total / limitNum));
+
         res.render('pages/admin/orders', {
-            title: 'Order Management',
+            title: 'Quản lý đơn hàng',
             orders,
+            orderStats,
+            totalOrders: totalAllOrders,
+            filteredOrderCount: total,
             pagination: {
-                current: parseInt(page),
-                limit: parseInt(limit),
+                current: pageNum,
+                page: pageNum,
+                limit: limitNum,
                 total,
-                pages: Math.ceil(total / limit)
+                pages,
             },
-            filters: { status, search }
+            filters: { status, search, payment, date },
         });
     } catch (error) {
         console.error('Error fetching orders:', error);
@@ -224,21 +357,18 @@ export const getAllOrders = async (req, res) => {
 export const getOrderDetail = async (req, res) => {
     try {
         const { id } = req.params;
-        const Order = require('../../models/Order.js').default;
         const order = await Order.findById(id)
-            .populate('userId', 'name email')
-            .populate('items.product', 'name thumbnail price');
+            .populate('customer', 'username email')
+            .populate('items.product', 'name images slug')
+            .lean();
 
         if (!order) {
             return res.status(404).render('404', { title: 'Order Not Found' });
         }
 
         res.render('pages/admin/order-detail', {
-            title: `Order: ${order.orderNumber}`,
-            order: {
-                ...order.toObject(),
-                customer: order.userId
-            }
+            title: `Đơn hàng ${order.orderNumber}`,
+            order,
         });
     } catch (error) {
         console.error('Error fetching order:', error);

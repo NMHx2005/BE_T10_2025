@@ -1,212 +1,84 @@
 extends ../../layouts/main
 
 block content
-  // Page Header
-  .bg-white.border-b.border-gray-200
-    .max-w-6xl.mx-auto.px-4.py-8
-      .flex.items-center.gap-3.mb-4
-        a.text-blue-600.hover:text-blue-700(href="/")
-          i.fas.fa-home
-        i.fas.fa-chevron-right.text-gray-400
-        span.text-gray-700 Wishlist
-      h1.text-4xl.font-bold.text-gray-900
-        i.fas.fa-heart.text-red-600.mr-3
-        | My Wishlist
+  section(class="bg-[#0d0d0d]")
+    div(class="mx-auto max-w-[1440px] px-4 py-10 sm:px-8 lg:px-[128px]")
+      p(class="text-xs font-semibold uppercase tracking-wider text-[#f48525]") Yêu thích
+      h1(class="text-3xl font-bold text-white") Sản phẩm đã lưu
 
-  .max-w-6xl.mx-auto.px-4.py-8
-    if wishlistItems && wishlistItems.length > 0
-      // Wishlist Stats
-      .bg-gradient-to-r.from-blue-600.to-blue-700.text-white.rounded-lg.p-6.mb-8
-        .grid.grid-cols-2(class="md:grid-cols-4 gap-4")
-          .text-center
-            p.text-3xl.font-bold= wishlistItems.length
-            p.text-blue-100 Items Saved
-
-          .text-center
-            p.text-3xl.font-bold
-              = wishlistItems.filter(item => item.stock > 0).length
-            p.text-blue-100 In Stock
-
-          .text-center
-            p.text-3xl.font-bold
-              = `$${Math.min(...wishlistItems.map(item => item.price)).toFixed(2)}`
-            p.text-blue-100 Lowest Price
-
-          .text-center
-            p.text-3xl.font-bold
-              = `$${Math.max(...wishlistItems.map(item => item.price)).toFixed(2)}`
-            p.text-blue-100 Highest Price
-
-      // Wishlist Items
-      .grid.grid-cols-1(class="md:grid-cols-2 lg:grid-cols-3 gap-6")
-        each item in wishlistItems
-          .bg-white.rounded-lg.shadow-md.overflow-hidden.hover:shadow-lg.transition-shadow
-            // Product Image
-            .relative.h-64.bg-gray-200.overflow-hidden
-              a(href=`/products/${item._id}`)
-                img.w-full.h-full.object-cover.hover:scale-110.transition-transform(
-                  src=item.thumbnail,
-                  alt=item.name,
-                  onerror="this.src='/images/placeholder.png'"
-                )
-
-              // Stock Badge
-              if item.stock > 0
-                span.absolute.top-3.right-3.px-3.py-1.bg-green-500.text-white.text-xs.font-semibold.rounded-full In Stock
-              else
-                span.absolute.top-3.right-3.px-3.py-1.bg-red-500.text-white.text-xs.font-semibold.rounded-full Out of Stock
-
-              // Wishlist Remove Button
-              button.absolute.top-3.left-3.w-10.h-10.rounded-full.bg-white.text-red-600.flex.items-center.justify-center.hover:bg-red-50.transition-colors(
-                type="button",
-                onclick=`removeFromWishlist('${item._id}')`
-              )
-                i.fas.fa-times.text-lg
-
-            // Product Info
-            .p-4
-              // Category
-              p.text-xs.text-gray-500.uppercase.mb-2
-                = item.category?.name || 'Uncategorized'
-
-              // Product Name
-              a.block.text-lg.font-semibold.text-gray-900.hover:text-blue-600.mb-2(
-                href=`/products/${item._id}`
-              )
-                = item.name
-
-              // Price
-              .flex.items-baseline.gap-2.mb-3
-                span.text-2xl.font-bold.text-gray-900
-                  = `$${item.price.toFixed(2)}`
-                if item.compareAtPrice
-                  span.text-sm.text-gray-500.line-through
-                    = `$${item.compareAtPrice.toFixed(2)}`
-                  span.text-sm.font-semibold.text-red-600
-                    = `-${Math.round((1 - item.price / item.compareAtPrice) * 100)}%`
-
-              // Rating
-              .flex.items-center.gap-2.mb-4
-                .flex.gap-1
-                  - for (let i = 1; i <= 5; i++) {
-                    if i <= Math.round(item.averageRating || 0)
-                      i.fas.fa-star.text-yellow-400
-                    else
-                      i.fas.fa-star.text-gray-300
-                  - }
-                span.text-sm.text-gray-600
-                  = `(${item.reviewCount || 0})`
-
-              // Description (truncated)
-              if item.description
-                p.text-sm.text-gray-600.mb-4.line-clamp-2= item.description
-
-              // Buttons
-              .flex.gap-2
-                button.flex-1.px-4.py-2.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-medium.transition-colors(
-                  type="button",
-                  onclick=`addToCart('${item._id}')`,
-                  disabled=item.stock === 0
-                )
-                  i.fas.fa-shopping-bag.mr-2
-                  | Add to Cart
-
-                a.flex-1.px-4.py-2.border.border-gray-300.text-gray-700.hover:bg-gray-50.rounded-lg.font-medium.text-center.transition-colors(
-                  href=`/products/${item._id}`
-                )
-                  i.fas.fa-eye.mr-2
-                  | View
-
-    else
-      // Empty Wishlist
-      .bg-white.rounded-lg.shadow-md.p-12.text-center
-        .mb-6
-          i.fas.fa-heart.text-6xl.text-gray-300
-
-        h2.text-2xl.font-bold.text-gray-900.mb-2 Your wishlist is empty
-
-        p.text-gray-600.mb-8
-          | Start adding items to your wishlist to keep track of products you love!
-
-        .space-y-3
-          a.inline-block.px-6.py-3.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.font-semibold.transition-colors(
-            href="/products"
-          )
-            i.fas.fa-shopping-bag.mr-2
-            | Start Shopping
-
-          a.inline-block.ml-3.px-6.py-3.border.border-blue-600.text-blue-600.hover:bg-blue-50.rounded-lg.font-semibold.transition-colors(
-            href="/"
-          )
-            i.fas.fa-home.mr-2
-            | Back to Home
-
-  // Wishlist Management Section
-  if user
-    .max-w-6xl.mx-auto.px-4.py-8.mt-8
-      .bg-white.rounded-lg.shadow-md.p-6
-        h3.text-lg.font-semibold.text-gray-900.mb-4 Wishlist Management
-
-        .grid.grid-cols-1(class="md:grid-cols-2 gap-4")
-          .p-4.bg-blue-50.rounded-lg.border.border-blue-200
-            p.font-medium.text-gray-900.mb-2
-              i.fas.fa-share-alt.mr-2
-              | Share Your Wishlist
-            p.text-sm.text-gray-600.mb-3
-              | Share with friends and family so they know what you want!
-            button.px-4.py-2.bg-blue-600.hover:bg-blue-700.text-white.rounded-lg.text-sm.font-medium.transition-colors(
-              type="button",
-              onclick="shareWishlist()"
-            )
-              i.fas.fa-link.mr-2
-              | Get Share Link
-
-          .p-4.bg-green-50.rounded-lg.border.border-green-200
-            p.font-medium.text-gray-900.mb-2
-              i.fas.fa-bell.mr-2
-              | Price Alerts
-            p.text-sm.text-gray-600.mb-3
-              | Get notified when prices drop on wishlist items!
-            button.px-4.py-2.bg-green-600.hover:bg-green-700.text-white.rounded-lg.text-sm.font-medium.transition-colors(
-              type="button",
-              onclick="enablePriceAlerts()"
-            )
-              i.fas.fa-cog.mr-2
-              | Configure Alerts
+  div(class="bg-[#f4f5f7] pb-16 pt-8")
+    div(class="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-[128px]")
+      #wishlist-root.grid.gap-6(class="sm:grid-cols-2 lg:grid-cols-4")
+      #wishlist-empty.hidden.border.bg-white.p-12.text-center(class="border-[#dee1e6]")
+        p(class="text-[#181b20]") Chưa có sản phẩm yêu thích.
+        a.mt-4.inline-block.text-sm.font-semibold(class="text-[#f48525]" href="/products") Khám phá sản phẩm
 
 block scripts
   script.
-    function removeFromWishlist(productId) {
-      if (!confirm('Remove from wishlist?')) return;
-      // TODO: Send AJAX request to remove from wishlist
-      console.log('Remove from wishlist:', productId);
-      location.reload();
-    }
+    (function () {
+      var root = document.getElementById('wishlist-root');
+      var emptyEl = document.getElementById('wishlist-empty');
 
-    function addToCart(productId) {
-      // TODO: Send AJAX request to add to cart
-      console.log('Add to cart:', productId);
-      alert('Added to cart!');
-    }
+      function vnd(n) {
+        return new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + '₫';
+      }
 
-    function shareWishlist() {
-      // TODO: Generate shareable link
-      const link = window.location.href;
-      if (navigator.share) {
-        navigator.share({
-          title: 'My Wishlist',
-          text: 'Check out my wishlist!',
-          url: link
-        });
-      } else {
-        // Fallback: copy to clipboard
-        navigator.clipboard.writeText(link).then(() => {
-          alert('Wishlist link copied to clipboard!');
+      async function loadOne(id) {
+        var res = await fetch('/api/v1/products/' + encodeURIComponent(id));
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) return null;
+        return data.data || data.product || data;
+      }
+
+      async function render() {
+        var ids = window.ProToolsStore ? window.ProToolsStore.wishGet().map(String) : [];
+        root.innerHTML = '';
+        if (!ids.length) {
+          emptyEl.classList.remove('hidden');
+          root.classList.add('hidden');
+          return;
+        }
+        emptyEl.classList.add('hidden');
+        root.classList.remove('hidden');
+        for (var i = 0; i < ids.length; i++) {
+          var p = await loadOne(ids[i]);
+          if (!p) continue;
+          var card = document.createElement('article');
+          card.className = 'overflow-hidden border border-[#dee1e6] bg-white shadow-sm';
+          var imgU = (p.images && p.images[0]) || (p.thumbnail || '');
+          if (typeof imgU === 'object' && imgU.url) imgU = imgU.url;
+          var v0 = p.variants && p.variants[0];
+          var price = v0 ? v0.price : p.minPrice;
+          var link = '/products/' + encodeURIComponent(p._id || ids[i]);
+          card.innerHTML =
+            '<a class="block h-44 bg-[#f3f4f6]" href="' + link + '">' +
+            (imgU
+              ? '<img class="h-full w-full object-cover" src="' + imgU + '" alt="">'
+              : '<div class="flex h-full items-center justify-center text-[#dee1e6]"><i class="fa-solid fa-image text-3xl"></i></div>') +
+            '</a>' +
+            '<div class="p-4">' +
+            '<a class="line-clamp-2 text-sm font-semibold text-[#181b20] hover:text-[#f48525]" href="' + link + '">' +
+            (p.name || '') +
+            '</a>' +
+            '<p class="mt-2 text-sm font-bold text-[#0d0d0d]">' + vnd(price) + '</p>' +
+            '<div class="mt-3 flex gap-2">' +
+            '<button type="button" class="flex-1 border border-[#dee1e6] py-2 text-xs font-semibold text-red-600 hover:bg-red-50 btn-rm" data-id="' +
+            (p._id || ids[i]) +
+            '">Xóa</button>' +
+            '<a class="flex-1 bg-[#f48525] py-2 text-center text-xs font-semibold text-white hover:bg-[#e07820]" href="' +
+            link +
+            '">Xem</a>' +
+            '</div></div>';
+          root.appendChild(card);
+        }
+        root.querySelectorAll('.btn-rm').forEach(function (b) {
+          b.addEventListener('click', function () {
+            window.ProToolsStore.wishToggle(b.getAttribute('data-id'));
+            render();
+          });
         });
       }
-    }
 
-    function enablePriceAlerts() {
-      // TODO: Open price alerts settings modal
-      alert('Price alerts configuration');
-    }
+      window.addEventListener('protools-wishlist-updated', render);
+      render();
+    })();

@@ -49,15 +49,13 @@ router.get('/verify-email', async (req, res, next) => {
         await user.save();
 
 
-        res.status(200).json({
+        return res.status(200).json({
             status: 'success',
             statusCode: 200,
             message: 'Email verified successfully.',
             user: user
         });
     }
-
-    next();
 }
 );
 

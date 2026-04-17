@@ -1,0 +1,51 @@
+extends ../../layouts/main
+
+block content
+  section(class="bg-[#0d0d0d]")
+    div(class="mx-auto max-w-[1440px] px-4 py-12 sm:px-8 lg:px-[128px]")
+      h1(class="text-2xl font-bold text-white") Thanh toán PayOS
+
+  div(class="bg-[#f4f5f7] pb-16 pt-10")
+    div(class="mx-auto max-w-lg px-4")
+      .border.bg-white.p-8.text-center(class="border-[#dee1e6]")
+        p#payos-msg.text-sm(class="text-[#323842]") Đang kiểm tra trạng thái thanh toán…
+        a.mt-6.inline-flex.items-center.text-sm.font-semibold.text-white(
+          href="/profile/orders"
+          class="bg-[#f48525] px-5 py-2.5 hover:bg-[#e07820]"
+        ) Xem đơn hàng của tôi
+
+block scripts
+  script.
+    (function () {
+      var orderId = !{JSON.stringify(orderId || '')};
+      var token = localStorage.getItem('accessToken');
+      var msg = document.getElementById('payos-msg');
+      if (!orderId || !token) {
+        msg.textContent = 'Thanh toán đã được ghi nhận (hoặc đang xử lý). Webhook PayOS sẽ cập nhật trạng thái trong vài giây. Vui lòng xem mục Đơn hàng.';
+        return;
+      }
+      var tries = 0;
+      function poll() {
+        tries += 1;
+        fetch('/api/v1/orders/' + encodeURIComponent(orderId), {
+          headers: { Authorization: 'Bearer ' + token }
+        })
+          .then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }); })
+          .then(function (_ref) {
+            var order = _ref.d && _ref.d.data;
+            if (order && order.payment && order.payment.status === 'paid') {
+              if (window.ProToolsStore && window.ProToolsStore.cartClear) window.ProToolsStore.cartClear();
+              msg.textContent = 'Thanh toán thành công! Đơn ' + (order.orderNumber || '') + ' đã được xác nhận.';
+              return;
+            }
+            if (tries < 15) setTimeout(poll, 2000);
+            else {
+              msg.textContent = 'Giao dịch có thể đang chờ ngân hàng xác nhận. Kiểm tra lại trang Đơn hàng sau vài phút.';
+            }
+          })
+          .catch(function () {
+            msg.textContent = 'Không kiểm tra được trạng thái. Vào mục Đơn hàng để xem cập nhật.';
+          });
+      }
+      poll();
+    })();

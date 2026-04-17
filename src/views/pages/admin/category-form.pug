@@ -1,0 +1,217 @@
+extends ../../layouts/admin
+
+block content
+  .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
+    .flex.items-center.gap-4
+      a.text-blue-600(class="hover:text-blue-700" href="/admin/categories")
+        i.fas.fa-arrow-left.text-xl
+      .flex.flex-col
+        p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Taxonomy
+        h1.text-3xl.font-bold(class="text-[#0d0d0d]")= title || 'Danh mục'
+        if category && category.productCount != null
+          p.text-gray-600.mt-2
+            | Sản phẩm (gồm danh mục con): 
+            span.font-semibold= category.productCount
+
+  .max-w-3xl
+    form.bg-white.p-6#category-edit-form.space-y-6
+      .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="name") Tên danh mục
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
+            type="text"
+            id="name"
+            name="name"
+            required
+            value=category && category.name ? category.name : ''
+          )
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="slug-readonly") Slug (tự cập nhật khi đổi tên)
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.bg-gray-50(
+            type="text"
+            id="slug-readonly"
+            readonly
+            value=category && category.slug ? category.slug : ''
+          )
+
+      .form-group
+        label.block.text-sm.font-medium.text-gray-700.mb-2(for="parent") Danh mục cha
+        select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+          class="focus:ring-2 focus:ring-blue-500"
+          id="parent"
+          name="parent"
+        )
+          option(value="") — Không (danh mục gốc) —
+          if allCategories && allCategories.length
+            each c in allCategories
+              option(
+                value=c._id
+                selected=category && category.parent && String(category.parent) === String(c._id)
+              )= c.name
+
+      .form-group
+        label.block.text-sm.font-medium.text-gray-700.mb-2(for="description") Mô tả
+        textarea.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+          class="focus:ring-2 focus:ring-blue-500"
+          id="description"
+          name="description"
+          rows="4"
+        )= category && category.description ? category.description : ''
+
+      .grid.grid-cols-1(class="md:grid-cols-2 gap-6")
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="icon") Icon (Font Awesome)
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
+            type="text"
+            id="icon"
+            name="icon"
+            placeholder="fas fa-folder"
+            value=category && category.icon ? category.icon : ''
+          )
+        .form-group
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="order") Thứ tự
+          input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+            class="focus:ring-2 focus:ring-blue-500"
+            type="number"
+            id="order"
+            name="order"
+            min="0"
+            value=category && category.order != null ? category.order : 0
+          )
+
+      .form-group
+        label.block.text-sm.font-medium.text-gray-700.mb-2(for="image") URL ảnh
+        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+          class="focus:ring-2 focus:ring-blue-500"
+          type="url"
+          id="image"
+          name="image"
+          placeholder="https://..."
+          value=category && category.image ? category.image : ''
+        )
+        p.text-xs.text-gray-500.mt-1 Hoặc upload (ghi đè URL nếu chọn file)
+
+      .form-group
+        label.block.text-sm.font-medium.text-gray-700.mb-2(for="image-file") Upload ảnh (Cloudinary)
+        input.block.w-full.text-sm.text-gray-500(
+          class="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          type="file"
+          id="image-file"
+          accept="image/*"
+        )
+
+      .form-group
+        label.block.text-sm.font-medium.text-gray-700.mb-2(for="status") Trạng thái
+        select.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg(
+          class="focus:ring-2 focus:ring-blue-500"
+          id="status"
+          name="status"
+        )
+          option(value="active" selected=category && category.status === 'active') Active
+          option(value="inactive" selected=category && category.status === 'inactive') Inactive
+
+      .flex.gap-3.pt-4.border-t
+        a.px-4.py-2.border.border-gray-300.rounded-lg.text-gray-700.font-medium.transition-colors(
+          class="hover:bg-gray-50"
+          href="/admin/categories"
+        ) Hủy
+        button.px-4.py-2.text-white.rounded-lg.font-medium.transition-colors(
+          class="bg-blue-600 hover:bg-blue-700"
+          type="submit"
+        )
+          i.fas.fa-save.mr-2
+          | Lưu thay đổi
+
+block scripts
+  script.
+    (function () {
+      var form = document.getElementById('category-edit-form');
+      if (!form) return;
+      var categoryId = !{JSON.stringify(category && category._id ? String(category._id) : '')};
+
+      function getToken() {
+        return localStorage.getItem('accessToken') || '';
+      }
+
+      async function uploadProductImageToCloudinary(file) {
+        var formData = new FormData();
+        formData.append('image', file);
+        var res = await fetch('/api/v1/upload/product-image', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + getToken() },
+          body: formData,
+        });
+        var data = await res.json().catch(function () {
+          return {};
+        });
+        if (!res.ok) {
+          throw new Error(data.message || 'Upload ảnh thất bại.');
+        }
+        if (!data.data || !data.data.url) {
+          throw new Error('Phản hồi upload không hợp lệ.');
+        }
+        return data.data.url;
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var token = getToken();
+        if (!token) {
+          if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+          window.location.href = '/auth/login';
+          return;
+        }
+        if (!categoryId) return;
+
+        var parentVal = document.getElementById('parent').value;
+        var imageUrl = (document.getElementById('image') && document.getElementById('image').value || '').trim();
+        var fileInput = document.getElementById('image-file');
+        var file = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+        if (file) {
+          try {
+            imageUrl = await uploadProductImageToCloudinary(file);
+            document.getElementById('image').value = imageUrl;
+          } catch (err) {
+            if (window.AppNotify) window.AppNotify.error(err.message || 'Upload lỗi.');
+            return;
+          }
+        }
+
+        var body = {
+          name: document.getElementById('name').value.trim(),
+          description: document.getElementById('description').value,
+          parent: parentVal ? parentVal : null,
+          icon: document.getElementById('icon').value.trim() || undefined,
+          order: parseInt(document.getElementById('order').value, 10) || 0,
+          status: document.getElementById('status').value,
+        };
+        if (imageUrl) {
+          body.image = imageUrl;
+        }
+
+        try {
+          var res = await fetch('/api/v1/categories/' + encodeURIComponent(categoryId), {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token,
+            },
+            body: JSON.stringify(body),
+          });
+          var data = await res.json().catch(function () {
+            return {};
+          });
+          if (!res.ok) {
+            throw new Error(data.message || 'Cập nhật thất bại.');
+          }
+          if (window.AppNotify) window.AppNotify.success(data.message || 'Đã lưu danh mục.');
+          setTimeout(function () {
+            window.location.href = '/admin/categories';
+          }, 400);
+        } catch (err) {
+          if (window.AppNotify) window.AppNotify.error(err.message || 'Lỗi mạng.');
+        }
+      });
+    })();

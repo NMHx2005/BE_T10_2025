@@ -80,12 +80,28 @@ function getProductStock(product) {
     return 0;
 }
 
+/** Chuỗi URL hoặc object legacy { url } — luôn trả về URL hiển thị được */
+function normalizeProductImageRef(ref) {
+    if (ref == null) return null;
+    if (typeof ref === 'string') {
+        const s = ref.trim();
+        return s || null;
+    }
+    if (typeof ref === 'object') {
+        if (typeof ref.url === 'string' && ref.url.trim()) return ref.url.trim();
+        if (typeof ref.secure_url === 'string' && ref.secure_url.trim()) return ref.secure_url.trim();
+    }
+    return null;
+}
+
 function getGalleryImages(product) {
-    const rootImgs = Array.isArray(product?.images) ? product.images.filter(Boolean) : [];
+    const rootRaw = Array.isArray(product?.images) ? product.images : [];
+    const rootImgs = rootRaw.map(normalizeProductImageRef).filter(Boolean);
     if (rootImgs.length) return rootImgs;
     if (Array.isArray(product?.variants)) {
         const variantImgs = product.variants
             .flatMap((v) => (Array.isArray(v?.images) ? v.images : []))
+            .map(normalizeProductImageRef)
             .filter(Boolean);
         if (variantImgs.length) return variantImgs;
     }

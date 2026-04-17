@@ -22,9 +22,6 @@ const addRandomSuffix = (sku, length = 4) => {
     return suffix;
 };
 
-const generateProductSKU = () => {
-    return `PRD-${Date.now()}-${addRandomSuffix(4)}`;
-}
 const generateVariantSKU = (productName, index) => {
     const short = slugify(productName, {
         lower: true,
@@ -34,20 +31,49 @@ const generateVariantSKU = (productName, index) => {
 
     return `VR-${short}-${index + 1}-∂${addRandomSuffix(4)}`;
 }
+const parseTagsInput = (raw) => {
+    if (Array.isArray(raw)) {
+        return raw.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
+    }
+    if (typeof raw === 'string') {
+        return raw
+            .split(/[,#]/)
+            .map((t) => t.trim().toLowerCase())
+            .filter(Boolean);
+    }
+    return [];
+};
+
+/** Khớp productVariantSchema: sku, attributes (object), price, stock, compareAtPrice (optional) */
 const normalizeVariant = (variant, index, fallbackName, fallbackPrice, fallbackStock) => {
-    return {
-        name: variant?.name?.trim() || `Variant ${index + 1}`,
+    const priceNum = Number.isFinite(Number(variant?.price))
+        ? Number(variant.price)
+        : Number(fallbackPrice);
+    const stockRaw = Number.isFinite(Number(variant?.stock))
+        ? Number(variant.stock)
+        : Number(fallbackStock);
+    const stockNum = Math.max(0, Math.floor(stockRaw));
+    let compareAtPrice;
+    if (
+        variant?.compareAtPrice !== undefined &&
+        variant?.compareAtPrice !== '' &&
+        Number.isFinite(Number(variant.compareAtPrice))
+    ) {
+        compareAtPrice = Number(variant.compareAtPrice);
+    }
+    const attrs = variant?.attributes;
+    const attributes =
+        attrs && typeof attrs === 'object' && !Array.isArray(attrs) ? attrs : {};
+    const out = {
         sku: variant?.sku?.trim() || generateVariantSKU(fallbackName, index),
-        price:
-            Number.isFinite(Number(variant?.price))
-                ? Number(variant.price)
-                : Number(fallbackPrice),
-        stock:
-            Number.isInteger(Number(variant?.stock))
-                ? Number(variant.stock)
-                : Number(fallbackStock),
-        attributes: variant?.attributes || {},
+        price: Math.max(0, priceNum),
+        stock: stockNum,
+        attributes,
     };
+    if (compareAtPrice !== undefined) {
+        out.compareAtPrice = compareAtPrice;
+    }
+    return out;
 };
 
 /**
@@ -91,33 +117,49 @@ const createProductController = async (req, res, next) => {
             counter++;
         }
 
-        // 2) SKU tự động
-        const sku = generateProductSKU();
+        // 2) Ảnh cấp product (schema: images[])
+        const images = [];
+        if (thumbnail && String(thumbnail).trim()) {
+            images.push(String(thumbnail).trim());
+        }
 
+        // 3) Variants — schema bắt buộc ít nhất 1 variant; giá/tồn kho nằm trên variant
+        const nameTrim = name.trim();
+        const priceNum = Number(price);
+        const stockNum = Number(stock);
+        const variantsSource =
+            Array.isArray(variants) && variants.length > 0
+                ? variants
+                : [
+                      {
+                          price: priceNum,
+                          stock: stockNum,
+                          compareAtPrice: req.body.compareAtPrice,
+                          sku: req.body.variantSku,
+                          attributes: {},
+                      },
+                  ];
+        const normalizedVariants = variantsSource.map((v, idx) =>
+            normalizeVariant(v, idx, nameTrim, priceNum, stockNum)
+        );
 
-        // 3) Chuẩn hóa variants data
-        const normalizedVariants = variants.map((v, idx) => ({
-            name: v.name?.trim() || `Variant ${idx + 1}`,
-            sku: v.sku?.trim() || generateVariantSKU(name, idx),
-            price: Number.isFinite(Number(v.price)) ? Number(v.price) : Number(price),
-            stock: Number.isInteger(Number(v.stock)) ? Number(v.stock) : Number(stock),
-            attributes: v.attributes || {},
-        }));
-
+        const shortRaw =
+            typeof req.body.shortDescription === 'string'
+                ? req.body.shortDescription.trim()
+                : '';
         const payload = {
-            name: name.trim(),
+            name: nameTrim,
             description,
+            shortDescription: shortRaw || undefined,
             slug,
-            sku,
-            price: Number(price),
             category,
             brand: brand || undefined,
-            stock: Number(stock),
-            thumbnail,
+            images,
+            tags: parseTagsInput(req.body.tags),
+            status: req.body.status || 'draft',
+            featured: !!req.body.featured,
             variants: normalizedVariants,
-            viewCount: 0,
-            deleted: false,
-            createdBy: req.user._id
+            createdBy: req.user._id,
         };
 
         const created = await Product.create(payload);
@@ -133,7 +175,7 @@ const createProductController = async (req, res, next) => {
     }
 }
 
-const updateFullProductController = async (req, res) => {
+const updateFullProductController = async (req, res, next) => {
     try {
         const { id } = req.params;
         // 1) Lấy product hiện tại
@@ -171,11 +213,9 @@ const updateFullProductController = async (req, res) => {
         if (typeof req.body.description === "string") {
             updatePayload.description = req.body.description;
         }
-        if (req.body.price !== undefined) {
-            updatePayload.price = Number(req.body.price);
-        }
-        if (req.body.stock !== undefined) {
-            updatePayload.stock = Number(req.body.stock);
+        if (typeof req.body.shortDescription === "string") {
+            const s = req.body.shortDescription.trim();
+            updatePayload.shortDescription = s || undefined;
         }
         if (req.body.category !== undefined) {
             updatePayload.category = req.body.category;
@@ -184,19 +224,42 @@ const updateFullProductController = async (req, res) => {
             // Cho phép set null để remove brand nếu muốn
             updatePayload.brand = req.body.brand || null;
         }
-        if (req.body.thumbnail !== undefined) {
-            updatePayload.thumbnail = req.body.thumbnail;
+        if (req.body.status !== undefined) {
+            updatePayload.status = req.body.status;
+        }
+        if (req.body.featured !== undefined) {
+            updatePayload.featured = !!req.body.featured;
+        }
+        if (req.body.tags !== undefined) {
+            updatePayload.tags = parseTagsInput(req.body.tags);
+        }
+        if (Array.isArray(req.body.images)) {
+            updatePayload.images = req.body.images.map((u) => String(u).trim()).filter(Boolean);
+        } else if (req.body.thumbnail !== undefined) {
+            if (req.body.thumbnail && String(req.body.thumbnail).trim()) {
+                updatePayload.images = [String(req.body.thumbnail).trim()];
+            }
         }
         // 3) Cập nhật variants nếu có
         // Strategy đơn giản: nếu client gửi variants thì replace toàn bộ mảng.
         // Ưu điểm: dễ kiểm soát tính nhất quán dữ liệu.
         if (Array.isArray(req.body.variants)) {
             const baseName = updatePayload.name || existing.name;
-            const basePrice = updatePayload.price ?? existing.price;
-            const baseStock = updatePayload.stock ?? existing.stock;
-            updatePayload.variants = req.body.variants.map((v, idx) =>
+            const v0 = existing.variants?.[0];
+            const basePrice = v0?.price ?? 0;
+            const baseStock = v0?.stock ?? 0;
+            const incoming = req.body.variants.map((v, idx) =>
                 normalizeVariant(v, idx, baseName, basePrice, baseStock)
             );
+            const existingList = existing.variants || [];
+            if (existingList.length > 1 && incoming.length === 1) {
+                const tail = existingList
+                    .slice(1)
+                    .map((doc) => (doc.toObject ? doc.toObject() : doc));
+                updatePayload.variants = [...incoming, ...tail];
+            } else {
+                updatePayload.variants = incoming;
+            }
         }
         // Nếu không có field nào để update thì trả luôn
         if (Object.keys(updatePayload).length === 0) {
@@ -209,9 +272,7 @@ const updateFullProductController = async (req, res) => {
         const updated = await Product.findByIdAndUpdate(existing._id, updatePayload, {
             new: true,
             runValidators: true,
-        })
-            .populate("category", "name slug")
-            .populate("brand", "name slug");
+        }).populate("category", "name slug");
         // 5) Audit log: ghi lại các field thay đổi
         const changedFields = getChangedFields(
             existing.toObject(),
@@ -220,12 +281,14 @@ const updateFullProductController = async (req, res) => {
                 "name",
                 "slug",
                 "description",
-                "price",
-                "stock",
+                "shortDescription",
                 "category",
                 "brand",
-                "thumbnail",
+                "images",
                 "variants",
+                "tags",
+                "status",
+                "featured",
             ]
         );
         // userId lấy từ middleware auth (nếu có)
@@ -239,20 +302,28 @@ const updateFullProductController = async (req, res) => {
             before: {
                 name: existing.name,
                 slug: existing.slug,
-                price: existing.price,
-                stock: existing.stock,
+                description: existing.description,
+                shortDescription: existing.shortDescription,
                 category: existing.category,
                 brand: existing.brand,
+                images: existing.images,
                 variants: existing.variants,
+                tags: existing.tags,
+                status: existing.status,
+                featured: existing.featured,
             },
             after: {
                 name: updated.name,
                 slug: updated.slug,
-                price: updated.price,
-                stock: updated.stock,
+                description: updated.description,
+                shortDescription: updated.shortDescription,
                 category: updated.category,
                 brand: updated.brand,
+                images: updated.images,
                 variants: updated.variants,
+                tags: updated.tags,
+                status: updated.status,
+                featured: updated.featured,
             },
             ip: req.ip,
             userAgent: req.headers["user-agent"] || "",
@@ -276,13 +347,10 @@ const updateProductController = (req, res) => {
 }
 
 /**
- * Soft delete product:
- * - set deleted=true
- * - set status='deleted'
- * - set deletedAt
- * - lưu deletedBy nếu có user đăng nhập
+ * DELETE /api/v1/products/:id — Xóa mềm (ẩn khỏi catalog)
+ * - set deleted=true, status='deleted', deletedAt, deletedBy
  */
-export const restoreProductController = async (req, res, next) => {
+export const softDeleteProductController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const actorId = req.user?._id || null;
@@ -334,7 +402,11 @@ export const restoreProductController = async (req, res, next) => {
         next(error);
     }
 };
-const deleteProductController = async (req, res, next) => {
+
+/**
+ * PATCH /api/v1/products/:id/restore — Khôi phục sau xóa mềm
+ */
+export const restoreDeletedProductController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const actorId = req.user?._id || null;
@@ -585,10 +657,10 @@ const getProductsDetail = async (req, res, next) => {
 
         // validate id
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: "Product ID không hợp lệ"
-            })
+            });
         }
 
         // find product + populate category, brand
@@ -601,10 +673,10 @@ const getProductsDetail = async (req, res, next) => {
             .lean();
 
         if (!product) {
-            res.return.status(404).json({
+            return res.status(404).json({
                 success: false,
                 message: "Không tìm thấy sản phẩm"
-            })
+            });
         }
 
 
@@ -614,10 +686,10 @@ const getProductsDetail = async (req, res, next) => {
         const relatedFilter = {
             _id: { $ne: id },
             deleted: { $ne: true },
-            category: product.category._id,
-        }
+            category: product.category && product.category._id ? product.category._id : product.category,
+        };
 
-        if (product.brand._id) {
+        if (product.brand && product.brand._id) {
             relatedFilter.brand = product.brand._id;
         }
 
@@ -995,4 +1067,14 @@ const getCategoryFiltersController = async (req, res, next) => {
     }
 };
 
-export { createProductController, updateFullProductController, updateProductController, deleteProductController, getProducts, getProductsDetail, searchProduct, getProductsByCategory, getCategoryStatsController, getCategoryFiltersController };
+export {
+    createProductController,
+    updateFullProductController,
+    updateProductController,
+    getProducts,
+    getProductsDetail,
+    searchProduct,
+    getProductsByCategory,
+    getCategoryStatsController,
+    getCategoryFiltersController,
+};

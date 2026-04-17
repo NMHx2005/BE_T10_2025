@@ -33,6 +33,10 @@ const addressSchema = new mongoose.Schema({
         required: [true, 'Địa chỉ là bắt buộc'],
         trim: true
     },
+    addressNew: {
+        type: String,
+        trim: true
+    },
     ward: {
         type: String,
         required: [true, 'Phường/Xã là bắt buộc'],

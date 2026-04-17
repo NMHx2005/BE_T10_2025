@@ -71,7 +71,7 @@ export const updateAddress = async (req, res, next) => {
     try {
         const userId = req.user._id;
         const { id } = req.params;
-        const { fullName, phone, address, ward, district, city, isDefault, note } = req.body;
+        const { fullName, phone, address, addressNew, ward, district, city, isDefault, note } = req.body;
 
         // Tìm địa chỉ
         const addressDoc = await Address.findOne({ _id: id, userId });
@@ -88,7 +88,6 @@ export const updateAddress = async (req, res, next) => {
             );
         }
 
-        // Cập nhật
         Object.assign(addressDoc, {
             fullName,
             phone,
@@ -99,6 +98,7 @@ export const updateAddress = async (req, res, next) => {
             isDefault: isDefault !== undefined ? isDefault : addressDoc.isDefault,
             note
         });
+        if (addressNew !== undefined) addressDoc.addressNew = addressNew;
 
         await addressDoc.save();
 

@@ -59,7 +59,15 @@ export const getCategoryDetail = async (req, res, next) => {
  */
 export const createCategory = async (req, res, next) => {
     try {
-        const { name, description = "", parent = null, image = "", icon = "", order = 0 } = req.body;
+        const {
+            name,
+            description = '',
+            parent = null,
+            image = '',
+            icon = '',
+            order = 0,
+            status: bodyStatus,
+        } = req.body;
 
         if (!name || !name.trim()) {
             throw new ValidationError('Tên danh mục là bắt buộc');
@@ -87,6 +95,10 @@ export const createCategory = async (req, res, next) => {
             }
         }
 
+        const orderNum = Number(order);
+        const statusVal =
+            bodyStatus && ['active', 'inactive'].includes(bodyStatus) ? bodyStatus : 'active';
+
         const newCategory = await Category.create({
             name: name.trim(),
             slug,
@@ -94,8 +106,8 @@ export const createCategory = async (req, res, next) => {
             parent: parent || null,
             image,
             icon,
-            order,
-            status: 'active'
+            order: Number.isFinite(orderNum) ? orderNum : 0,
+            status: statusVal,
         });
 
         res.status(201).json({
@@ -138,17 +150,34 @@ export const updateCategory = async (req, res, next) => {
         // Cập nhật các field khác
         if (description !== undefined) category.description = description;
         if (parent !== undefined) {
-            if (parent && parent !== id) {
+            if (parent && String(parent) === String(id)) {
+                throw new ValidationError('Danh mục không thể là cha của chính nó');
+            }
+            if (parent) {
                 const parentExists = await Category.exists({ _id: parent });
                 if (!parentExists) {
                     throw new NotFoundError('Danh mục cha không tồn tại');
+                }
+                let walk = parent;
+                while (walk) {
+                    if (String(walk) === String(id)) {
+                        throw new ValidationError(
+                            'Không thể đặt danh mục cha thuộc nhánh con của chính danh mục này',
+                        );
+                    }
+                    const up = await Category.findById(walk).select('parent').lean();
+                    if (!up) break;
+                    walk = up.parent;
                 }
             }
             category.parent = parent || null;
         }
         if (image !== undefined) category.image = image;
         if (icon !== undefined) category.icon = icon;
-        if (order !== undefined) category.order = order;
+        if (order !== undefined) {
+            const orderNum = Number(order);
+            category.order = Number.isFinite(orderNum) ? orderNum : 0;
+        }
         if (status !== undefined && ['active', 'inactive'].includes(status)) {
             category.status = status;
         }

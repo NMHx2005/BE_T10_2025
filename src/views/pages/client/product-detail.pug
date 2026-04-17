@@ -45,21 +45,48 @@ block content
       }
       return null
     }
+    function __normImg(u) {
+      if (u == null) return null
+      if (typeof u === 'string') {
+        var t = u.trim()
+        return t || null
+      }
+      if (typeof u === 'object' && u.url) {
+        var s = String(u.url).trim()
+        return s || null
+      }
+      if (typeof u === 'object' && u.secure_url) {
+        var z = String(u.secure_url).trim()
+        return z || null
+      }
+      return null
+    }
     function __img(p) {
       if (!p) return null
-      if (p.galleryImages && p.galleryImages.length) return p.galleryImages[0]
-      if (p.images && p.images.length) return p.images[0]
+      var i
+      if (p.galleryImages && p.galleryImages.length) {
+        i = __normImg(p.galleryImages[0])
+        if (i) return i
+      }
+      if (p.images && p.images.length) {
+        i = __normImg(p.images[0])
+        if (i) return i
+      }
       if (p.variants && p.variants.length) {
         var withImg = p.variants.find(function (v) { return v && v.images && v.images.length })
-        if (withImg) return withImg.images[0]
+        if (withImg) {
+          i = __normImg(withImg.images[0])
+          if (i) return i
+        }
       }
       return null
     }
     function __gallery(p) {
       if (!p) return []
-      if (p.galleryImages && p.galleryImages.length) return p.galleryImages
-      if (p.images && p.images.length) return p.images
-      return []
+      var list = []
+      if (p.galleryImages && p.galleryImages.length) list = p.galleryImages
+      else if (p.images && p.images.length) list = p.images
+      return list.map(__normImg).filter(Boolean)
     }
 
   if __p
@@ -168,6 +195,27 @@ block content
                   p(class="whitespace-pre-wrap text-sm leading-relaxed text-[#323842]")= __p.description
 
               form#purchase-form(class="space-y-4")
+                if __p.variants && __p.variants.length > 1
+                  div
+                    label(for="variant-select" class="mb-2 block text-sm font-medium text-[#181b20]") Chọn biến thể
+                    select#variant-select.w-full.border.px-3.text-sm(
+                      required
+                      class="py-2 border-[#dee1e6] text-[#181b20] outline-none focus:border-[#f48525] focus:ring-1 focus:ring-[#f48525]"
+                    )
+                      option(value="" disabled selected) — Chọn —
+                      each v in __p.variants
+                        if v.isActive !== false
+                          option(
+                            value=String(v._id)
+                            data-price=v.price
+                            data-stock=v.stock
+                            data-sku=v.sku
+                          )= (v.sku || 'SKU') + ' — ' + __vnd(v.price) + ' (còn ' + v.stock + ')'
+                else if __p.variants && __p.variants.length === 1
+                  input#variant-id(type="hidden" value=String(__p.variants[0]._id))
+                else
+                  p.text-sm.font-medium.text-red-600 Sản phẩm chưa có biến thể để bán.
+
                 .flex.items-center.gap-3
                   label(for="quantity" class="text-sm font-medium text-[#181b20]") Số lượng
                   .inline-flex.items-center.border(class="border-[#dee1e6]")
@@ -192,13 +240,19 @@ block content
                     )
                       i.fa-solid.fa-plus.text-xs(aria-hidden="true")
 
-                if __stock(__p) > 0
-                  button(
+                if __stock(__p) > 0 && __p.variants && __p.variants.length
+                  button#btn-add-cart(
                     type="submit"
                     class="inline-flex h-12 w-full items-center justify-center gap-2 bg-[#f48525] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#e07820] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f48525] focus-visible:ring-offset-2"
                   )
                     i.fa-solid.fa-bag-shopping(aria-hidden="true")
                     | Thêm vào giỏ hàng
+                  button#btn-wishlist.inline-flex.h-12.w-full.items-center.justify-center.gap-2.border.px-6.text-sm.font-semibold(
+                    type="button"
+                    class="border-[#dee1e6] text-[#181b20] hover:border-[#f48525] hover:text-[#f48525]"
+                  )
+                    i.fa-regular.fa-heart(aria-hidden="true")
+                    span#wishlist-label Yêu thích
                 else
                   button(
                     type="button"
@@ -248,7 +302,7 @@ block content
             ul.grid.gap-6(class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4")
               each rp in __related
                 li
-                  - var rpImg = (rp.images && rp.images.length) ? rp.images[0] : null
+                  - var rpImg = (rp.images && rp.images.length) ? __normImg(rp.images[0]) : null
                   article(class="overflow-hidden border border-[#eef0f3] bg-white shadow-[0_2px_4px_rgba(34,37,42,0.08)]")
                     a.block(class="h-48 bg-[#f3f4f6]" href=`/products/${rp._id}`)
                       if rpImg
@@ -269,8 +323,12 @@ block content
           href="/products"
         ) Quay lại danh sách sản phẩm
 
+  - var __pdpJson = JSON.stringify(__p ? { id: String(__p._id), name: __p.name, image: __img(__p), variants: (__p.variants || []).filter(function (v) { return v && v.isActive !== false; }).map(function (v) { return { id: String(v._id), price: Number(v.price), sku: v.sku || '', stock: Number(v.stock) }; }) } : null)
+
 block scripts
   script.
+    var PDP = !{__pdpJson};
+
     function initProductGallery() {
       const main = document.getElementById('main-image');
       const stage = document.getElementById('main-image-stage');
@@ -318,14 +376,41 @@ block scripts
       });
     }
 
+    function getSelectedVariantMeta() {
+      var hidden = document.getElementById('variant-id');
+      if (hidden && hidden.value) {
+        var one = PDP && PDP.variants && PDP.variants[0];
+        if (one && one.id === hidden.value) return one;
+        return PDP && PDP.variants ? PDP.variants.find(function (v) { return v.id === hidden.value; }) : null;
+      }
+      var sel = document.getElementById('variant-select');
+      if (!sel || !sel.value) return null;
+      var opt = sel.selectedOptions[0];
+      return {
+        id: sel.value,
+        price: Number(opt && opt.dataset ? opt.dataset.price : 0),
+        sku: opt && opt.dataset ? opt.dataset.sku : '',
+        stock: Number(opt && opt.dataset ? opt.dataset.stock : 0),
+      };
+    }
+
     function updateQuantity(change) {
       const input = document.getElementById('quantity');
       if (!input) return;
+      const meta = getSelectedVariantMeta();
+      var max = meta && meta.stock ? meta.stock : parseInt(input.max || '999', 10);
       const current = parseInt(input.value || '1', 10);
-      const max = parseInt(input.max || '1', 10);
       const next = current + change;
       if (next >= 1 && next <= max) input.value = String(next);
     }
+
+    document.getElementById('variant-select')?.addEventListener('change', function () {
+      var meta = getSelectedVariantMeta();
+      var input = document.getElementById('quantity');
+      if (!input || !meta) return;
+      input.max = String(Math.max(1, meta.stock || 1));
+      if (parseInt(input.value, 10) > meta.stock) input.value = String(Math.max(1, meta.stock));
+    });
 
     function copyToClipboard() {
       navigator.clipboard.writeText(window.location.href).then(function () {
@@ -335,8 +420,41 @@ block scripts
 
     document.getElementById('purchase-form')?.addEventListener('submit', function (e) {
       e.preventDefault();
-      const qty = document.getElementById('quantity')?.value || '1';
-      alert('Da them ' + qty + ' san pham vao gio.');
+      if (!PDP || !window.ProToolsStore) return;
+      var meta = getSelectedVariantMeta();
+      if (!meta || !meta.id) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng chọn biến thể.');
+        return;
+      }
+      var qty = parseInt(document.getElementById('quantity')?.value || '1', 10);
+      if (qty < 1 || qty > meta.stock) {
+        if (window.AppNotify) window.AppNotify.error('Số lượng không hợp lệ.');
+        return;
+      }
+      window.ProToolsStore.cartAdd({
+        productId: PDP.id,
+        variantId: meta.id,
+        quantity: qty,
+        name: PDP.name,
+        price: meta.price,
+        image: PDP.image || '',
+        sku: meta.sku || '',
+      });
+      if (window.AppNotify) window.AppNotify.success('Đã thêm vào giỏ hàng.');
     });
+
+    document.getElementById('btn-wishlist')?.addEventListener('click', function () {
+      if (!PDP || !window.ProToolsStore) return;
+      var on = window.ProToolsStore.wishToggle(PDP.id);
+      var lbl = document.getElementById('wishlist-label');
+      if (lbl) lbl.textContent = on ? 'Đã lưu yêu thích' : 'Yêu thích';
+      if (window.AppNotify) window.AppNotify.success(on ? 'Đã thêm vào yêu thích.' : 'Đã bỏ khỏi yêu thích.');
+    });
+
+    (function syncWishLabel() {
+      if (!PDP || !window.ProToolsStore) return;
+      var lbl = document.getElementById('wishlist-label');
+      if (lbl && window.ProToolsStore.wishHas(PDP.id)) lbl.textContent = 'Đã lưu yêu thích';
+    })();
 
     initProductGallery();

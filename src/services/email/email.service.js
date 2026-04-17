@@ -53,8 +53,31 @@ export const sendVerificationEmail = async (email, token) => {
 }
 
 
+export const sendPasswordResetEmail = async (email, token) => {
+    const transporter = createTransporter();
+    const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000';
+    const resetUrl = `${baseUrl}/auth/reset-password/${encodeURIComponent(token)}`;
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Đặt lại mật khẩu — PRO-TOOLS',
+        html: `
+                <h2>Đặt lại mật khẩu</h2>
+                <p>Bạn (hoặc ai đó) đã yêu cầu đặt lại mật khẩu cho tài khoản này.</p>
+                <p><a href="${resetUrl}">Nhấn vào đây để đặt mật khẩu mới</a> (hiệu lực 1 giờ).</p>
+                <p>Nếu không phải bạn, bỏ qua email này.</p>
+            `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Password reset email sent: ' + info.messageId);
+    return info;
+};
+
 export default {
-    sendVerificationEmail
+    sendVerificationEmail,
+    sendPasswordResetEmail,
 }
 
 

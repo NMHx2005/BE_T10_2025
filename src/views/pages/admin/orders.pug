@@ -1,23 +1,33 @@
 extends ../../layouts/admin
 
 block content
+  - const __stats = orderStats || {}
+  - const __filters = filters || {}
+  - const __search = __filters.search || ''
+  - const __status = __filters.status || ''
+  - const __payment = __filters.payment || ''
+  - const __date = __filters.date || ''
+  - const __pq = (function () { var p = []; if (__search) p.push('search=' + encodeURIComponent(__search)); if (__status) p.push('status=' + encodeURIComponent(__status)); if (__payment) p.push('payment=' + encodeURIComponent(__payment)); if (__date) p.push('date=' + encodeURIComponent(__date)); return p.length ? '&' + p.join('&') : ''; })()
   // Page Header
   .mb-8.border.bg-white.p-6(class="border-[#dee1e6]")
     .flex.items-center.justify-between
       .flex.flex-col
         p.text-xs.uppercase.tracking-widest(class="text-[#8c8f95]") Fulfillment
-        h1.text-3xl.font-bold(class="text-[#0d0d0d]") Orders Management
-        p.text-gray-600.mt-2 Total: 
-          span.font-semibold #{totalOrders || 0}
-          |  orders
+        h1.text-3xl.font-bold(class="text-[#0d0d0d]") Quản lý đơn hàng
+        p.text-gray-600.mt-2 Khớp bộ lọc: 
+          span.font-semibold #{typeof filteredOrderCount !== 'undefined' ? filteredOrderCount : (pagination && pagination.total) || 0}
+          |  đơn — Tổng trong hệ thống: 
+          span.font-semibold #{typeof totalOrders !== 'undefined' ? totalOrders : 0}
       
-      a.text-white.font-medium.py-2.px-6.transition-colors.flex.items-center.gap-2(class="bg-[#f48525] hover:bg-[#e07820]"
-        href="/admin/orders/export"
+      button#btn-export-orders-csv.text-gray-800.font-medium.py-2.px-6.border.border-gray-300.rounded-lg.transition-colors(
+        class="hover:bg-[#fff7ef] border-[#dee1e6]"
+        type="button",
+        title="Tải CSV theo bộ lọc hiện tại (tối đa ~8000 đơn)"
       )
         i.fas.fa-download.mr-2
-        | Export CSV
+        | Xuất CSV
 
-  // Summary Cards
+  // Summary Cards (toàn bộ đơn trong DB — không phụ thuộc bộ lọc trang)
   .grid.grid-cols-1(class="md:grid-cols-4 gap-6 mb-8")
     .bg-white.rounded-lg.shadow-md.p-6
       .flex.items-center
@@ -25,9 +35,8 @@ block content
           .w-12.h-12.bg-blue-100.rounded-lg.flex.items-center.justify-center
             i.fas.fa-shopping-cart.text-blue-600.text-xl
         .ml-4
-          p.text-sm.font-medium.text-gray-600 Pending
-          p.text-2xl.font-bold.text-gray-900
-            = (orders || []).filter(o => o.status === 'pending').length || 0
+          p.text-sm.font-medium.text-gray-600 Chờ xử lý
+          p.text-2xl.font-bold.text-gray-900= __stats.pending || 0
     
     .bg-white.rounded-lg.shadow-md.p-6
       .flex.items-center
@@ -35,9 +44,8 @@ block content
           .w-12.h-12.bg-yellow-100.rounded-lg.flex.items-center.justify-center
             i.fas.fa-hourglass-half.text-yellow-600.text-xl
         .ml-4
-          p.text-sm.font-medium.text-gray-600 Processing
-          p.text-2xl.font-bold.text-gray-900
-            = (orders || []).filter(o => o.status === 'processing' || o.status === 'confirmed').length || 0
+          p.text-sm.font-medium.text-gray-600 Xác nhận / Đang xử lý
+          p.text-2xl.font-bold.text-gray-900= (__stats.confirmed || 0) + (__stats.processing || 0)
     
     .bg-white.rounded-lg.shadow-md.p-6
       .flex.items-center
@@ -45,9 +53,8 @@ block content
           .w-12.h-12.bg-indigo-100.rounded-lg.flex.items-center.justify-center
             i.fas.fa-truck.text-indigo-600.text-xl
         .ml-4
-          p.text-sm.font-medium.text-gray-600 Shipped
-          p.text-2xl.font-bold.text-gray-900
-            = (orders || []).filter(o => o.status === 'shipped').length || 0
+          p.text-sm.font-medium.text-gray-600 Đang giao
+          p.text-2xl.font-bold.text-gray-900= __stats.shipped || 0
     
     .bg-white.rounded-lg.shadow-md.p-6
       .flex.items-center
@@ -55,50 +62,58 @@ block content
           .w-12.h-12.bg-green-100.rounded-lg.flex.items-center.justify-center
             i.fas.fa-check-circle.text-green-600.text-xl
         .ml-4
-          p.text-sm.font-medium.text-gray-600 Delivered
-          p.text-2xl.font-bold.text-gray-900
-            = (orders || []).filter(o => o.status === 'delivered').length || 0
+          p.text-sm.font-medium.text-gray-600 Đã giao
+          p.text-2xl.font-bold.text-gray-900= __stats.delivered || 0
 
   // Filters & Search
   .bg-white.p-6.mb-6
     .grid.grid-cols-1(class="md:grid-cols-5 gap-4")
       .form-group
-        input.form-input.w-full.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+        input.form-input(
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           type="text",
-          placeholder="Search by order #...",
-          id="search-input"
+          placeholder="Mã đơn hàng...",
+          id="search-input",
+          value=__search
         )
       
-      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+      select.form-input(
+        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
         id="status-filter"
       )
-        option(value="") All Status
-        option(value="pending") Pending
-        option(value="confirmed") Confirmed
-        option(value="processing") Processing
-        option(value="shipped") Shipped
-        option(value="delivered") Delivered
-        option(value="cancelled") Cancelled
+        option(value="") Trạng thái đơn
+        option(value="pending") Chờ xác nhận
+        option(value="confirmed") Đã xác nhận
+        option(value="processing") Đang xử lý
+        option(value="shipped") Đang giao
+        option(value="delivered") Đã giao
+        option(value="cancelled") Đã hủy
+        option(value="refunded") Hoàn tiền
       
-      select.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+      select.form-input(
+        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
         id="payment-filter"
       )
-        option(value="") All Payments
-        option(value="pending") Unpaid
-        option(value="paid") Paid
-        option(value="failed") Failed
+        option(value="") Thanh toán
+        option(value="pending") Chưa thanh toán
+        option(value="paid") Đã thanh toán
+        option(value="failed") Thất bại
+        option(value="refunded") Đã hoàn tiền
       
-      input.form-input.px-4.py-2.border.border-gray-300.rounded-lg.focus:ring-2.focus:ring-blue-500(
+      input.form-input(
+        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
         type="date",
-        id="date-filter"
+        id="date-filter",
+        value=__date
       )
       
-      button.bg-blue-600.hover:bg-blue-700.text-white.font-medium.py-2.px-4.rounded-lg.transition-colors(
+      button(
+        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
         type="button",
-        onclick="applyFilters()"
+        id="apply-order-filters"
       )
         i.fas.fa-filter.mr-2
-        | Filter
+        | Lọc
 
   // Orders Table
   if orders && orders.length > 0
@@ -107,21 +122,22 @@ block content
         table.w-full
           thead.bg-gray-100.border-b.border-gray-200
             tr
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Order #
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Customer
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Items
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Total
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Payment
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Status
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Date
-              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Actions
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Mã đơn
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Khách
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Số SP
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Tổng tiền
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Thanh toán
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Trạng thái
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Ngày
+              th.px-6.py-4.text-left.text-sm.font-semibold.text-gray-900 Thao tác
           
           tbody.divide-y.divide-gray-200
             each order in orders
-              tr.hover:bg-gray-50.transition-colors
+              tr(class="hover:bg-gray-50 transition-colors")
                 // Order Number
                 td.px-6.py-4
-                  a.text-blue-600.hover:text-blue-700.font-medium(
+                  a.font-medium(
+                    class="text-blue-600 hover:text-blue-700"
                     href=`/admin/orders/${order._id}`
                   )
                     = order.orderNumber
@@ -130,9 +146,9 @@ block content
                 td.px-6.py-4.text-sm
                   .flex.flex-col
                     p.font-medium.text-gray-900
-                      = (order.customer && order.customer.username) || 'Guest'
+                      = (order.customer && order.customer.username) || '—'
                     p.text-xs.text-gray-500
-                      = (order.customer && order.customer.email) || 'N/A'
+                      = (order.customer && order.customer.email) || '—'
                 
                 // Items Count
                 td.px-6.py-4.text-sm.text-center
@@ -142,37 +158,43 @@ block content
                 
                 // Total
                 td.px-6.py-4.text-sm.font-semibold.text-gray-900
-                  = '$' + order.total.toFixed(2)
+                  = new Intl.NumberFormat('vi-VN').format(Math.round(Number(order.total) || 0)) + '₫'
                 
                 // Payment Status
                 td.px-6.py-4
+                  - const paySt = order.payment && order.payment.status
                   span.px-2.py-1.rounded-full.text-xs.font-semibold(class={
-                    'bg-green-100 text-green-800': order.payment && order.payment.status === 'paid',
-                    'bg-yellow-100 text-yellow-800': order.payment && order.payment.status === 'pending',
-                    'bg-red-100 text-red-800': !order.payment || order.payment.status === 'failed'
+                    'bg-green-100 text-green-800': paySt === 'paid',
+                    'bg-yellow-100 text-yellow-800': paySt === 'pending',
+                    'bg-red-100 text-red-800': paySt === 'failed',
+                    'bg-gray-100 text-gray-800': paySt === 'refunded' || !paySt
                   })
-                    if order.payment && order.payment.status === 'paid'
+                    if paySt === 'paid'
                       i.fas.fa-check-circle.mr-1
-                      | Paid
-                    else if order.payment && order.payment.status === 'pending'
+                      | Đã TT
+                    else if paySt === 'pending'
                       i.fas.fa-clock.mr-1
-                      | Unpaid
-                    else
+                      | Chưa TT
+                    else if paySt === 'refunded'
+                      | Hoàn tiền
+                    else if paySt === 'failed'
                       i.fas.fa-times-circle.mr-1
-                      | Failed
+                      | Lỗi
+                    else
+                      | —
                 
                 // Status
                 td.px-6.py-4
-                  select.text-xs.px-2.py-1.border.border-gray-300.rounded(
-                    onchange=`updateOrderStatus('${order._id}', this.value)`,
-                    value=order.status
+                  select.text-xs.px-2.py-1.border.border-gray-300.rounded.admin-order-status(
+                    data-order-id=order._id
                   )
-                    option(value="pending") Pending
-                    option(value="confirmed") Confirmed
-                    option(value="processing") Processing
-                    option(value="shipped") Shipped
-                    option(value="delivered") Delivered
-                    option(value="cancelled") Cancelled
+                    option(value="pending", selected=order.status === 'pending') Chờ xác nhận
+                    option(value="confirmed", selected=order.status === 'confirmed') Đã xác nhận
+                    option(value="processing", selected=order.status === 'processing') Đang xử lý
+                    option(value="shipped", selected=order.status === 'shipped') Đang giao
+                    option(value="delivered", selected=order.status === 'delivered') Đã giao
+                    option(value="cancelled", selected=order.status === 'cancelled') Đã hủy
+                    option(value="refunded", selected=order.status === 'refunded') Hoàn tiền
                 
                 // Date
                 td.px-6.py-4.text-sm.text-gray-600
@@ -180,122 +202,270 @@ block content
                 
                 // Actions
                 td.px-6.py-4.text-sm.flex.gap-2
-                  a.text-blue-600.hover:text-blue-700.transition-colors.px-2.py-1(
+                  a(
+                    class="text-blue-600 hover:text-blue-700 transition-colors px-2 py-1"
                     href=`/admin/orders/${order._id}`,
-                    title="View details"
+                    title="Chi tiết"
                   )
                     i.fas.fa-eye
                   
-                  if order.status !== 'shipped' && order.status !== 'delivered'
-                    button.text-orange-600.hover:text-orange-700.transition-colors.px-2.py-1(
+                  if order.status !== 'shipped' && order.status !== 'delivered' && order.status !== 'cancelled'
+                    button(
                       type="button",
-                      onclick=`markAsShipped('${order._id}')`,
-                      title="Mark as shipped"
+                      class="text-orange-600 hover:text-orange-700 transition-colors px-2 py-1 btn-mark-shipped",
+                      data-order-id=order._id,
+                      title="Đánh dấu đang giao"
                     )
                       i.fas.fa-truck
                   
                   if order.payment && order.payment.status === 'pending'
-                    button.text-green-600.hover:text-green-700.transition-colors.px-2.py-1(
+                    button(
                       type="button",
-                      onclick=`markAsPaid('${order._id}')`,
-                      title="Mark as paid"
+                      class="text-green-600 hover:text-green-700 transition-colors px-2 py-1 btn-mark-paid",
+                      data-order-id=order._id,
+                      title="Đánh dấu đã thanh toán"
                     )
                       i.fas.fa-check
                   
                   if order.status === 'pending' || order.status === 'confirmed'
-                    button.text-red-600.hover:text-red-700.transition-colors.px-2.py-1(
+                    button(
                       type="button",
-                      onclick=`cancelOrder('${order._id}')`,
-                      title="Cancel order"
+                      class="text-red-600 hover:text-red-700 transition-colors px-2 py-1 btn-cancel-order",
+                      data-order-id=order._id,
+                      title="Hủy đơn"
                     )
                       i.fas.fa-trash
 
       // Pagination
       if pagination && pagination.pages > 1
+        - const cur = Number(pagination.current || pagination.page || 1)
+        - const lim = Number(pagination.limit || 10)
+        - const tot = Number(pagination.total || 0)
         .bg-gray-50.px-6.py-4.flex.justify-between.items-center
           p.text-sm.text-gray-600
-            | Showing 
-            span.font-semibold= (pagination.page - 1) * pagination.limit + 1
-            |  to 
-            span.font-semibold= Math.min(pagination.page * pagination.limit, pagination.total)
-            |  of 
-            span.font-semibold= pagination.total
+            | Hiển thị 
+            span.font-semibold= tot > 0 ? ((cur - 1) * lim + 1) : 0
+            |  – 
+            span.font-semibold= Math.min(cur * lim, tot)
+            |  / 
+            span.font-semibold= tot
           
           .flex.gap-2
-            if pagination.page > 1
-              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
-                href=`/admin/orders?page=${pagination.page - 1}`
+            if cur > 1
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700(class="hover:bg-gray-100"
+                href=`/admin/orders?page=${cur - 1}${__pq}`
               )
                 i.fas.fa-chevron-left
             
-            each i in [...Array(Math.min(pagination.pages, 5)).keys()].map(x => Math.max(1, pagination.page - 2) + x)
-              if i <= pagination.pages
-                if i === pagination.page
-                  .px-3.py-2.bg-blue-600.text-white.rounded
-                    = i
-                else
-                  a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
-                    href=`/admin/orders?page=${i}`
-                  )
-                    = i
+            each i in [...Array(pagination.pages).keys()].map(x => x + 1)
+              if i === cur
+                .px-3.py-2.bg-blue-600.text-white.rounded
+                  = i
+              else if i === 1 || i === pagination.pages || (i >= cur - 1 && i <= cur + 1)
+                a.px-3.py-2.border.border-gray-300.rounded.text-gray-700(class="hover:bg-gray-100"
+                  href=`/admin/orders?page=${i}${__pq}`
+                )
+                  = i
             
-            if pagination.page < pagination.pages
-              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700.hover:bg-gray-100(
-                href=`/admin/orders?page=${pagination.page + 1}`
+            if cur < pagination.pages
+              a.px-3.py-2.border.border-gray-300.rounded.text-gray-700(class="hover:bg-gray-100"
+                href=`/admin/orders?page=${cur + 1}${__pq}`
               )
                 i.fas.fa-chevron-right
   else
     // No Orders
     .bg-white.p-12.text-center
       i.fas.fa-inbox.text-gray-400.text-5xl.mb-4
-      h3.text-xl.font-semibold.text-gray-900.mb-2 No Orders Found
-      p.text-gray-600 Orders will appear here once customers start placing them
+      h3.text-xl.font-semibold.text-gray-900.mb-2 Chưa có đơn hàng
+      p.text-gray-600 Thử đổi bộ lọc hoặc đợi khách đặt hàng.
 
 block scripts
   script.
-    function updateOrderStatus(orderId, newStatus) {
-      // TODO: Call API to update order status
-      alert(`Order status updated to ${newStatus}!`);
-      location.reload();
+    function getAdminToken() {
+      return localStorage.getItem('accessToken') || '';
     }
 
-    function markAsShipped(orderId) {
-      const trackingNumber = prompt('Enter tracking number:');
-      if (trackingNumber) {
-        // TODO: Call API to mark as shipped with tracking number
-        alert('Order marked as shipped!');
-        location.reload();
+    async function apiPutOrder(orderId, body) {
+      var token = getAdminToken();
+      if (!token) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+        window.location.href = '/auth/login';
+        return null;
       }
+      var res = await fetch('/api/v1/orders/' + encodeURIComponent(orderId), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token
+        },
+        body: JSON.stringify(body)
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(data.message || 'Cập nhật đơn thất bại.');
+      return data;
     }
 
-    function markAsPaid(orderId) {
-      if (confirm('Mark this order as paid?')) {
-        // TODO: Call API to mark as paid
-        alert('Order marked as paid!');
-        location.reload();
+    async function apiCancelOrder(orderId, reason) {
+      var token = getAdminToken();
+      if (!token) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+        window.location.href = '/auth/login';
+        return null;
       }
-    }
-
-    function cancelOrder(orderId) {
-      const reason = prompt('Cancel reason:');
-      if (reason) {
-        // TODO: Call API to cancel order
-        alert('Order cancelled!');
-        location.reload();
-      }
+      var res = await fetch('/api/v1/orders/' + encodeURIComponent(orderId) + '/cancel', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token
+        },
+        body: JSON.stringify({ reason: reason || 'Hủy từ admin' })
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(data.message || 'Hủy đơn thất bại.');
+      return data;
     }
 
     function applyFilters() {
-      const search = document.getElementById('search-input')?.value || '';
-      const status = document.getElementById('status-filter')?.value || '';
-      const payment = document.getElementById('payment-filter')?.value || '';
-      const date = document.getElementById('date-filter')?.value || '';
-      
-      let url = '/admin/orders?';
-      if (search) url += `search=${encodeURIComponent(search)}&`;
-      if (status) url += `status=${status}&`;
-      if (payment) url += `payment=${payment}&`;
-      if (date) url += `date=${date}`;
-      
-      window.location.href = url;
+      var search = document.getElementById('search-input')?.value || '';
+      var status = document.getElementById('status-filter')?.value || '';
+      var payment = document.getElementById('payment-filter')?.value || '';
+      var date = document.getElementById('date-filter')?.value || '';
+      var params = new URLSearchParams();
+      if (search.trim()) params.set('search', search.trim());
+      if (status) params.set('status', status);
+      if (payment) params.set('payment', payment);
+      if (date) params.set('date', date);
+      window.location.href = '/admin/orders' + (params.toString() ? '?' + params.toString() : '');
     }
+
+    async function downloadOrdersCsv() {
+      var token = getAdminToken();
+      if (!token) {
+        if (window.AppNotify) window.AppNotify.warning('Vui lòng đăng nhập admin.');
+        window.location.href = '/auth/login';
+        return;
+      }
+      var params = new URLSearchParams();
+      var s = !{JSON.stringify(__search)};
+      var st = !{JSON.stringify(__status)};
+      var pay = !{JSON.stringify(__payment)};
+      var dt = !{JSON.stringify(__date)};
+      if (s && String(s).trim()) params.set('search', String(s).trim());
+      if (st) params.set('status', st);
+      if (pay) params.set('payment', pay);
+      if (dt) params.set('date', dt);
+      try {
+        var res = await fetch('/api/v1/orders/export/csv?' + params.toString(), {
+          method: 'GET',
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        if (!res.ok) {
+          var errJson = await res.json().catch(function () { return {}; });
+          throw new Error(errJson.message || 'Xuất CSV thất bại.');
+        }
+        var blob = await res.blob();
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'orders-export.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        if (window.AppNotify) window.AppNotify.success('Đã tải file CSV.');
+      } catch (err) {
+        if (window.AppNotify) window.AppNotify.error(err.message || 'Lỗi.');
+      }
+    }
+
+    (function initOrderAdminPage() {
+      document.getElementById('btn-export-orders-csv')?.addEventListener('click', function () {
+        downloadOrdersCsv();
+      });
+      document.getElementById('apply-order-filters')?.addEventListener('click', function (e) {
+        e.preventDefault();
+        applyFilters();
+      });
+      document.getElementById('search-input')?.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyFilters();
+        }
+      });
+
+      var statusSel = !{JSON.stringify(__status)};
+      var paySel = !{JSON.stringify(__payment)};
+      var stEl = document.getElementById('status-filter');
+      var pyEl = document.getElementById('payment-filter');
+      if (stEl && statusSel) stEl.value = statusSel;
+      if (pyEl && paySel) pyEl.value = paySel;
+
+      document.querySelectorAll('.admin-order-status').forEach(function (sel) {
+        sel.addEventListener('change', async function () {
+          var orderId = sel.getAttribute('data-order-id');
+          var newStatus = sel.value;
+          var body = { status: newStatus };
+          if (newStatus === 'shipped') {
+            var track = window.prompt('Mã vận đơn (bắt buộc khi chuyển sang Đang giao):', '');
+            if (!track || !track.trim()) {
+              if (window.AppNotify) window.AppNotify.warning('Cần mã vận đơn.');
+              window.location.reload();
+              return;
+            }
+            body.trackingNumber = track.trim();
+          }
+          try {
+            await apiPutOrder(orderId, body);
+            if (window.AppNotify) window.AppNotify.success('Đã cập nhật trạng thái.');
+            window.location.reload();
+          } catch (err) {
+            if (window.AppNotify) window.AppNotify.error(err.message || 'Lỗi');
+            window.location.reload();
+          }
+        });
+      });
+
+      document.querySelectorAll('.btn-mark-shipped').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var orderId = btn.getAttribute('data-order-id');
+          var track = window.prompt('Mã vận đơn:', '');
+          if (!track || !track.trim()) return;
+          try {
+            await apiPutOrder(orderId, { status: 'shipped', trackingNumber: track.trim() });
+            if (window.AppNotify) window.AppNotify.success('Đã cập nhật giao hàng.');
+            window.location.reload();
+          } catch (err) {
+            if (window.AppNotify) window.AppNotify.error(err.message || 'Lỗi');
+          }
+        });
+      });
+
+      document.querySelectorAll('.btn-mark-paid').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var orderId = btn.getAttribute('data-order-id');
+          if (!window.confirm('Xác nhận đã thanh toán?')) return;
+          try {
+            await apiPutOrder(orderId, { paymentStatus: 'paid' });
+            if (window.AppNotify) window.AppNotify.success('Đã ghi nhận thanh toán.');
+            window.location.reload();
+          } catch (err) {
+            if (window.AppNotify) window.AppNotify.error(err.message || 'Lỗi');
+          }
+        });
+      });
+
+      document.querySelectorAll('.btn-cancel-order').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var orderId = btn.getAttribute('data-order-id');
+          var reason = window.prompt('Lý do hủy:', '');
+          if (reason == null) return;
+          try {
+            await apiCancelOrder(orderId, reason);
+            if (window.AppNotify) window.AppNotify.success('Đã hủy đơn.');
+            window.location.reload();
+          } catch (err) {
+            if (window.AppNotify) window.AppNotify.error(err.message || 'Lỗi');
+          }
+        });
+      });
+    })();

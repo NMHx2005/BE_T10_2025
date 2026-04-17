@@ -1,5 +1,17 @@
 import express from 'express';
-import { createProductController, deleteProductController, getProducts, getProductsDetail, restoreProductController, searchProduct, updateFullProductController, updateProductController, getProductsByCategory, getCategoryStatsController, getCategoryFiltersController } from '../../controllers/client/product.controller.js';
+import {
+    createProductController,
+    getProducts,
+    getProductsDetail,
+    softDeleteProductController,
+    restoreDeletedProductController,
+    searchProduct,
+    updateFullProductController,
+    updateProductController,
+    getProductsByCategory,
+    getCategoryStatsController,
+    getCategoryFiltersController,
+} from '../../controllers/client/product.controller.js';
 import { adminOnly, optionalAuth, protect } from '../../middleware/auth.js';
 import { createProductValidation, updateProductValidation } from '../../middleware/validators/product.validator.js';
 
@@ -37,19 +49,17 @@ router.post('/', protect, adminOnly, createProductValidation, createProductContr
 // PUT /products/:id - Cập nhật toàn bộ thông tin sản phẩm
 router.put('/:id', protect, adminOnly, updateProductValidation, updateFullProductController);
 
+/**
+ * PATCH /api/v1/products/:id/restore — Khôi phục sau xóa mềm (đặt trước PATCH /:id)
+ */
+router.patch('/:id/restore', protect, adminOnly, restoreDeletedProductController);
+
 // PATCH /products/:id - Cập nhật một phần thông tin sản phẩm
 router.patch('/:id', protect, adminOnly, updateProductController);
 
 /**
- * PATCH /api/products/:id/restore
- * Khôi phục sản phẩm đã soft delete
+ * DELETE /api/v1/products/:id — Xóa mềm (admin)
  */
-router.patch("/:id/restore", protect, adminOnly, restoreProductController);
-
-/**
- * DELETE /api/products/:id/force
- * Xóa vĩnh viễn khỏi DB (dangerous)
- */
-router.delete("/:id/force", protect, adminOnly, deleteProductController);
+router.delete('/:id', protect, adminOnly, softDeleteProductController);
 
 export default router;

@@ -50,6 +50,7 @@ app.use('/api', apiLimiter);
 app.use("/api/auth/login", authLimiter)
 app.use("/api/auth/register", authLimiter)
 app.use("/api/auth/forgot-password", authLimiter)
+app.use("/api/v1/auth/forgot-password", authLimiter)
 
 // Upload routes với rate limiting riêng (nếu cần)
 app.use('/api/upload', uploadLimiter);

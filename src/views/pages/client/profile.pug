@@ -113,7 +113,7 @@ block content
                       i.fa-solid.fa-circle-notch.fa-spin(aria-hidden="true")
                       | Đang lưu...
                   a.inline-flex.h-11.items-center.justify-center.border.px-6.text-sm.font-semibold.transition-colors(
-                    href="/profile/settings/password"
+                    href="/profile/settings#mat-khau"
                     class="border-[#0d0d0d] text-[#0d0d0d] hover:bg-[#0d0d0d] hover:text-white"
                   )
                     i.fa-solid.fa-key.mr-2(aria-hidden="true")
@@ -201,6 +201,23 @@ block scripts
         document.getElementById('stat-member-since').textContent = toDateText(user.createdAt);
       }
 
+      async function loadStats() {
+        if (!token) return;
+        try {
+          var r1 = await fetch('/api/v1/orders?limit=1', { headers: authHeaders() });
+          var d1 = await r1.json().catch(function () { return {}; });
+          if (d1.pagination && document.getElementById('stat-orders')) {
+            document.getElementById('stat-orders').textContent = String(d1.pagination.total);
+          }
+          var r2 = await fetch('/api/v1/users/addresses', { headers: authHeaders() });
+          var d2 = await r2.json().catch(function () { return {}; });
+          var list = (d2.data && d2.data.addresses) || [];
+          if (document.getElementById('stat-addresses')) {
+            document.getElementById('stat-addresses').textContent = String(list.length);
+          }
+        } catch (e) {}
+      }
+
       async function loadProfile() {
         if (!token) {
           showAlert('warn', 'Bạn chưa đăng nhập. Vui lòng đăng nhập để xem hồ sơ.');
@@ -211,6 +228,7 @@ block scripts
           var data = await res.json().catch(function () { return {}; });
           if (!res.ok) throw new Error(data.message || 'Không thể tải hồ sơ.');
           bindUser(data?.data?.user || data.user);
+          loadStats();
           showAlert('success', 'Đã tải hồ sơ thành công.');
         } catch (err) {
           showAlert('error', err.message || 'Có lỗi khi tải hồ sơ.');

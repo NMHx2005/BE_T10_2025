@@ -181,6 +181,25 @@ export const getTokenExpiration = (token) => {
     }
 }
 
+/** Token đặt lại mật khẩu (gửi qua email) */
+export const generatePasswordResetToken = (userId) => {
+    return jwt.sign(
+        { userId: String(userId), purpose: 'password_reset' },
+        JWT_SECRET,
+        { expiresIn: '1h', algorithm: JWT_ALGORITHM }
+    );
+};
+
+export const verifyPasswordResetToken = (token) => {
+    const payload = jwt.verify(token, JWT_SECRET, { algorithms: [JWT_ALGORITHM] });
+    if (payload.purpose !== 'password_reset') {
+        const err = new Error('Token không hợp lệ');
+        err.name = 'JsonWebTokenError';
+        throw err;
+    }
+    return payload;
+};
+
 export default {
     JWT_SECRET,
     JWT_EXPIRE,
@@ -194,5 +213,7 @@ export default {
     verifyRefreshToken,
     decodeToken,
     getTokenFromRequest,
-    getTokenExpiration
+    getTokenExpiration,
+    generatePasswordResetToken,
+    verifyPasswordResetToken,
 }
